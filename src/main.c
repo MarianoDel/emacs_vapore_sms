@@ -185,15 +185,100 @@ int main(void)
 
     //--- Welcome code ---//
     LED_OFF;
-//	EN_GPS_OFF;
-    EN_GPS_ON;
-    //RELAY_ON;
     RELAY_OFF;
 
     USART1Config();
     USART2Config();
 
     EXTIOff();
+
+#ifdef USE_REDONDA_BASIC
+
+    // Prendo todos los Timers
+    TIM_3_Init ();					//lo utilizo para 1 a 10V y para synchro ADC
+    TIM_16_Init();					//o utilizo para synchro de relay
+    TIM16Enable();
+    
+    Usart2Send("\r\nKirno Placa Redonda - Basic V1.0\r\n");
+    Usart2Send("  Features:\r\n");
+#ifdef USE_GSM
+    Usart2Send("  Uses GSM for SMS data\r\n");
+#endif
+
+
+
+    for (unsigned char i = 0; i < 8; i++)
+    {
+        if (LED)
+            LED_OFF;
+        else
+            LED_ON;
+
+        Wait_ms (250);
+    }
+
+
+    timer_standby = 2000;
+    FuncsGSMReset();
+
+
+//--- Programa de Redonda Basic - Produccion - -----
+
+    while (1)
+    {
+        switch (main_state)
+        {
+        case main_init:
+            if (!timer_standby)
+            {
+                timer_standby = 10;
+                if (LED_PWR)
+                    LED_PWR_OFF;
+                else
+                    LED_PWR_ON;
+
+                // if (LED_NET)
+                //     LED_NET_OFF;
+                // else
+                //     LED_NET_ON;
+
+                if (RELAY)
+                    RELAY_OFF;
+                else
+                    RELAY_ON;
+                        
+            }
+            break;
+
+        case main_wait_for_gsm_network:
+            break;
+
+        case main_ready:
+            break;
+
+        // case LAMP_OFF:
+        //     Usart2Send("PRENDIDO\r\n");
+        //     FuncsGSMSendSMS("PRENDIDO", mem_conf.num_reportar);
+        //     LED_ON;
+        //     break;
+
+
+        default:
+            main_state = main_init;
+            break;
+        }
+
+        //Cosas que no dependen del estado del programa
+        // UpdateRelay ();
+        // UpdatePhotoTransistor();
+        FuncsGSM();
+    }	//end while 1
+
+//---------- Fin Programa de Produccion Redonda Basic--------//
+#endif	//USE_REDONDA_BASIC
+
+//---------- Inicio Programa de Produccion Redonda Basic --------//
+
 
 
 
@@ -258,78 +343,6 @@ int main(void)
     }
 #endif
 //---------- Fin Prueba con GSM GATEWAY --------//
-
-
-
-
-
-#ifdef USE_REDONDA_BASIC
-//---------- Inicio Programa de Produccion Redonda Basic --------//
-    // USART1Config();
-
-    // Prendo todos los Timers
-    TIM_3_Init ();					//lo utilizo para 1 a 10V y para synchro ADC
-    TIM_16_Init();					//o utilizo para synchro de relay
-    TIM16Enable();
-    
-    Usart2Send("\r\nKirno Placa Redonda - Basic V1.0\r\n");
-    Usart2Send("  Features:\r\n");
-#ifdef USE_GSM
-    Usart2Send("  Uses GSM for SMS data\r\n");
-#endif
-
-
-
-    for (unsigned char i = 0; i < 8; i++)
-    {
-        if (LED)
-            LED_OFF;
-        else
-            LED_ON;
-
-        Wait_ms (250);
-    }
-
-
-    timer_standby = 2000;
-    FuncsGSMReset();
-
-
-//--- Programa de Redonda Basic - Produccion - -----
-
-    while (1)
-    {
-        switch (main_state)
-        {
-        case main_init:
-            break;
-
-        case main_wait_for_gsm_network:
-            break;
-
-        case main_ready:
-            break;
-
-        // case LAMP_OFF:
-        //     Usart2Send("PRENDIDO\r\n");
-        //     FuncsGSMSendSMS("PRENDIDO", mem_conf.num_reportar);
-        //     LED_ON;
-        //     break;
-
-
-        default:
-            main_state = main_init;
-            break;
-        }
-
-        //Cosas que no dependen del estado del programa
-        // UpdateRelay ();
-        // UpdatePhotoTransistor();
-        FuncsGSM();
-    }	//end while 1
-
-//---------- Fin Programa de Produccion Redonda Basic--------//
-#endif	//USE_REDONDA_BASIC
 
     return 0;
 }

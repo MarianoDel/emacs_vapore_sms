@@ -35,16 +35,15 @@
 
 //-------- End Of Defines For Configuration ------
 
-#if (defined VER_1_0 || defined VER_1_1)
-#ifdef USE_WITH_SYNC
-//GPIOA pin0	lo uso como SYNC
-#define SYNC ((GPIOA->IDR & 0x0001) != 0)
-#else
-//GPIOA pin0	V_Sense
-#endif
-//GPIOA pin0	V_Sense
-//GPIOA pin1	Light_Sense
-#define LIGHT ((GPIOA->IDR & 0x0002) != 0)
+//GPIOA pin0    LED_PWR
+#define LED_PWR    ((GPIOA->ODR & 0x0001) != 0)
+#define LED_PWR_ON    (GPIOA->BSRR = 0x00000001)
+#define LED_PWR_OFF    (GPIOA->BSRR = 0x00010000)
+
+//GPIOA pin1	LED_NET
+#define LED_NET    ((GPIOA->ODR & 0x0002) != 0)
+#define LED_NET_ON    (GPIOA->BSRR = 0x00000002)
+#define LED_NET_OFF    (GPIOA->BSRR = 0x00020000)
 
 //GPIOA pin2
 //GPIOA pin3	usart2 tx rx (para debug)
@@ -86,16 +85,7 @@
 
 //GPIOA pin13
 //GPIOA pin14
-
 //GPIOA pin15
-#define EN_GPS 		((GPIOA->ODR & 0x8000) != 0)
-#define EN_GPS_ON		GPIOA->BSRR = 0x00008000
-#define EN_GPS_OFF	GPIOA->BSRR = 0x80000000
-#ifndef USE_GPS
-#define SYNCP			EN_GPS
-#define SYNCP_ON		EN_GPS_ON
-#define SYNCP_OFF		EN_GPS_OFF
-#endif
 
 //GPIOB pin3
 #define PPS ((GPIOB->IDR & 0x0008) == 0)
@@ -105,8 +95,6 @@
 
 //GPIOB pin6
 //GPIOB pin7	usart1 tx rx (para el GPS)
-
-#endif	//
 
 
 // Exported Types --------------------------------------------------------------
