@@ -155,24 +155,6 @@ int main(void)
     }
 
 
-    //--- Leo los parametros de memoria ---//
-#ifdef USE_REDONDA_BASIC
-    memcpy(&mem_conf, pmem, sizeof(parameters_typedef));
-    if (mem_conf.acumm_wh == 0xFFFFFFFF)
-    {
-        //memoria vacia
-        mem_conf.acumm_wh = 0;
-        mem_conf.acumm_w2s = 0;
-        mem_conf.acumm_w2s_index = 0;
-        mem_conf.timer_reportar = 2;
-        mem_conf.timer_pruebas = 10;
-        //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
-
-        strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
-    }
-#endif
-
-
     //--- Welcome code ---//
     LED_OFF;
     RELAY_OFF;
@@ -192,6 +174,33 @@ int main(void)
     WelcomeCodeFeatures(s_lcd);
     
     FuncsGSMReset();
+
+    //--- Leo los parametros de memoria ---//
+#ifdef USE_REDONDA_BASIC
+    memcpy(&mem_conf, pmem, sizeof(parameters_typedef));
+    if (mem_conf.acumm_wh == 0xFFFFFFFF)
+    {
+        //memoria vacia
+        mem_conf.acumm_wh = 0;
+        mem_conf.acumm_w2s = 0;
+        mem_conf.acumm_w2s_index = 0;
+        mem_conf.timer_reportar = 2;
+        mem_conf.timer_pruebas = 10;
+        //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
+
+        strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
+    
+#ifdef DEBUG_ON
+        Usart2Send("Memory Empty\n");
+#endif        
+    }
+#ifdef DEBUG_ON
+    else
+        Usart2Send("Memory Have Saved Data\n");
+#endif        
+
+#endif
+
 
 //--- Programa de Redonda Basic - Produccion ---
 
