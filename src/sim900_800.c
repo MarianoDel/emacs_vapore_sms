@@ -12,7 +12,6 @@
 #include "sim900_800.h"
 #include "uart.h"
 #include "tim.h"
-#include "ESP8266.h"
 #include "funcs_gsm.h"		//para string flags
 #include "flash_program.h"
 
@@ -615,7 +614,7 @@ void GSMReceive (void)
     //---- Comunicacion con modulo GSM ----//
     if (PacketReadyUARTGSM)
     {
-        ESPPreParser2((unsigned char *)buffUARTGSMrx2, (unsigned char *)buffUARTGSMrx2);
+        FuncsGSMParser((unsigned char *)buffUARTGSMrx2, (unsigned char *)buffUARTGSMrx2);
 #ifdef DEBUG_ON
         Usart2Send((char *)buffUARTGSMrx2);
         Usart2Send("\r\n");

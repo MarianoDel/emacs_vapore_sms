@@ -120,7 +120,7 @@ unsigned char ReadUsart1Buffer (unsigned char * bout, unsigned short max_len)
     {
         //el prx1 siempre llega adelantado desde la int, lo corto con un 0
         *prx1 = '\0';
-        len += 1;
+        len += 1;    //me aseguro que entre el '\0' en buffer out (bout)
         memcpy(bout, (unsigned char *) rx1buff, len);
     }
     else
@@ -167,7 +167,7 @@ void USART1_IRQHandler(void)
     {
         dummy = USART1->RDR & 0x0FF;
 
-        //RX GPS & GSM
+        //RX del GSM
         if ((usart_mode == USART_GPS_MODE) || (usart_mode == USART_GSM_MODE))
         {
             if (prx1 < &rx1buff[SIZEOF_DATA])

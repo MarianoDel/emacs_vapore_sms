@@ -78,8 +78,6 @@ SRC += ./src/uart.c
 SRC += ./src/flash_program.c
 SRC += ./src/dsp.c
 SRC += ./src/hard.c
-SRC += ./src/ESP8266.c
-#SRC += ./src/HLK_RM04.c
 SRC += ./src/sim900_800.c
 SRC += ./src/funcs_gsm.c
 

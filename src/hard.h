@@ -15,8 +15,7 @@
 
 //----------- Defines For Configuration -------------
 //----------- Hardware Board Version -------------
-// #define VER_1_0
-#define VER_1_1		//mismo pinout que VER_1_0
+#define VER_1_1		//esta es la placa kirno_redonda
 
 //-------- Type of Program ----------------
 //OJO --- los dos que siguen van juntos

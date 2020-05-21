@@ -453,5 +453,22 @@ unsigned char FuncsGSMCommandAnswer (char * pCMD, char * pIMEI)
 }
 
 
+//achica el buffer recibido a todos los codigos numeros letras y espacios
+void FuncsGSMParser (unsigned char * orig, unsigned char * dest)
+{
+    while (*orig != '\0')
+    {
+        //todos los codigos numeros y letras        
+        if ((*orig > 31) && (*orig < 127))
+        {
+            *dest = *orig;
+            dest++;
+        }
+        orig++;
+    }
+
+    *dest = '\0';
+}
+
 //--- end of file ---//
 

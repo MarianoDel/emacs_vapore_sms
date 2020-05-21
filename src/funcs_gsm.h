@@ -75,7 +75,7 @@ unsigned char FuncsGSMSendSMS (char *, char *);
 void FuncsGSMMessageFlags (unsigned short);
 unsigned short FuncsGSMMessageFlagsAsk (void);
 unsigned char FuncsGSMCommandAnswer (char * , char * );
-
+void FuncsGSMParser (unsigned char *, unsigned char *);
 
 
 #endif

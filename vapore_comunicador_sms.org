@@ -9,6 +9,11 @@
     - quito lib del Makefile
 
 *** Quito modulo ESP8266
+    - quito archivos
+    - quito source en el Makefile
+    - el modulo sim900_800 lo llama, usa la funcion ESPPreParser2
+    - paso eso funcionalidad al modulo funcs_gsm, la llamo FuncsGSMParser
+
 *** Quito modulo adc y dma
     - No quito estos modulos, simplemente no llamo a estas funciones
     - estos modulos en general son de uso comun a varios proyectos
@@ -35,3 +40,5 @@
 
 
 ** Renombrar pines hard.h
+
+** Dejar uart1 siempre conectado al GSM
