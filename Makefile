@@ -90,18 +90,6 @@ SRC += ./src/gps_vktel.c
 ## Core Support
 SRC += $(CORELIBDIR)/core_cm0.c
 
-## Other Peripherals Libs
-## MQTT libraries
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTConnectClient.c
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTConnectServer.c
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTDeserializePublish.c
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTFormat.c
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTPacket.c
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTSerializePublish.c
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTSubscribeClient.c
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTSubscribeServer.c
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTUnsubscribeClient.c
-SRC += ./paho.mqtt.embedded-c/MQTTPacket/src/MQTTUnsubscribeServer.c
 
 ## used part of GSM_Library
 #SRC += $(DLIBDIR)/src/at_parser.c

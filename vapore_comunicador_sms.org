@@ -3,9 +3,15 @@
    - recibe SMS y prende una salida de 12V durante 2 segundos
 
 ** Respecto de kirno_redonda le quito todo lo que no uso, paso a paso
-*** TODO Quito paho mqtt
+*** DONE Quito paho mqtt
+    CLOSED: [2020-05-21 Thu 12:48]
+    - quito todos los archivos lib
+    - quito lib del Makefile
+
 *** Quito modulo ESP8266
 *** Quito modulo adc y dma
+    - No quito estos modulos, simplemente no llamo a estas funciones
+
 *** Quito modulo gps_vktel
 *** Quito modulo synchro
 *** Quito modulo tcp_transceiver
