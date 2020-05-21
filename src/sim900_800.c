@@ -1633,63 +1633,7 @@ void GSMReceivSMS (void)
                     if (colon_index == 8)
                     {
                         //Son todos payloads correctos REVISO RESPUESTAS
-                        if (!strncmp(pToAnswer, (const char *)"REPORTAR:", sizeof ("REPORTAR:") -1))
-                        {
-                            strcpy(num_tel_rep, (pToAnswer + 9));
-                            //quito el OK pegado
-                            colon_index	= strlen(num_tel_rep);
-                            if (colon_index > 2)
-                                num_tel_rep[colon_index - 2] = '\0';
-
-                            send_sms_ok_set;
-
-                        }
-
-                        if (!strncmp(pToAnswer, (const char *)"TIMER:", sizeof ("TIMER:") -1))
-                        {
-                            colon_index = 0;
-                            colon_index += (*(pToAnswer + 6) - 48) * 10;
-                            colon_index += *(pToAnswer + 7) - 48;
-
-                            if ((*(pToAnswer + 6) == 'F') && (*(pToAnswer + 7) == 'F'))
-                            {
-                                timer_rep = 0;
-                                send_sms_ok_set;
-                            }
-                            else if ((colon_index > 1) && (colon_index <= 60))
-                            {
-                                timer_rep = colon_index;
-                                send_sms_ok_set;
-                            }
-                        }
-
-                        if (!strncmp(pToAnswer, (const char *)"TIMERD:", sizeof ("TIMERD:") -1))
-                        {
-                            colon_index = 0;
-                            colon_index += (*(pToAnswer + 7) - 48) * 10;
-                            colon_index += *(pToAnswer + 8) - 48;
-
-                            if ((*(pToAnswer + 7) == 'F') && (*(pToAnswer + 8) == 'F'))
-                            {
-                                timer_debug = 0;
-                                send_sms_ok_set;
-                            }
-                            else if ((colon_index > 1) && (colon_index <= 60))
-                            {
-                                timer_debug = colon_index;
-                                send_sms_ok_set;
-                            }
-                        }
-
-                        if (!strncmp(pToAnswer, (const char *)"PRENDER:", sizeof ("PRENDER:") -1))
-                            diag_prender_set;
-
-                        if (!strncmp(pToAnswer, (const char *)"APAGAR:", sizeof ("APAGAR:") -1))
-                            diag_apagar_set;
-
-                        if (!strncmp(pToAnswer, (const char *)"ENERGIA:", sizeof ("ENERGIA:") -1))
-                            send_energy_set;
-
+                        FuncsGSMGetSMSPayloadCallback(pToAnswer);
                     }
 
                     //me fijo si tengo mas SMS

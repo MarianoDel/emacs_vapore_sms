@@ -14,6 +14,7 @@
 #include "uart.h"
 #include "flash_program.h"
 #include <string.h>
+#include <stdio.h>
 
 
 // Externals -------------------------------------------------------------------
@@ -46,7 +47,6 @@ void FuncsGSM (void)
 {
     t_RespGsm resp = resp_gsm_continue;
     unsigned short flags = 0;
-    unsigned char i = 0;
 
     switch (gsm_state)
     {
@@ -246,6 +246,9 @@ void FuncsGSM (void)
 
         if (resp == 2)
         {
+#ifdef GSM_SEND_SMS_ON_START
+            unsigned char i = 0;
+
             i = strlen(s_msg);
             strncpy(mem_conf.imei, s_msg, (i - 2));
             Usart2Send("IMEI: ");
@@ -260,6 +263,9 @@ void FuncsGSM (void)
             p_MSG = s_msg;
             p_NUM = mem_conf.num_reportar;
             gsm_state = gsm_state_sending_sms;
+#else
+            gsm_state = gsm_state_ready;
+#endif
         }
 
         if (resp > 2)
@@ -361,16 +367,77 @@ void FuncsGSM (void)
         else
             gsm_state = gsm_state_ready;
     }
+}
 
 
+// la llaman desde el modulo sim900_800 cuando existe un payload SMS valido
+// debe interpretar el mensaje o descartar
+void FuncsGSMGetSMSPayloadCallback (char * payload)
+{
+    unsigned char index = 0;
+    
+    if (!strncmp(payload, "REPORTAR:", sizeof ("REPORTAR:") -1))
+    {
+        strcpy(num_tel_rep, (payload + 9));
+        //TODO: strcpy ya no me da la cantidad de bytes copiados
+        //quito el OK pegado
+        index = strlen(num_tel_rep);
+        if (index > 2)
+            num_tel_rep[index - 2] = '\0';
+        
+        send_sms_ok_set;
+    }
 
+    if (!strncmp(payload, (const char *)"TIMER:", sizeof ("TIMER:") -1))
+    {
+        index = 0;
+        index += (*(payload + 6) - 48) * 10;
+        index += *(payload + 7) - 48;
 
-    // if (gsm_error_counter > 4)
-    // {
-    // 	Usart2Send("Error counter overflow -> SHUTTING DOWN\r\n");
-    // 	GSM_Start_Stop_ResetSM ();
-    // 	gsm_state = gsm_state_shutdown;
-    // }
+        if ((*(payload + 6) == 'F') && (*(payload + 7) == 'F'))
+        {
+            timer_rep = 0;
+            send_sms_ok_set;
+        }
+        else if ((index > 1) && (index <= 60))
+        {
+#ifdef DEBUG_ON
+            char debug [60] = {'\0'};
+            sprintf(debug, "nuevo timer %d", index);
+            Usart2Send(debug);
+#endif
+            timer_rep = index;
+            send_sms_ok_set;
+        }
+    }
+
+    if (!strncmp(payload, (const char *)"TIMERD:", sizeof ("TIMERD:") -1))
+    {
+        index = 0;
+        index += (*(payload + 7) - 48) * 10;
+        index += *(payload + 8) - 48;
+
+        if ((*(payload + 7) == 'F') && (*(payload + 8) == 'F'))
+        {
+            timer_debug = 0;
+            send_sms_ok_set;
+        }
+        else if ((index > 1) && (index <= 60))
+        {
+            timer_debug = index;
+            send_sms_ok_set;
+        }
+    }
+
+    if (!strncmp(payload, (const char *)"PRENDER:", sizeof ("PRENDER:") -1))
+        diag_prender_set;
+
+    if (!strncmp(payload, (const char *)"APAGAR:", sizeof ("APAGAR:") -1))
+        diag_apagar_set;
+
+    if (!strncmp(payload, (const char *)"ENERGIA:", sizeof ("ENERGIA:") -1))
+        send_energy_set;
+
 }
 
 

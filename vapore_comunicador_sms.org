@@ -8,15 +8,12 @@
     - quito todos los archivos lib
     - quito lib del Makefile
 
-*** Quito modulo ESP8266
+*** DONE Quito modulo ESP8266
+    CLOSED: [2020-05-21 Thu 14:18]
     - quito archivos
     - quito source en el Makefile
     - el modulo sim900_800 lo llama, usa la funcion ESPPreParser2
     - paso eso funcionalidad al modulo funcs_gsm, la llamo FuncsGSMParser
-
-*** Quito modulo adc y dma
-    - No quito estos modulos, simplemente no llamo a estas funciones
-    - estos modulos en general son de uso comun a varios proyectos
 
 *** DONE Quito modulo gps_vktel
     CLOSED: [2020-05-21 Thu 13:53]
@@ -38,6 +35,16 @@
 *** DONE Quito libs utils.h y constants.h
     CLOSED: [2020-05-21 Thu 13:44]
 
+*** Quito modulo adc y dma
+    - No quito estos modulos, simplemente no llamo a estas funciones
+    - quito variables externas del main y le quito los headers
+    - estos modulos en general son de uso comun a varios proyectos
+
+** Cambios al main
+*** quito variables de filtros
+*** quito variables del adc, quito headers
+*** quito reports airplane mode
+    - quito tambien opciones en el hard.h
 
 ** Renombrar pines hard.h
 

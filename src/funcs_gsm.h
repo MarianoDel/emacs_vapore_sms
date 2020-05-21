@@ -16,6 +16,9 @@
 #include "hard.h"
 #include "stm32f0xx.h"
 
+// Module Configurations -------------------------------------------------------
+// #define GSM_SEND_SMS_ON_START    //envia un SMS con el dato del IMEI al conseguir red
+
 
 // Exported Types --------------------------------------------------------------
 typedef enum {
@@ -76,7 +79,7 @@ void FuncsGSMMessageFlags (unsigned short);
 unsigned short FuncsGSMMessageFlagsAsk (void);
 unsigned char FuncsGSMCommandAnswer (char * , char * );
 void FuncsGSMParser (unsigned char *, unsigned char *);
-
+void FuncsGSMGetSMSPayloadCallback (char *);
 
 #endif
 //--- end of file ---//

@@ -52,64 +52,6 @@ volatile unsigned char usart_mode = USART_GPS_MODE;
 
 //--- Private function prototypes ---//
 //--- Private functions ---//
-//cambio de modo al USART del GPS al GSM
-//le paso el modo o le pregunto
-//responde modo
-unsigned char Usart1Mode (unsigned char new_mode)
-{
-    unsigned int temp_int;
-    unsigned int temp_gpio;
-
-    temp_int = USART1->CR1;
-    USART1->CR1 &= 0xFFFFFF6F;		//limpio flags IE
-
-    if (new_mode == USART_GPS_MODE)
-    {
-        //config gpio A to Input
-        temp_gpio = GPIOA->MODER;		//2 bits por pin
-        temp_gpio &= 0xFFC3FFFF;		//PA9 PA10 input
-        temp_gpio |= 0x00000000;		//
-        GPIOA->MODER = temp_gpio;
-
-        GPIOA->AFR[1] &= 0xFFFFF00F;	//PA9 -> AF0 A10 -> AF0
-
-        //config gpio B to Alternative
-        temp_gpio = GPIOB->MODER;		//2 bits por pin
-        temp_gpio &= 0xFFFF0FFF;		//PB6 PB7 alternative
-        temp_gpio |= 0x0000A000;		//
-        GPIOB->MODER = temp_gpio;
-
-        GPIOB->AFR[0] &= 0x00FFFFFF;	//PB7 -> AF0 PB6 -> AF0
-
-        usart_mode = USART_GPS_MODE;
-    }
-
-    if (new_mode == USART_GSM_MODE)
-    {
-        //config gpio B to Input
-        temp_gpio = GPIOB->MODER;		//2 bits por pin
-        temp_gpio &= 0xFFFF0FFF;		//PB6 PB7 input
-        temp_gpio |= 0x00000000;		//
-        GPIOB->MODER = temp_gpio;
-
-        GPIOB->AFR[0] &= 0x00FFFFFF;	//PB7 -> AF0 PB6 -> AF0
-
-        //config gpio A to Alternative
-        temp_gpio = GPIOA->MODER;		//2 bits por pin
-        temp_gpio &= 0xFFC3FFFF;		//PA9 PA10 alternative
-        temp_gpio |= 0x00280000;		//
-        GPIOA->MODER = temp_gpio;
-
-        GPIOA->AFR[1] |= 0x00000110;	//PA10 -> AF1 PA9 -> AF1
-
-        usart_mode = USART_GSM_MODE;
-    }
-
-    USART1->CR1 = temp_int;
-    return usart_mode;
-}
-
-
 unsigned char ReadUsart1Buffer (unsigned char * bout, unsigned short max_len)
 {
     unsigned int len;
@@ -337,16 +279,16 @@ void USART1Config(void)
     // USART1->CR1 = USART_CR1_RE | USART_CR1_TE | USART_CR1_UE;
     // USART1->CR1 = USART_CR1_RXNEIE | USART_CR1_RE | USART_CR1_UE;	//SIN TX
     USART1->CR1 = USART_CR1_RXNEIE | USART_CR1_RE | USART_CR1_TE | USART_CR1_UE;	//para pruebas TX
-    
-    temp = GPIOB->AFR[0];
-    temp &= 0x00FFFFFF;
-    // temp |= 0x00000000;	//PB7 -> AF0 PB6 -> AF0
-    GPIOB->AFR[0] = temp;
+
+    temp = GPIOA->AFR[1];
+    temp &= 0xFFFFF00F;
+    temp |= 0x00000110;    //PA10 -> AF1 PA9 -> AF1
+    GPIOA->AFR[1] = temp;
 
     ptx1 = tx1buff;
     ptx1_pckt_index = tx1buff;
     prx1 = rx1buff;
-
+    
     NVIC_EnableIRQ(USART1_IRQn);
     NVIC_SetPriority(USART1_IRQn, 5);
 }
