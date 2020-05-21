@@ -24,7 +24,6 @@
 #include "adc.h"
 #include "dma.h"
 #include "flash_program.h"
-#include "synchro.h"
 
 
 //Para Hardware de GSM

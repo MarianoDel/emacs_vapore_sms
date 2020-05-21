@@ -12,8 +12,17 @@
 *** Quito modulo adc y dma
     - No quito estos modulos, simplemente no llamo a estas funciones
 
-*** Quito modulo gps_vktel
-*** Quito modulo synchro
+*** DONE Quito modulo gps_vktel
+    CLOSED: [2020-05-21 Thu 13:53]
+    - quito archivos
+    - quito source en el Makefile
+
+*** DONE Quito modulo synchro
+    CLOSED: [2020-05-21 Thu 13:50]
+    - quito archivos
+    - quito include del main
+    - quito source en el Makefile
+
 *** DONE Quito modulo tcp_transceiver
     CLOSED: [2020-05-21 Thu 13:47]
     - quito archivos
@@ -23,3 +32,5 @@
 *** DONE Quito libs utils.h y constants.h
     CLOSED: [2020-05-21 Thu 13:44]
 
+
+** Renombrar pines hard.h
