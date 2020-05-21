@@ -70,6 +70,8 @@ extern volatile char buffUARTGSMrx2[];
 parameters_typedef * pmem = (parameters_typedef *) (unsigned int *) FLASH_PAGE_FOR_BKP;	//en flash
 parameters_typedef mem_conf;
 
+// ------- Externals para el LED state --------
+volatile unsigned short timer_led;
 
 //--- VARIABLES GLOBALES ---//
 unsigned short show_power_index = 0;	//lo uso como timer sincronizado con la medicion, tick 2 secs.
@@ -127,22 +129,11 @@ void TimingDelay_Decrement(void);
 //------------------------------------------//
 int main(void)
 {
-    unsigned char resp = resp_continue;
-    unsigned char need_to_save = 0;
-    // unsigned short wh_int, wh_dec;
-    // float fcalc = 1.0;
-    unsigned short power, last_power;
-    unsigned int zero_current_loc = 0;
-
-    unsigned short acum_secs_index;
-    unsigned int acum_secs, acum_hours;
-
     main_state_t main_state = main_init;
     char s_lcd [100];
 
     //GPIO Configuration.
     GPIO_Config();
-
 
     //ACTIVAR SYSTICK TIMER
     if (SysTick_Config(48000))
@@ -163,7 +154,6 @@ int main(void)
         }
     }
 
-    HARD_Initial_Setup();
 
     //--- Leo los parametros de memoria ---//
 #ifdef USE_REDONDA_BASIC
@@ -198,64 +188,95 @@ int main(void)
     TIM_3_Init ();					//lo utilizo para 1 a 10V y para synchro ADC
     TIM_16_Init();					//o utilizo para synchro de relay
     TIM16Enable();
+
+    WelcomeCodeFeatures(s_lcd);
     
-    Usart2Send("\r\nKirno Placa Redonda - Basic V1.0\r\n");
-    Usart2Send("  Features:\r\n");
-#ifdef USE_GSM
-    Usart2Send("  Uses GSM for SMS data\r\n");
-#endif
-
-
-
-    for (unsigned char i = 0; i < 8; i++)
-    {
-        if (LED)
-            LED_OFF;
-        else
-            LED_ON;
-
-        Wait_ms (250);
-    }
-
-
-    timer_standby = 2000;
     FuncsGSMReset();
 
-
-//--- Programa de Redonda Basic - Produccion - -----
+//--- Programa de Redonda Basic - Produccion ---
 
     while (1)
     {
         switch (main_state)
         {
         case main_init:
-            if (!timer_standby)
-            {
-                timer_standby = 10;
-                if (LED_PWR)
-                    LED_PWR_OFF;
-                else
-                    LED_PWR_ON;
+            ChangeLed(LED_STANDBY);
+            RELAY_OFF;
+            main_state = main_wait_for_gsm_network;
 
-                // if (LED_NET)
-                //     LED_NET_OFF;
-                // else
-                //     LED_NET_ON;
-
-                if (RELAY)
-                    RELAY_OFF;
-                else
-                    RELAY_ON;
-                        
-            }
+            //reset de mensajes del gsm
+            send_energy_reset;
+            send_sms_ok_reset;
+            diag_prender_reset;
+            diag_apagar_reset;
+            timer_rep_change_reset;
             break;
 
         case main_wait_for_gsm_network:
+            if (FuncsGSMStateAsk() >= gsm_state_ready)
+            {
+                main_state = main_ready;
+                ChangeLed(LED_GSM_NETWORK);
+            }
             break;
 
         case main_ready:
+            if (diag_prender)
+            {
+                diag_prender_reset;
+                main_state = main_enable_output;
+                RELAY_ON;
+                ChangeLed(LED_ENABLE_OUTPUT);
+                timer_standby = timer_rep * 1000;
+            }
+
+            if (FuncsGSMStateAsk() < gsm_state_ready)
+            {
+                main_state = main_wait_for_gsm_network;
+                ChangeLed(LED_STANDBY);
+            }
+
+            if (timer_rep_change)
+            {
+                unsigned char saved_ok = 0;
+                timer_rep_change_reset;
+
+                __disable_irq();
+                saved_ok = WriteConfigurations();
+                __enable_irq();                
+#ifdef DEBUG_ON
+                if (saved_ok)
+                    Usart2Send("Memory Saved OK!\n");
+                else
+                    Usart2Send("Memory Error!!!\n");
+#endif
+            }
             break;
 
+        case main_enable_output:
+            if (!timer_standby)
+            {
+                main_state = main_ready;
+                RELAY_OFF;
+                ChangeLed(LED_GSM_NETWORK);
+            }
+
+            if (timer_rep_change)
+            {
+                unsigned char saved_ok = 0;
+                timer_rep_change_reset;
+                __disable_irq();
+                saved_ok = WriteConfigurations();
+                __enable_irq();                
+#ifdef DEBUG_ON
+                if (saved_ok)
+                    Usart2Send("Memory Saved OK!\n");
+                else
+                    Usart2Send("Memory Error!!!\n");
+#endif                
+            }            
+            break;
+            
         // case LAMP_OFF:
         //     Usart2Send("PRENDIDO\r\n");
         //     FuncsGSMSendSMS("PRENDIDO", mem_conf.num_reportar);
@@ -269,6 +290,7 @@ int main(void)
         }
 
         //Cosas que no dependen del estado del programa
+        UpdateLed();
         // UpdateRelay ();
         // UpdatePhotoTransistor();
         FuncsGSM();
@@ -364,6 +386,9 @@ void TimingDelay_Decrement(void)
     if (usart2_mini_timeout)
         usart2_mini_timeout--;
 
+    if (timer_led)
+        timer_led--;
+    
     GSMTimeoutCounters ();
 }
 

@@ -43,12 +43,6 @@ volatile unsigned char * prx2;
 volatile unsigned char tx2buff[SIZEOF_DATA];
 volatile unsigned char rx2buff[SIZEOF_DATA];
 
-volatile unsigned char pckt_gps_ready = 0;
-volatile unsigned char usart_mode = USART_GPS_MODE;
-
-//Reception buffer.
-
-//Transmission buffer.
 
 //--- Private function prototypes ---//
 //--- Private functions ---//
@@ -110,19 +104,16 @@ void USART1_IRQHandler(void)
         dummy = USART1->RDR & 0x0FF;
 
         //RX del GSM
-        if ((usart_mode == USART_GPS_MODE) || (usart_mode == USART_GSM_MODE))
+        if (prx1 < &rx1buff[SIZEOF_DATA])
         {
-            if (prx1 < &rx1buff[SIZEOF_DATA])
-            {
-                *prx1 = dummy;
-                prx1++;
-                usart1_have_data = 1;
-            }
-            else
-                prx1 = rx1buff;    //soluciona problema bloqueo con garbage
-
-            usart1_mini_timeout = TT_GSM_MINI;
+            *prx1 = dummy;
+            prx1++;
+            usart1_have_data = 1;
         }
+        else
+            prx1 = rx1buff;    //soluciona problema bloqueo con garbage
+
+        usart1_mini_timeout = TT_GSM_MINI;
     }
 
     /* USART in mode Transmitter -------------------------------------------------*/

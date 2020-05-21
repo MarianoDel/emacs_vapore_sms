@@ -21,16 +21,7 @@
 //OJO --- los dos que siguen van juntos
 #define USE_GSM
 #define USE_REDONDA_BASIC
-//OJO --- los dos que siguen van juntos
-// #define USE_GSM
-// #define USE_ONLY_POWER_SENSE
-
-
-//#define WIFI_TO_MQTT_BROKER
-//#define USE_CERT_PROGRAM
-//#define USE_PROD_PROGRAM
 #define DEBUG_ON
-#define DEBUG_MEAS_ON
 
 
 //-------- End Of Defines For Configuration ------
@@ -97,12 +88,23 @@
 //GPIOB pin7	usart1 tx rx (para el GPS)
 
 
+
+// Exported Constants  ---------------------------------------------------------
+//Estados Externos de LED BLINKING
+#define LED_NO_BLINKING               0
+#define LED_STANDBY                   1
+#define LED_GSM_NETWORK               2
+#define LED_ENABLE_OUTPUT             3
+#define LED_LOW_VOLTAGE               4
+
+
 // Exported Types --------------------------------------------------------------
 typedef enum
 {
     main_init = 0,
     main_wait_for_gsm_network,
-    main_ready
+    main_ready,
+    main_enable_output
 
 } main_state_t;
 
@@ -125,7 +127,13 @@ typedef enum {
 } resp_t;
 
 
+//--- Stringtify Utils -----------------------
+#define str_macro(s) #s
+
+
 // Module Exported Functions ---------------------------------------------------
-void HARD_Initial_Setup (void);
+void ChangeLed (unsigned char);
+void UpdateLed (void);
+void WelcomeCodeFeatures (char *);
 
 #endif /* HARD_H_ */

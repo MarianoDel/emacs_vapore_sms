@@ -407,6 +407,7 @@ void FuncsGSMGetSMSPayloadCallback (char * payload)
             Usart2Send(debug);
 #endif
             timer_rep = index;
+            timer_rep_change_set;
             send_sms_ok_set;
         }
     }

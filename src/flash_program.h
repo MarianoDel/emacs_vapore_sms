@@ -42,13 +42,18 @@ typedef struct parameters {
 } parameters_typedef;
 
 
-#define timer_rep				mem_conf.timer_reportar
-#define timer_debug			mem_conf.timer_pruebas
-#define num_tel_rep			mem_conf.num_reportar
+#define timer_rep		(mem_conf.timer_reportar)
+#define timer_rep_change	(mem_conf.send_energy_flag & 0x40)
+#define timer_rep_change_set	(mem_conf.send_energy_flag |= 0x40)
+#define timer_rep_change_reset	(mem_conf.send_energy_flag &= 0xBF)
+
+#define timer_debug			(mem_conf.timer_pruebas)
+#define num_tel_rep			(mem_conf.num_reportar)
 
 #define send_energy			(mem_conf.send_energy_flag & 0x01)
 #define send_energy_set		(mem_conf.send_energy_flag |= 0x01)
 #define send_energy_reset	(mem_conf.send_energy_flag &= 0xFE)
+
 #define send_sms_ok			(mem_conf.send_energy_flag & 0x02)
 #define send_sms_ok_set		(mem_conf.send_energy_flag |= 0x02)
 #define send_sms_ok_reset	(mem_conf.send_energy_flag &= 0xFD)
@@ -56,6 +61,7 @@ typedef struct parameters {
 #define diag_prender			(mem_conf.send_energy_flag & 0x10)
 #define diag_prender_set		(mem_conf.send_energy_flag |= 0x10)
 #define diag_prender_reset	(mem_conf.send_energy_flag &= 0xEF)
+
 #define diag_apagar			(mem_conf.send_energy_flag & 0x20)
 #define diag_apagar_set		(mem_conf.send_energy_flag |= 0x20)
 #define diag_apagar_reset	(mem_conf.send_energy_flag &= 0xDF)

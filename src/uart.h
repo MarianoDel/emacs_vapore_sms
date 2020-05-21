@@ -29,14 +29,9 @@
 #define USARTx_RX_DISA	USARTx->CR1 &= 0xfffffffb
 #define USARTx_RX_ENA	USARTx->CR1 |= 0x04
 
-//--- Modos de funcionamiento del USART1
-#define USART_GPS_MODE		1
-#define USART_GSM_MODE		2
-#define USART_ASK_MODE		0
-
 #define TT_GSM_MINI		5
 
-#define SIZEOF_DATA 128
+#define SIZEOF_DATA 256
 // #define SIZEOF_TXDATA 128
 
 //--- Exported functions ---//
