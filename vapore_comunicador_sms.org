@@ -1,0 +1,13 @@
+* Comunicador Vapore SMS - base kirno_redonda
+** Funcionamiento
+   - recibe SMS y prende una salida de 12V durante 2 segundos
+
+** Respecto de kirno_redonda le quito todo lo que no uso, paso a paso
+*** TODO Quito paho mqtt
+*** Quito modulo ESP8266
+*** Quito modulo adc y dma
+*** Quito modulo gps_vktel
+*** Quito modulo synchro
+*** Quito modulo tcp_transceiver
+*** Quito libs utils.h y constants.h
+
