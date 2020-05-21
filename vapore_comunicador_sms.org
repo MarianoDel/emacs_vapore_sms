@@ -11,6 +11,7 @@
 *** Quito modulo ESP8266
 *** Quito modulo adc y dma
     - No quito estos modulos, simplemente no llamo a estas funciones
+    - estos modulos en general son de uso comun a varios proyectos
 
 *** DONE Quito modulo gps_vktel
     CLOSED: [2020-05-21 Thu 13:53]

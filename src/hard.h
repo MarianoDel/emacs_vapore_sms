@@ -19,8 +19,6 @@
 #define VER_1_1		//mismo pinout que VER_1_0
 
 //-------- Type of Program ----------------
-// #define USE_GPS    //TODO: hay que mejorar la inclusion, redefine MAIN_INIT
-// #define USE_GSM_GATEWAY
 //OJO --- los dos que siguen van juntos
 #define USE_GSM
 #define USE_REDONDA_BASIC
