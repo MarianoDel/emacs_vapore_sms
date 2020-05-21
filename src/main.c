@@ -27,19 +27,6 @@
 #include "synchro.h"
 
 
-#include "tcp_transceiver.h"
-
-//Para MQTT
-#ifdef USE_GPS
-#include "MQTTPacket.h"
-#include "MQTTConnect.h"
-#endif
-
-//Para Hardware de GPS
-#ifdef USE_GPS
-#include "gps_vktel.h"
-#endif
-
 //Para Hardware de GSM
 #if (defined USE_GSM) || (defined USE_GSM_GATEWAY) || (defined USE_ONLY_POWER_SENSE)
 #include "sim900_800.h"

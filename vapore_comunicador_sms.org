@@ -14,6 +14,12 @@
 
 *** Quito modulo gps_vktel
 *** Quito modulo synchro
-*** Quito modulo tcp_transceiver
-*** Quito libs utils.h y constants.h
+*** DONE Quito modulo tcp_transceiver
+    CLOSED: [2020-05-21 Thu 13:47]
+    - quito archivos
+    - quito include del main
+    - quito source en el Makefile
+
+*** DONE Quito libs utils.h y constants.h
+    CLOSED: [2020-05-21 Thu 13:44]
 
