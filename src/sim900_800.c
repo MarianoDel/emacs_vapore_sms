@@ -1593,6 +1593,7 @@ void GSMTimeoutCounters (void)
 }
 
 
+char last_num [20] = { '\0' };
 void GSMReceivSMS (void)
 {
     unsigned char i, j, colon_index;
@@ -1614,13 +1615,25 @@ void GSMReceivSMS (void)
             {
                 if (!strncmp((char *)&GSMbuffRtaCommand[0], (const char *)"+CMGR:", sizeof("+CMGR:") - 1))
                 {
+                    unsigned char num_start = 0;
+                    unsigned char num_end = 0;
+
+                    memset(last_num, '\0', sizeof(last_num));
+                    
                     //mensajes al modulo
+                    //+CMGR: "REC UNREAD","+5491145376762","","20/05/21,20:25:22-12"PRENDER:OK 
                     colon_index = 0;
                     for (j = 0; j < 222; j++)		//222 	160bytes para SMS + 62 bytes header
                     {
                         if (GSMbuffRtaCommand[j] == '"')
                         {
                             colon_index++;
+                            if (colon_index == 3)
+                                num_start = j + 1;
+
+                            if (colon_index == 4)
+                                num_end = j;
+                            
                             if (colon_index == 8)
                             {
                                 pToAnswer = (char *) &GSMbuffRtaCommand [j+1];
@@ -1628,12 +1641,19 @@ void GSMReceivSMS (void)
                             }
                         }
                     }
-
-                    //fin del for, en pToAnswer debo tener la respuesta (payload del SMS)
+                    
+                    //fin del for
+                    // copio el numero de origen del mensaje
+                    strncpy(last_num, &GSMbuffRtaCommand[num_start], num_end - num_start);
+                    Usart2Send("el numero origen: ");
+                    Usart2Send(last_num);
+                    Usart2Send("\n");                    
+                    
+                    //en pToAnswer debo tener la respuesta (payload del SMS)
                     if (colon_index == 8)
                     {
                         //Son todos payloads correctos REVISO RESPUESTAS
-                        FuncsGSMGetSMSPayloadCallback(pToAnswer);
+                        FuncsGSMGetSMSPayloadCallback(last_num, pToAnswer);
                     }
 
                     //me fijo si tengo mas SMS

@@ -119,7 +119,7 @@ unsigned short power_vect [SIZEOF_POWER_VECT];
 
 // Module Private Functions ----------------------------------------------------
 void TimingDelay_Decrement(void);
-
+void ConfigurationChange (void);
 
 
 //-------------------------------------------//
@@ -184,11 +184,11 @@ int main(void)
         mem_conf.acumm_wh = 0;
         mem_conf.acumm_w2s = 0;
         mem_conf.acumm_w2s_index = 0;
-        mem_conf.timer_reportar = 2;
-        mem_conf.timer_pruebas = 10;
+        timer_rep = 2;
+        envios_ok = 0;
+        memset(num_tel_rep, '\0', sizeof(num_tel_rep));
         //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
-
-        strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
+        // strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
     
 #ifdef DEBUG_ON
         Usart2Send("Memory Empty\n");
@@ -219,6 +219,7 @@ int main(void)
             diag_prender_reset;
             diag_apagar_reset;
             timer_rep_change_reset;
+            envios_ok_change_reset;
             break;
 
         case main_wait_for_gsm_network:
@@ -247,19 +248,15 @@ int main(void)
 
             if (timer_rep_change)
             {
-                unsigned char saved_ok = 0;
                 timer_rep_change_reset;
-
-                __disable_irq();
-                saved_ok = WriteConfigurations();
-                __enable_irq();                
-#ifdef DEBUG_ON
-                if (saved_ok)
-                    Usart2Send("Memory Saved OK!\n");
-                else
-                    Usart2Send("Memory Error!!!\n");
-#endif
+                ConfigurationChange();
             }
+            
+            if (envios_ok_change)
+            {
+                envios_ok_change_reset;
+                ConfigurationChange();
+            }                        
             break;
 
         case main_enable_output:
@@ -272,17 +269,14 @@ int main(void)
 
             if (timer_rep_change)
             {
-                unsigned char saved_ok = 0;
                 timer_rep_change_reset;
-                __disable_irq();
-                saved_ok = WriteConfigurations();
-                __enable_irq();                
-#ifdef DEBUG_ON
-                if (saved_ok)
-                    Usart2Send("Memory Saved OK!\n");
-                else
-                    Usart2Send("Memory Error!!!\n");
-#endif                
+                ConfigurationChange();
+            }            
+
+            if (envios_ok_change)
+            {
+                envios_ok_change_reset;
+                ConfigurationChange();
             }            
             break;
             
@@ -380,6 +374,20 @@ int main(void)
 
 //--- End of Main ---//
 
+void ConfigurationChange (void)
+{
+    unsigned char saved_ok = 0;
+
+    __disable_irq();
+    saved_ok = WriteConfigurations();
+    __enable_irq();                
+#ifdef DEBUG_ON
+    if (saved_ok)
+        Usart2Send("Memory Saved OK!\n");
+    else
+        Usart2Send("Memory Error!!!\n");
+#endif
+}
 
 void TimingDelay_Decrement(void)
 {

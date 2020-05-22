@@ -57,6 +57,11 @@ typedef enum {
 
 } t_RespGsm;
 
+typedef struct {
+    char orig_num [22];
+    char payload [160];
+} sms_t;
+
 // Exported Constants ----------------------------------------------------------
 //FLAGS de string del gsm
 #define GSM_RESET_FLAG		0x8000
@@ -79,7 +84,7 @@ void FuncsGSMMessageFlags (unsigned short);
 unsigned short FuncsGSMMessageFlagsAsk (void);
 unsigned char FuncsGSMCommandAnswer (char * , char * );
 void FuncsGSMParser (unsigned char *, unsigned char *);
-void FuncsGSMGetSMSPayloadCallback (char *);
+void FuncsGSMGetSMSPayloadCallback (char *, char *);
 
 #endif
 //--- end of file ---//

@@ -49,3 +49,12 @@
 ** Renombrar pines hard.h
 
 ** Dejar uart1 siempre conectado al GSM
+
+** Tiene una forma de manejo medio fea con los SMS
+   - en vez de leerlos de a uno y contestar con origin number y payload
+     lee todos juntos y va cargando flags, entonces con varios mensajes 
+     no se conoce el origin
+
+   - cuando mando un ok sale desde la mitad de la pila de lectura SMS
+
+

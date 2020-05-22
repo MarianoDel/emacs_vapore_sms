@@ -31,7 +31,7 @@ typedef struct parameters {
     unsigned short acumm_w2s_index;	//74
 
     unsigned char timer_reportar;		//75
-    unsigned char timer_pruebas;			//76
+    unsigned char envios_ok;			//76
 
     unsigned char send_energy_flag;	//77
     //dummys para completar
@@ -47,7 +47,11 @@ typedef struct parameters {
 #define timer_rep_change_set	(mem_conf.send_energy_flag |= 0x40)
 #define timer_rep_change_reset	(mem_conf.send_energy_flag &= 0xBF)
 
-#define timer_debug			(mem_conf.timer_pruebas)
+#define envios_ok		(mem_conf.envios_ok)
+#define envios_ok_change	(mem_conf.send_energy_flag & 0x80)
+#define envios_ok_change_set	(mem_conf.send_energy_flag |= 0x80)
+#define envios_ok_change_reset	(mem_conf.send_energy_flag &= 0x7F)
+
 #define num_tel_rep			(mem_conf.num_reportar)
 
 #define send_energy			(mem_conf.send_energy_flag & 0x01)
