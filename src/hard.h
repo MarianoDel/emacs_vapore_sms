@@ -20,8 +20,9 @@
 //-------- Type of Program ----------------
 //OJO --- los dos que siguen van juntos
 #define USE_GSM
-#define USE_REDONDA_BASIC
 #define DEBUG_ON
+// #define USE_REDONDA_BASIC
+#define USE_GSM_GATEWAY
 
 
 //-------- End Of Defines For Configuration ------

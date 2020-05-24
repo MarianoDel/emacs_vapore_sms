@@ -48,7 +48,8 @@
 
 ** Renombrar pines hard.h
 
-** Dejar uart1 siempre conectado al GSM
+** DONE Dejar uart1 siempre conectado al GSM
+   CLOSED: [2020-05-24 Sun 11:12]
 
 ** Tiene una forma de manejo medio fea con los SMS
    - en vez de leerlos de a uno y contestar con origin number y payload
@@ -57,4 +58,20 @@
 
    - cuando mando un ok sale desde la mitad de la pila de lectura SMS
 
+** Si el gsm esta prendido y se resetea el micro (programcion)
+   - en vez de prender apaga el modulo NORMAL POWER DOWN
 
+* GSM Gateway
+** Comandos
+   - Los envio todos con CTRL+J desde minicom
+   ATE0    # elimina el echo
+   
+   AT+CSQ    # muestra RSSI, BER
+
+   AT+COPS?    # muestra el operador de la res "CTI Movil"
+
+   AT+CREG?    # +CREG: 0,1    1 home network
+
+   AT+GSN    # contesta el IMEI que identifica el celular
+
+   AT+CIMI    # contesta el IMSI que identifica a la SIM

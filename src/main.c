@@ -327,6 +327,7 @@ int main(void)
     Usart2Send("Reset y Start GSM\r\n");
     //GPSStartResetSM ();
     timer_standby = 60000;		//doy 1 minuto para prender modulo
+    unsigned char i = 0;
     while (timer_standby)
     {
         i = GSM_Start();
@@ -361,10 +362,6 @@ int main(void)
             Usart2SendUnsigned((unsigned char *) buffUARTGSMrx2, gsm_pckt_bytes);
         }
 
-        if (LIGHT)
-            LED_ON;
-        else
-            LED_OFF;
     }
 #endif
 //---------- Fin Prueba con GSM GATEWAY --------//

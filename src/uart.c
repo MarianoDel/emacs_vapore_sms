@@ -151,10 +151,12 @@ void USART2_IRQHandler(void)
     {
         dummy = USART2->RDR & 0x0FF;
 
-        if (prx2 < &rx2buff[SIZEOF_DATA])
-        {
-            if ((dummy == '\n') || (dummy == '\r') || (dummy == 26))		//26 es CTRL-Z
+        if (prx2 < (&rx2buff[SIZEOF_DATA] - 1))
+        {            
+            if ((dummy == '\n') || (dummy == 26))    //CTRL+J ("\r\n"); CTRL-Z (26)
             {
+                *prx2 = dummy;
+                prx2++;
                 *prx2 = '\0';
                 usart2_have_data = 1;
             }
