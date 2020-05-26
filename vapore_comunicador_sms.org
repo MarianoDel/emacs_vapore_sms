@@ -61,6 +61,11 @@
 ** Si el gsm esta prendido y se resetea el micro (programcion)
    - en vez de prender apaga el modulo NORMAL POWER DOWN
 
+** A veces quedan como trabados los SMS y luego aparecen todos juntos
+   - no se si es el micro q no dio bola (NO CREO)
+   - el SIM800 que no aviso y se lo podría interrogar cada 10segs
+   - o es la red que no se los habia enviado al SIM800 y luego le manda todo junto
+
 * GSM Gateway
 ** Comandos
    - Los envio todos con CTRL+J desde minicom
@@ -68,10 +73,13 @@
    
    AT+CSQ    # muestra RSSI, BER
 
-   AT+COPS?    # muestra el operador de la res "CTI Movil"
+   AT+COPS?    # muestra el operador de la red "CTI Movil"
 
    AT+CREG?    # +CREG: 0,1    1 home network
 
    AT+GSN    # contesta el IMEI que identifica el celular
 
    AT+CIMI    # contesta el IMSI que identifica a la SIM
+
+   # PIN y PUK son codigos de bloqueos para llamadas desde la SIM
+
