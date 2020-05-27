@@ -227,6 +227,7 @@ void FuncsGSM (void)
         break;
 
     case gsm_state_dell_all:
+        //TODO: Realmente tengo que borrar todos los mensajes cuando arranco???
         resp = GSMSendCommand ("AT+CMGDA=\"DEL ALL\"\r\n", 25000, 0, &s_msg[0]);
 
         if (resp == 2)
@@ -291,10 +292,18 @@ void FuncsGSM (void)
             enviar_sms = 0;
             FuncsGSMSendSMS (enviar_sms_msg, enviar_sms_num);
         }
+        else if (SMSLeft())    //si tengo algun mensaje paso a leerlo
+            gsm_state = gsm_state_reading_sms;
+
         break;
 
     case gsm_state_reading_sms:
         //TODO: poner aca timeout???
+        resp = GSMReceivSMS();
+
+        if (resp == resp_gsm_ok)
+            gsm_state = gsm_state_ready;
+
         break;
 
     case gsm_state_sending_sms:
@@ -305,12 +314,18 @@ void FuncsGSM (void)
             if (gsm_sms_error_counter)
                 gsm_sms_error_counter--;
 
+#ifdef DEBUG_ON
+            Usart2Send("end send sms ok\n");
+#endif
             gsm_state = gsm_state_ready;
         }
 
         if ((resp == resp_gsm_error) || (resp == resp_gsm_timeout))
         {
             gsm_sms_error_counter++;
+#ifdef DEBUG_ON
+            Usart2Send("end send sms with errors\n");
+#endif            
             gsm_state = gsm_state_ready;
         }
         break;
@@ -366,15 +381,6 @@ void FuncsGSM (void)
     GSMProcess ();		//lee bytes del puerto serie y avisa con flag la terminacion del msj
     GSMReceive ();		//usa el flag para analizar las respuestas
 
-    if ((gsm_state == gsm_state_ready) || (gsm_state == gsm_state_reading_sms))	//me fijo si tengo SMS para leer
-    {
-        GSMReceivSMS ();
-
-        if (SMSLeft())
-            gsm_state = gsm_state_reading_sms;
-        else
-            gsm_state = gsm_state_ready;
-    }
 }
 
 

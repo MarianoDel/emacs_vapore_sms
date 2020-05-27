@@ -66,6 +66,10 @@
    - el SIM800 que no aviso y se lo podría interrogar cada 10segs
    - o es la red que no se los habia enviado al SIM800 y luego le manda todo junto
 
+** Si llega un +CMTI mientras lee SMS, puede confundir el valor de GSMCantSMS
+   - no lo vi pasar nunca pero podria!!!
+
+
 * GSM Gateway
 ** Comandos
    - Los envio todos con CTRL+J desde minicom

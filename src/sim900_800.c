@@ -119,8 +119,6 @@ unsigned char prestadorSimTime = 250;
 
 //Recepcion de SMS.
 unsigned char GSMCantSMS = 0;
-// unsigned char GSMCantSMS2 = 0;
-unsigned char GSMnumSMS = 1;
 char GSMReadSMSState = 0;
 char GSMReadSMScommand[32];
 char GSMReadSMSrepIn[32];
@@ -1001,6 +999,9 @@ char GSMSendSMS (char *ptrMSG, char *ptrNUM, unsigned short timeOut)
         strcat(&GSMSendSMSbuffAux[0], ptrNUM);
         strcat(&GSMSendSMSbuffAux[0], "\"\r\n");
         GSMSendSMSState = 1;
+#ifdef DEBUG_ON
+        Usart2Send("send sms\n");
+#endif        
         break;
 
     case 1:
@@ -1594,101 +1595,117 @@ void GSMTimeoutCounters (void)
 
 
 char last_num [20] = { '\0' };
-void GSMReceivSMS (void)
+t_RespGsm GSMReceivSMS (void)
 {
+    t_RespGsm resp = resp_gsm_continue;
     unsigned char i, j, colon_index;
     char * pToAnswer;
+    char s_debug [20] = { 0 };
 
-    if (GSMCantSMS)	//me avisan que hay un SMS para leer, este es el index
+    switch(GSMReadSMSState)
     {
-        switch(GSMReadSMSState)
+    case 0:
+        if (GSMCantSMS)    //avanzo solo si tengo algo que leer
         {
-        case 0:
             sprintf(&GSMReadSMScommand[0], (const char *)"AT+CMGR=%d\r\n", GSMCantSMS);
+#ifdef DEBUG_ON
+            Usart2Send("receiv sms\n");
+#endif
             GSMReadSMSState++;
-            break;
+        }
+        break;
 
-        case 1:
-            i = GSMSendCommand (&GSMReadSMScommand[0], 6000, 1, &GSMbuffRtaCommand[0]);
+    case 1:
+        i = GSMSendCommand (&GSMReadSMScommand[0], 6000, 1, &GSMbuffRtaCommand[0]);
 
-            if (i == 2)
+        if (i == 2)
+        {
+            if (!strncmp((char *)&GSMbuffRtaCommand[0], (const char *)"+CMGR:", sizeof("+CMGR:") - 1))
             {
-                if (!strncmp((char *)&GSMbuffRtaCommand[0], (const char *)"+CMGR:", sizeof("+CMGR:") - 1))
-                {
-                    unsigned char num_start = 0;
-                    unsigned char num_end = 0;
+                unsigned char num_start = 0;
+                unsigned char num_end = 0;
 
-                    memset(last_num, '\0', sizeof(last_num));
+                memset(last_num, '\0', sizeof(last_num));
                     
-                    //mensajes al modulo
-                    //+CMGR: "REC UNREAD","+5491145376762","","20/05/21,20:25:22-12"PRENDER:OK 
-                    colon_index = 0;
-                    for (j = 0; j < 222; j++)		//222 	160bytes para SMS + 62 bytes header
+                //mensajes al modulo
+                //+CMGR: "REC UNREAD","+5491145376762","","20/05/21,20:25:22-12"PRENDER:OK 
+                colon_index = 0;
+                for (j = 0; j < 222; j++)		//222 	160bytes para SMS + 62 bytes header
+                {
+                    if (GSMbuffRtaCommand[j] == '"')
                     {
-                        if (GSMbuffRtaCommand[j] == '"')
-                        {
-                            colon_index++;
-                            if (colon_index == 3)
-                                num_start = j + 1;
+                        colon_index++;
+                        if (colon_index == 3)
+                            num_start = j + 1;
 
-                            if (colon_index == 4)
-                                num_end = j;
+                        if (colon_index == 4)
+                            num_end = j;
                             
-                            if (colon_index == 8)
-                            {
-                                pToAnswer = (char *) &GSMbuffRtaCommand [j+1];
-                                j = 222;
-                            }
+                        if (colon_index == 8)
+                        {
+                            pToAnswer = (char *) &GSMbuffRtaCommand [j+1];
+                            j = 222;
                         }
                     }
-                    
-                    //fin del for
-                    // copio el numero de origen del mensaje
-                    strncpy(last_num, &GSMbuffRtaCommand[num_start], num_end - num_start);
-                    Usart2Send("el numero origen: ");
-                    Usart2Send(last_num);
-                    Usart2Send("\n");                    
-                    
-                    //en pToAnswer debo tener la respuesta (payload del SMS)
-                    if (colon_index == 8)
-                    {
-                        //Son todos payloads correctos REVISO RESPUESTAS
-                        FuncsGSMGetSMSPayloadCallback(last_num, pToAnswer);
-                    }
-
-                    //me fijo si tengo mas SMS
-                    if (GSMCantSMS > 1)
-                    {
-                        GSMReadSMSState = 0;
-                        GSMCantSMS--;
-                    }
-                    else
-                        GSMReadSMSState++;
                 }
+                    
+                //fin del for
+                // copio el numero de origen del mensaje
+                strncpy(last_num, &GSMbuffRtaCommand[num_start], num_end - num_start);
+                Usart2Send("el numero origen: ");
+                Usart2Send(last_num);
+                Usart2Send("\n");                    
+                    
+                //en pToAnswer debo tener la respuesta (payload del SMS)
+                if (colon_index == 8)
+                {
+                    //Son todos payloads correctos REVISO RESPUESTAS
+                    FuncsGSMGetSMSPayloadCallback(last_num, pToAnswer);
+                }
+
+                //me fijo si tengo mas SMS, quito el index de la lista
+                // y paso a borrar los leidos
+                GSMCantSMS--;
+                GSMReadSMSState++;
             }
-
-            if (i > 2)
-                GSMReadSMSState = 0;
-
-            break;
-
-        case 2:
-            i = GSMSendCommand ("AT+CMGDA=\"DEL READ\"\r\n", 25000, 0, &GSMbuffRtaCommand[0]);
-
-            //modificacion 19-12-17, si no logre borrar igual dejo vacios sms
-            //ademas uso GSMCantSMS como flag para seguir trabajando
-            if (i != 1)
-            {
-                GSMReadSMSState = 0;
-                GSMCantSMS = 0;
-            }
-            break;
-
-        default:
-            GSMReadSMSState = 0;
-            break;
         }
+
+        if (i > 2)
+            GSMReadSMSState = 0;
+
+        break;
+
+    case 2:
+        if (GSM_Delay(200))
+            GSMReadSMSState++;
+
+        break;
+            
+    case 3:
+        i = GSMSendCommand ("AT+CMGDA=\"DEL READ\"\r\n", 25000, 0, &GSMbuffRtaCommand[0]);
+
+        //modificacion 19-12-17, si no logre borrar igual dejo vacios sms
+        //ademas uso GSMCantSMS como flag para seguir trabajando
+        if (i != 1)
+        {
+#ifdef DEBUG_ON
+            sprintf(s_debug, "%d", i);
+            Usart2Send("del read answer: ");
+            Usart2Send(s_debug);
+            Usart2Send("\n");
+#endif
+                
+            GSMReadSMSState = 0;
+            resp = resp_gsm_ok;
+        }
+        break;
+
+    default:
+        GSMReadSMSState = 0;
+        break;
     }
+
+    return resp;
 }
 
 //---------------------------------------------------------//
