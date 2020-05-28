@@ -87,3 +87,9 @@
 
    # PIN y PUK son codigos de bloqueos para llamadas desde la SIM
 
+   AT+CMGL    # da la lista de mensajes desde la memoria
+
+   AT+CMGL,"REC UNREAD",1    #lista de mensajes no leidos, no cambia el estado
+
+
+
