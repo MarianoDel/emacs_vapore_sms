@@ -622,16 +622,35 @@ void GSMReceive (void)
         {
             if (GSMSendCommandFlag == 3)	//no espera respuesta
             {
-                if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)&GSM_SENDOK[0], strlen((const char *)&GSM_SENDOK[0])))
-                    GSMSendCommandFlag = 4;
-                if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"> ", (sizeof("> ") - 1)))
-                    GSMSendCommandFlag = 4;
-                if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"ATOK", (sizeof("ATOK") - 1)))
-                    GSMSendCommandFlag = 4;
-                if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"ATE0OK", (sizeof("ATE0OK") - 1)))
-                    GSMSendCommandFlag = 4;
-                if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"OK", (sizeof("OK") - 1)))
-                    GSMSendCommandFlag = 4;
+                //reviso si existe un OK en el string
+                for (unsigned short i = 0; i < (buffUARTGSMrx_dimension - 2); i++)
+                {
+                    if ((*(buffUARTGSMrx2 + i) != '\0') &&
+                        (*(buffUARTGSMrx2 + i + 1) != '\0'))
+                    {
+                        if ((*(buffUARTGSMrx2 + i) == 'O') &&
+                            (*(buffUARTGSMrx2 + i + 1) == 'K'))
+                        {
+                            GSMSendCommandFlag = 4;
+                            break;
+                        }
+                    }
+                    else
+                        break;
+                    
+                }
+
+                if (GSMSendCommandFlag != 4)    //todavía no vi el OK??, sera otra cosa?
+                {
+                    if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"> ", (sizeof("> ") - 1)))
+                        GSMSendCommandFlag = 4;                    
+                }
+                // if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"ATOK", (sizeof("ATOK") - 1)))
+                //     GSMSendCommandFlag = 4;
+                // if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"ATE0OK", (sizeof("ATE0OK") - 1)))
+                //     GSMSendCommandFlag = 4;
+                // if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"OK", (sizeof("OK") - 1)))
+                //     GSMSendCommandFlag = 4;
             }
 
             if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *) "ERROR", (sizeof("ERROR") - 1)))
@@ -703,6 +722,11 @@ void GSMReceive (void)
             GSMCantSMS = buffUARTGSMrx2[12] - 48;
         }
 
+        if (!strncmp((char *)&buffUARTGSMrx2[0], "RING", sizeof ("RING") -1))
+        {
+            diag_ringing_set;
+        }
+        
         if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"CLOSED", strlen((const char *)"CLOSED")))
         {
             flagCloseIP = 1;

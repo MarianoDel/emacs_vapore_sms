@@ -19,6 +19,9 @@
 
 // Externals -------------------------------------------------------------------
 extern parameters_typedef mem_conf;
+extern unsigned char register_status;
+extern unsigned char rssi_level;
+
 
 // Globals ---------------------------------------------------------------------
 t_GsmState gsm_state = gsm_state_reset;
@@ -37,6 +40,9 @@ unsigned short GSMFlags = 0;
 unsigned char enviar_sms = 0;
 char enviar_sms_num [20] = { '\0' };
 char enviar_sms_msg [160] = { '\0' };
+
+// Timeout Timer
+volatile unsigned short funcs_gsm_timeout_timer = 0;
 
 // Constants -------------------------------------------------------------------
 // #define MAX_STARTUP_ERRORS		5		//a veces tarda mas en registrar
@@ -294,9 +300,76 @@ void FuncsGSM (void)
         }
         else if (SMSLeft())    //si tengo algun mensaje paso a leerlo
             gsm_state = gsm_state_reading_sms;
+        
+        else if (!funcs_gsm_timeout_timer)
+            gsm_state = gsm_state_check_rssi;
 
         break;
 
+    case gsm_state_check_rssi:
+        resp = GSMSendCommand ("AT+CSQ\r\n", 2000, 1, &s_msg[0]);
+
+        if (resp == 2)
+        {
+            // Usart2Send("csq\n");
+            // Usart2Send(s_msg);
+            
+            if (!strncmp(s_msg, "+CSQ: ", sizeof("+CSQ: ") - 1))
+            {
+                char * p_colon;
+                
+                p_colon = s_msg + (sizeof("+CSQ: ") - 1);
+
+                if (*(p_colon + 1) == ',')
+                {
+                    rssi_level = *p_colon - '0';
+                }
+                else if (*(p_colon + 2) == ',')
+                {
+                    rssi_level = (*p_colon - '0') * 10 + (*(p_colon + 1) - '0');
+                }
+
+                char s_ser [20] = { 0 };
+                sprintf(s_ser, "RSSI: %d\n", rssi_level);
+                Usart2Send(s_ser);
+            }
+            
+            gsm_state = gsm_state_check_network;
+        }
+        else if (resp > 2)
+            gsm_state = gsm_state_check_network;
+
+        break;
+
+    case gsm_state_check_network:
+        resp = GSMSendCommand ("AT+CREG?\r\n", 2000, 1, &s_msg[0]);
+
+        if (resp == 2)
+        {
+            if (!strncmp(s_msg, "+CREG: ", sizeof("+CREG: ") - 1))
+            {
+                char * p_colon;
+                
+                p_colon = s_msg + (sizeof("+CREG: ") - 1);
+
+                if (*(p_colon + 1) == ',')
+                    register_status = *(p_colon + 2) - '0';
+
+                char s_ser [20] = { 0 };
+                sprintf(s_ser, "REG: %d\n", register_status);
+                Usart2Send(s_ser);
+            }
+
+            gsm_state = gsm_state_ready;
+            funcs_gsm_timeout_timer = 20000;
+        }
+        else if (resp > 2)
+        {
+            gsm_state = gsm_state_ready;
+            funcs_gsm_timeout_timer = 20000;
+        }        
+        break;
+        
     case gsm_state_reading_sms:
         //TODO: poner aca timeout???
         resp = GSMReceivSMS();
@@ -389,7 +462,8 @@ void FuncsGSM (void)
 void FuncsGSMGetSMSPayloadCallback (char * orig_num, char * payload)
 {
     unsigned char index = 0;
-    
+
+    // Configurations
     if (!strncmp(payload, "REPORTAR_OK:1", sizeof ("REPORTAR_OK:1") -1))
     {
         envios_ok = 1;
@@ -405,6 +479,32 @@ void FuncsGSMGetSMSPayloadCallback (char * orig_num, char * payload)
         envios_ok = 0;
         envios_ok_change_set;
     }
+
+    if (!strncmp(payload, "PRENDER_RING:0", sizeof ("PRENDER_RING:0") -1))
+    {
+        prender_ring = 0;
+        prender_ring_change_set;
+
+        if (envios_ok)
+        {
+            enviar_sms = 1;
+            strcpy(enviar_sms_num, orig_num);
+            strcpy(enviar_sms_msg, "OK");
+        }
+    }
+
+    if (!strncmp(payload, "PRENDER_RING:1", sizeof ("PRENDER_RING:1") -1))
+    {
+        prender_ring = 1;
+        prender_ring_change_set;
+
+        if (envios_ok)
+        {
+            enviar_sms = 1;
+            strcpy(enviar_sms_num, orig_num);
+            strcpy(enviar_sms_msg, "OK");
+        }        
+    }
     
     if (!strncmp(payload, (const char *)"TIMER:", sizeof ("TIMER:") -1))
     {
@@ -415,7 +515,6 @@ void FuncsGSMGetSMSPayloadCallback (char * orig_num, char * payload)
         if ((*(payload + 6) == 'F') && (*(payload + 7) == 'F'))
         {
             timer_rep = 0;
-            send_sms_ok_set;
         }
         else if ((index > 1) && (index <= 60))
         {
@@ -426,7 +525,6 @@ void FuncsGSMGetSMSPayloadCallback (char * orig_num, char * payload)
 #endif
             timer_rep = index;
             timer_rep_change_set;
-            send_sms_ok_set;
         }
 
         if (envios_ok)
@@ -569,6 +667,15 @@ void FuncsGSMParser (unsigned char * orig, unsigned char * dest)
     }
 
     *dest = '\0';
+}
+
+
+void FuncsGSMTimeoutCounters (void)
+{
+    
+    if (funcs_gsm_timeout_timer)
+        funcs_gsm_timeout_timer--;
+    
 }
 
 //--- end of file ---//

@@ -35,40 +35,50 @@ typedef struct parameters {
 
     unsigned char send_energy_flag;	//77
     //dummys para completar
-    unsigned char dummy1;			//78
-    unsigned char dummy2;			//79
-    unsigned char dummy3;			//80
+    unsigned char prender_ring;			//78
+    unsigned char dummy1;			//79
+    unsigned char dummy2;			//80
 
 } parameters_typedef;
 
+// Configuration Change
+#define envios_ok		(mem_conf.envios_ok)
+#define envios_ok_change	(mem_conf.send_energy_flag & 0x80)
+#define envios_ok_change_set	(mem_conf.send_energy_flag |= 0x80)
+#define envios_ok_change_reset	(mem_conf.send_energy_flag &= 0x7F)
 
 #define timer_rep		(mem_conf.timer_reportar)
 #define timer_rep_change	(mem_conf.send_energy_flag & 0x40)
 #define timer_rep_change_set	(mem_conf.send_energy_flag |= 0x40)
 #define timer_rep_change_reset	(mem_conf.send_energy_flag &= 0xBF)
 
-#define envios_ok		(mem_conf.envios_ok)
-#define envios_ok_change	(mem_conf.send_energy_flag & 0x80)
-#define envios_ok_change_set	(mem_conf.send_energy_flag |= 0x80)
-#define envios_ok_change_reset	(mem_conf.send_energy_flag &= 0x7F)
+#define prender_ring		(mem_conf.prender_ring)
+#define prender_ring_change	(mem_conf.send_energy_flag & 0x20)
+#define prender_ring_change_set	(mem_conf.send_energy_flag |= 0x20)
+#define prender_ring_change_reset	(mem_conf.send_energy_flag &= 0xDF)
 
 #define num_tel_rep			(mem_conf.num_reportar)
 
-#define send_energy			(mem_conf.send_energy_flag & 0x01)
-#define send_energy_set		(mem_conf.send_energy_flag |= 0x01)
-#define send_energy_reset	(mem_conf.send_energy_flag &= 0xFE)
+// Flags
+#define diag_prender		(mem_conf.send_energy_flag & 0x08)
+#define diag_prender_set	(mem_conf.send_energy_flag |= 0x08)
+#define diag_prender_reset	(mem_conf.send_energy_flag &= 0xF7)
 
-#define send_sms_ok			(mem_conf.send_energy_flag & 0x02)
-#define send_sms_ok_set		(mem_conf.send_energy_flag |= 0x02)
-#define send_sms_ok_reset	(mem_conf.send_energy_flag &= 0xFD)
+#define diag_ringing		(mem_conf.send_energy_flag & 0x04)
+#define diag_ringing_set	(mem_conf.send_energy_flag |= 0x04)
+#define diag_ringing_reset	(mem_conf.send_energy_flag &= 0xFB)
 
-#define diag_prender			(mem_conf.send_energy_flag & 0x10)
-#define diag_prender_set		(mem_conf.send_energy_flag |= 0x10)
-#define diag_prender_reset	(mem_conf.send_energy_flag &= 0xEF)
+// #define send_energy		(mem_conf.send_energy_flag & 0x01)
+// #define send_energy_set		(mem_conf.send_energy_flag |= 0x01)
+// #define send_energy_reset	(mem_conf.send_energy_flag &= 0xFE)
 
-#define diag_apagar			(mem_conf.send_energy_flag & 0x20)
-#define diag_apagar_set		(mem_conf.send_energy_flag |= 0x20)
-#define diag_apagar_reset	(mem_conf.send_energy_flag &= 0xDF)
+// #define send_sms_ok		(mem_conf.send_energy_flag & 0x02)
+// #define send_sms_ok_set		(mem_conf.send_energy_flag |= 0x02)
+// #define send_sms_ok_reset	(mem_conf.send_energy_flag &= 0xFD)
+
+// #define diag_apagar		(mem_conf.send_energy_flag & 0x20)
+// #define diag_apagar_set		(mem_conf.send_energy_flag |= 0x20)
+// #define diag_apagar_reset	(mem_conf.send_energy_flag &= 0xDF)
 
 //- End of Data Struct to Backup -----------------------------------------------
 

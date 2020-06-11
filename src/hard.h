@@ -94,8 +94,8 @@
 //Estados Externos de LED BLINKING
 #define LED_NO_BLINKING               0
 #define LED_STANDBY                   1
-#define LED_GSM_NETWORK               2
-#define LED_ENABLE_OUTPUT             3
+#define LED_GSM_NETWORK_LOW_RSSI      2
+#define LED_GSM_NETWORK_HIGH_RSSI     3
 #define LED_LOW_VOLTAGE               4
 
 

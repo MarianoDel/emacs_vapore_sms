@@ -73,7 +73,12 @@ parameters_typedef mem_conf;
 // ------- Externals para el LED state --------
 volatile unsigned short timer_led;
 
-//--- VARIABLES GLOBALES ---//
+// --- Externals Funcs GSM
+unsigned char register_status = 0;
+unsigned char rssi_level = 0;
+
+
+// Globals ---------------------------------------------------------------------
 unsigned short show_power_index = 0;	//lo uso como timer sincronizado con la medicion, tick 2 secs.
 unsigned short show_power_index_debug = 0;
 
@@ -84,7 +89,8 @@ char gsmMSG [180];
 
 // ------- de los timers -------
 volatile unsigned short wait_ms_var = 0;
-volatile unsigned short timer_standby;
+volatile unsigned short timer_standby = 0;
+volatile unsigned short timer_prender_ringing = 0;
 volatile unsigned short tcp_kalive_timer;
 //volatile unsigned char display_timer;
 volatile unsigned char timer_meas;
@@ -120,6 +126,7 @@ unsigned short power_vect [SIZEOF_POWER_VECT];
 // Module Private Functions ----------------------------------------------------
 void TimingDelay_Decrement(void);
 void ConfigurationChange (void);
+void ConfigurationCheck (void);
 
 
 //-------------------------------------------//
@@ -180,12 +187,13 @@ int main(void)
     memcpy(&mem_conf, pmem, sizeof(parameters_typedef));
     if (mem_conf.acumm_wh == 0xFFFFFFFF)
     {
-        //memoria vacia
+        //memoria vacia --> Configuracion a Default
         mem_conf.acumm_wh = 0;
         mem_conf.acumm_w2s = 0;
         mem_conf.acumm_w2s_index = 0;
         timer_rep = 2;
         envios_ok = 0;
+        prender_ring = 0;
         memset(num_tel_rep, '\0', sizeof(num_tel_rep));
         //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
         // strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
@@ -203,6 +211,7 @@ int main(void)
 
 
 //--- Programa de Redonda Basic - Produccion ---
+    unsigned char led_rssi_high = 0;
 
     while (1)
     {
@@ -213,20 +222,21 @@ int main(void)
             RELAY_OFF;
             main_state = main_wait_for_gsm_network;
 
-            //reset de mensajes del gsm
-            send_energy_reset;
-            send_sms_ok_reset;
+            //reset de flags del gsm
             diag_prender_reset;
-            diag_apagar_reset;
-            timer_rep_change_reset;
+            diag_ringing_reset;
+
+            //reset de configuraciones del gsm
             envios_ok_change_reset;
+            timer_rep_change_reset;
+            prender_ring_change_reset;
             break;
 
         case main_wait_for_gsm_network:
             if (FuncsGSMStateAsk() >= gsm_state_ready)
             {
                 main_state = main_ready;
-                ChangeLed(LED_GSM_NETWORK);
+                ChangeLed(LED_GSM_NETWORK_LOW_RSSI);
             }
             break;
 
@@ -236,8 +246,20 @@ int main(void)
                 diag_prender_reset;
                 main_state = main_enable_output;
                 RELAY_ON;
-                ChangeLed(LED_ENABLE_OUTPUT);
                 timer_standby = timer_rep * 1000;
+                Usart2Send("RELAY ACTIVO\n");
+            }
+
+            if ((diag_ringing) &&
+                (prender_ring) &&
+                (!timer_prender_ringing))
+            {
+                diag_ringing_reset;
+                timer_prender_ringing = 12000;
+                main_state = main_enable_output;
+                RELAY_ON;
+                timer_standby = timer_rep * 1000;
+                Usart2Send("RELAY ACTIVO\n");
             }
 
             if (FuncsGSMStateAsk() < gsm_state_ready)
@@ -246,17 +268,19 @@ int main(void)
                 ChangeLed(LED_STANDBY);
             }
 
-            if (timer_rep_change)
+            if ((rssi_level > 10) && (!led_rssi_high))
             {
-                timer_rep_change_reset;
-                ConfigurationChange();
+                ChangeLed(LED_GSM_NETWORK_HIGH_RSSI);
+                led_rssi_high = 1;
             }
-            
-            if (envios_ok_change)
+
+            if ((rssi_level <= 10) && (led_rssi_high))
             {
-                envios_ok_change_reset;
-                ConfigurationChange();
-            }                        
+                ChangeLed(LED_GSM_NETWORK_LOW_RSSI);
+                led_rssi_high = 0;
+            }
+
+            ConfigurationCheck();
             break;
 
         case main_enable_output:
@@ -264,20 +288,9 @@ int main(void)
             {
                 main_state = main_ready;
                 RELAY_OFF;
-                ChangeLed(LED_GSM_NETWORK);
             }
 
-            if (timer_rep_change)
-            {
-                timer_rep_change_reset;
-                ConfigurationChange();
-            }            
-
-            if (envios_ok_change)
-            {
-                envios_ok_change_reset;
-                ConfigurationChange();
-            }            
+            ConfigurationCheck();
             break;
             
         // case LAMP_OFF:
@@ -371,6 +384,27 @@ int main(void)
 
 //--- End of Main ---//
 
+void ConfigurationCheck (void)
+{
+    if (timer_rep_change)
+    {
+        timer_rep_change_reset;
+        ConfigurationChange();
+    }            
+
+    if (envios_ok_change)
+    {
+        envios_ok_change_reset;
+        ConfigurationChange();
+    }
+
+    if (prender_ring_change)
+    {
+        prender_ring_change_reset;
+        ConfigurationChange();
+    }
+}
+    
 void ConfigurationChange (void)
 {
     unsigned char saved_ok = 0;
@@ -394,6 +428,9 @@ void TimingDelay_Decrement(void)
     if (timer_standby)
         timer_standby--;
 
+    if (timer_prender_ringing)
+        timer_prender_ringing--;
+    
     if (usart1_mini_timeout)
         usart1_mini_timeout--;
     
@@ -404,6 +441,8 @@ void TimingDelay_Decrement(void)
         timer_led--;
     
     GSMTimeoutCounters ();
+
+    FuncsGSMTimeoutCounters ();
 }
 
 //--- end of file ---//

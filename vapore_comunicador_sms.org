@@ -70,6 +70,15 @@
    - no lo vi pasar nunca pero podria!!!
 
 
+** TODO Agregar medidor de señal
+** DONE Agregar low voltage
+   CLOSED: [2020-06-11 Thu 14:17]
+   - no se puede, V_Sense se reutiliza
+
+** DONE quitar OK
+   CLOSED: [2020-06-11 Thu 15:14]
+** DONE Avisar si prende salida
+   CLOSED: [2020-06-11 Thu 15:14]
 * GSM Gateway
 ** Comandos
    - Los envio todos con CTRL+J desde minicom
