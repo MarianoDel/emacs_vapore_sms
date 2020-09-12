@@ -16,7 +16,7 @@
 //--- Exported constants ---//
 //--- Enable of Ports Pins ---//
 #define GPIOB_ENABLE
-//#define GPIOF_ENABLE
+//#define GPIOC_ENABLE
 
 #define GPIOA_CLK (RCC->IOPENR & 0x00000001)
 #define GPIOA_CLK_ON (RCC->IOPENR |= 0x00000001)

@@ -16,13 +16,19 @@
 
 #include <stdio.h>
 
+// Configs. --------------------------------------------------------------------
+#define LED_BLINK_ON    LED_ON
+#define LED_BLINK_OFF    LED_OFF
+#define TIMER_BLINK    200
+#define TIMER_BLINK_NEXT_CYCLE    2000
+
 
 // Externals -------------------------------------------------------------------
 extern volatile unsigned short timer_led;
 
 
 // Private Types ---------------------------------------------------------------
-//ESTADOS DEL LED
+// led states
 typedef enum
 {    
     START_BLINKING = 0,
@@ -34,7 +40,7 @@ typedef enum
 
 
 // Globals ---------------------------------------------------------------------
-// para el led
+// for the led
 led_state_t led_state = START_BLINKING;
 unsigned char blink = 0;
 unsigned char how_many_blinks = 0;
@@ -59,8 +65,8 @@ void UpdateLed (void)
             
             if (blink)
             {
-                LED_PWR_ON;
-                timer_led = 200;
+                LED_BLINK_ON;
+                timer_led = TIMER_BLINK;
                 led_state++;
                 blink--;
             }
@@ -69,8 +75,8 @@ void UpdateLed (void)
         case WAIT_TO_OFF:
             if (!timer_led)
             {
-                LED_PWR_OFF;
-                timer_led = 200;
+                LED_BLINK_OFF;
+                timer_led = TIMER_BLINK;
                 led_state++;
             }
             break;
@@ -81,14 +87,14 @@ void UpdateLed (void)
                 if (blink)
                 {
                     blink--;
-                    timer_led = 200;
+                    timer_led = TIMER_BLINK;
                     led_state = WAIT_TO_OFF;
-                    LED_PWR_ON;
+                    LED_BLINK_ON;
                 }
                 else
                 {
                     led_state = WAIT_NEW_CYCLE;
-                    timer_led = 2000;
+                    timer_led = TIMER_BLINK_NEXT_CYCLE;
                 }
             }
             break;
@@ -105,9 +111,27 @@ void UpdateLed (void)
     }
 }
 
-void WelcomeCodeFeatures (char * str)
+
+void WelcomeCode (void)
 {
-    Usart2Send("\r\nKirno Placa Redonda - Basic V1.1\r\n");
+    char str [128] = { 0 };
+    
+    Usart2Send("\r\nKirno -- Comunicador Vapore SMS --\r\n");
+
+#ifdef HARD
+    Usart2Send(HARD);
+    Wait_ms(100);    
+#else
+#error	"No Hardware defined in hard.h file"
+#endif
+
+#ifdef SOFT
+    Usart2Send(SOFT);
+    Wait_ms(100);    
+#else
+#error	"No Soft Version defined in hard.h file"
+#endif
+    
     Usart2Send("Features:\r\n");
     
     // Main Program Type

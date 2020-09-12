@@ -111,13 +111,10 @@ void SysTickError (void);
 //------------------------------------------//
 int main(void)
 {
-    main_state_t main_state = main_init;
-    char s_lcd [100];
-
     //GPIO Configuration.
     GPIO_Config();
 
-    //ACTIVAR SYSTICK TIMER
+    //Start the SysTick Timer
 #ifdef CLOCK_FREQ_64_MHZ
     if (SysTick_Config(64000))
         SysTickError();
@@ -129,23 +126,22 @@ int main(void)
 
     //--- Welcome code ---//
     LED_OFF;
-    RELAY_OFF;
+    ACT_12V_OFF;
 
     Usart1Config();
     Usart2Config();
 
     EXTIOff();
 
-    // Prendo todos los Timers
-    TIM_3_Init ();    //lo utilizo para 1 a 10V y para synchro ADC
+    // Timers Start Functions
+    // TIM_3_Init ();    //lo utilizo para 1 a 10V y para synchro ADC
     // TIM_16_Init();    //o utilizo para synchro de relay
     // TIM16Enable();
 
-    WelcomeCodeFeatures(s_lcd);
-    
-    FuncsGSMReset();
+    WelcomeCode ();
+    FuncsGSMReset ();
 
-    //--- Leo los parametros de memoria ---//
+    // Backuped Memory Parameters
     memcpy(&mem_conf, pmem, sizeof(parameters_typedef));
     if (mem_conf.acumm_wh == 0xFFFFFFFF)
     {
@@ -166,7 +162,8 @@ int main(void)
         Usart2Send("Memory Have Saved Data\n");
 
 
-//--- Programa de Redonda Basic - Produccion ---
+//--- Programa de Activacion SMS - Produccion ---
+    main_state_t main_state = main_init;
     unsigned char led_rssi_high = 0;
 
     while (1)
@@ -175,7 +172,7 @@ int main(void)
         {
         case main_init:
             ChangeLed(LED_STANDBY);
-            RELAY_OFF;
+            ACT_12V_OFF;
             main_state = main_wait_for_gsm_network;
 
             //reset de flags del gsm
@@ -201,9 +198,9 @@ int main(void)
             {
                 diag_prender_reset;
                 main_state = main_enable_output;
-                RELAY_ON;
+                ACT_12V_ON;
                 timer_standby = timer_rep * 1000;
-                Usart2Send("RELAY ACTIVO\n");
+                Usart2Send("ACT_12V ACTIVO\n");
             }
 
             if ((diag_ringing) &&
@@ -213,9 +210,9 @@ int main(void)
                 diag_ringing_reset;
                 timer_prender_ringing = 12000;
                 main_state = main_enable_output;
-                RELAY_ON;
+                ACT_12V_ON;
                 timer_standby = timer_rep * 1000;
-                Usart2Send("RELAY ACTIVO\n");
+                Usart2Send("ACT_12V ACTIVO\n");
             }
 
             if (FuncsGSMStateAsk() < gsm_state_ready)
@@ -243,32 +240,23 @@ int main(void)
             if (!timer_standby)
             {
                 main_state = main_ready;
-                RELAY_OFF;
+                ACT_12V_OFF;
             }
 
             ConfigurationCheck();
             break;
             
-        // case LAMP_OFF:
-        //     Usart2Send("PRENDIDO\r\n");
-        //     FuncsGSMSendSMS("PRENDIDO", mem_conf.num_reportar);
-        //     LED_ON;
-        //     break;
-
-
         default:
             main_state = main_init;
             break;
         }
 
-        //Cosas que no dependen del estado del programa
-        UpdateLed();
-        // UpdateRelay ();
-        // UpdatePhotoTransistor();
-        FuncsGSM();
+        // The things that do not depend on the program state
+        UpdateLed ();
+        FuncsGSM ();
     }	//end while 1
 
-//---------- Fin Programa de Produccion Redonda Basic--------//
+//--- Fin Programa de Produccion Alarma SMS ---
 
 
 //---------- Pruebas con GSM GATEWAY --------//

@@ -119,8 +119,8 @@
    CLOSED: [2020-09-12 Sat 07:59]
 *** Nombre archivo salida
 
-** cambiar memoria a 64k
-** cambiar pagina de bkp de 15 a 31 (por la mayor memoria)
+** TODO cambiar memoria a 64k
+** TODO cambiar pagina de bkp de 15 a 31 (por la mayor memoria)
 
 ** DONE Migrar CMSIS_CORE
    CLOSED: [2020-09-12 Sat 08:53]
@@ -155,3 +155,7 @@
 
 
 * Ultimas Mejoras al programa antes de produccion
+** DONE Configurar Gpios
+   CLOSED: [2020-09-12 Sat 13:03]
+** Armar Tests de Hardware
+** Posibilidad de armar GSM Gateway en el programa principal

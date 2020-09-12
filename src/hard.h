@@ -16,7 +16,8 @@
 //----------- Defines For Configuration -------------
 
 //----------- Hardware Board Version -------------
-#define VER_1_1		//esta es la placa kirno_redonda
+#define HARD    "Hardware version 1.0"
+#define SOFT    "Firmware version 1.0"
 
 //-------- Type of Program ----------------
 //OJO --- los dos que siguen van juntos
@@ -31,70 +32,66 @@
 
 //-------- End Of Defines For Configuration ------
 
-//GPIOA pin0    LED_PWR
-#define LED_PWR    ((GPIOA->ODR & 0x0001) != 0)
-#define LED_PWR_ON    (GPIOA->BSRR = 0x00000001)
-#define LED_PWR_OFF    (GPIOA->BSRR = 0x00010000)
+// Gpios Configuration ------------------------------
+//GPIOB pin9    nc
 
-//GPIOA pin1	LED_NET
-#define LED_NET    ((GPIOA->ODR & 0x0002) != 0)
-#define LED_NET_ON    (GPIOA->BSRR = 0x00000002)
-#define LED_NET_OFF    (GPIOA->BSRR = 0x00020000)
+//GPIOA pin0    nc
 
-//GPIOA pin2
-//GPIOA pin3	usart2 tx rx (para debug)
-#define PIN3_ON	GPIOA->BSRR = 0x00000008
-#define PIN3_OFF GPIOA->BSRR = 0x00080000
+//GPIOA pin1	V_Sense_4V
 
+//GPIOA pin2    usart2 tx
+//GPIOA pin3	usart2 rx (para debug)
 
 //GPIOA pin4
-#define NETLIGHT	((GPIOA->IDR & 0x0010) != 0)
-
 //GPIOA pin5
-#define STATUS		((GPIOA->IDR & 0x0020) != 0)
-
-//GPIOA pin6	para PWM_CH1
+//GPIOA pin6	nc
 
 //GPIOA pin7
-#define PWRKEY ((GPIOA->ODR & 0x0080) != 0)
-#define PWRKEY_ON	GPIOA->BSRR = 0x00000080
-#define PWRKEY_OFF GPIOA->BSRR = 0x00800000
+#define PWRKEY    ((GPIOA->ODR & 0x0080) != 0)
+#define PWRKEY_ON    (GPIOA->BSRR = 0x00000080)
+#define PWRKEY_OFF    (GPIOA->BSRR = 0x00800000)
 
-//GPIOB pin0 I_Sense
+//GPIOB pin0 
+//GPIOB pin1    nc
 
-//GPIOB pin1
+//GPIOB pin1    V_Sense_12V
 
-//GPIOA pin8
+//GPIOA pin8    nc
 
-//GPIOA pin9
-//GPIOA pin10	usart1 tx rx (para el SIM)
+//GPIOA pin9    usart1 tx (para el SIM)
+
+//GPIOC pin6    nc
+
+//GPIOA pin10	usart1 rx (para el SIM)
 
 //GPIOA pin11
-#define RELAY ((GPIOA->ODR & 0x0800) != 0)
-#define RELAY_ON	GPIOA->BSRR = 0x00000800
-#define RELAY_OFF GPIOA->BSRR = 0x08000000
+#define ACT_12V    ((GPIOA->ODR & 0x0800) != 0)
+#define ACT_12V_ON    (GPIOA->BSRR = 0x00000800)
+#define ACT_12V_OFF    (GPIOA->BSRR = 0x08000000)
 
 //GPIOA pin12
-#define LED ((GPIOA->ODR & 0x1000) != 0)
-#define LED_ON	GPIOA->BSRR = 0x00001000
-#define LED_OFF GPIOA->BSRR = 0x10000000
+#define LED    ((GPIOA->ODR & 0x1000) != 0)
+#define LED_ON    (GPIOA->BSRR = 0x00001000)
+#define LED_OFF    (GPIOA->BSRR = 0x10000000)
 
-//GPIOA pin13
-//GPIOA pin14
-//GPIOA pin15
+//GPIOA pin13    swdio
+//GPIOA pin14    swclk
+//GPIOA pin15    nc
 
-//GPIOB pin3
-#define PPS ((GPIOB->IDR & 0x0008) == 0)
+//GPIOB pin3    nc
 
 //GPIOB pin4
+#define STATUS    ((GPIOB->IDR & 0x0010) != 0)
+
 //GPIOB pin5
+#define NETLIGHT    ((GPIOB->IDR & 0x0020) != 0)
 
-//GPIOB pin6
-//GPIOB pin7	usart1 tx rx (para el GPS)
+//GPIOB pin6    test1
+//GPIOB pin7    test2
+//GPIOB pin8    test3
 
 
-
-// Exported Constants  ---------------------------------------------------------
+// Exported Types Constants & Macros  ------------------------------------------
 //Estados Externos de LED BLINKING
 #define LED_NO_BLINKING               0
 #define LED_STANDBY                   1
@@ -102,8 +99,6 @@
 #define LED_GSM_NETWORK_HIGH_RSSI     3
 #define LED_LOW_VOLTAGE               4
 
-
-// Exported Types --------------------------------------------------------------
 typedef enum
 {
     main_init = 0,
@@ -139,6 +134,6 @@ typedef enum {
 // Module Exported Functions ---------------------------------------------------
 void ChangeLed (unsigned char);
 void UpdateLed (void);
-void WelcomeCodeFeatures (char *);
+void WelcomeCode (void);
 
 #endif /* HARD_H_ */
