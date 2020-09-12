@@ -3,167 +3,155 @@
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
+// ## @CPU:    STM32G030
 // ##
 // #### FLASH_PROGRAM.C #######################
 //---------------------------------------------
 
 #include "flash_program.h"
-#include "stm32f0xx.h"
+#include "stm32g0xx.h"
 
 
 
-/* Externals variables ---------------------------------------------------------*/
-extern parameters_typedef mem_conf;
+// Externals -------------------------------------------------------------------
 
 
-/* Private typedef -----------------------------------------------------------*/
+// Globals ---------------------------------------------------------------------
 
 
-/* Private define ------------------------------------------------------------*/
+// Private Types Constants and Macros ------------------------------------------
 
 
-// extern parameters_typedef param_struct;
-// extern mem_bkp_typedef memory_backup;
-// extern filesystem_typedef files;
-// extern unsigned int v_bkp [];
-
-/* Private macro -------------------------------------------------------------*/
-/* Private variables ---------------------------------------------------------*/
-
-//const int vmem [1024] ;
-// unsigned int * pmem = (unsigned int *)0x08007000;	//Sector 7 Page 28
-
-
-/* Private function prototypes -----------------------------------------------*/
-/* Private functions ---------------------------------------------------------*/
-void ErasePage(uint32_t , unsigned char );
-void FLASH_Unlock(void);
-void FLASH_Lock(void);
-FLASH_Status FLASH_ErasePage(uint32_t Page_Address);
+// Module Private Functions ----------------------------------------------------
+// FLASH_Status Flash_ErasePage (uint8_t Page_Num, uint8_t lock_after_finish);
+void Flash_Unlock (void);
+void Flash_Lock (void);
 FLASH_Status FLASH_WaitForLastOperation(uint32_t Timeout);
 FLASH_Status FLASH_GetStatus(void);
 FLASH_Status FLASH_ProgramWord(uint32_t Address, uint32_t Data);
+FLASH_Status Flash_WriteFlash (uint32_t dest_addr, uint32_t * origin_addr, uint8_t lock, uint8_t len8);
+static void FLASH_Program_DoubleWord(uint32_t Address, uint64_t Data);
 
-/* Module functions ---------------------------------------------------------*/
-unsigned char WriteConfigurations (void)
+// Module functions ------------------------------------------------------------
+FLASH_Status Flash_WriteConfigurations (uint32_t * Address, uint32_t size)
 {
-    parameters_typedef * p_param;
+    FLASH_Status status = FLASH_COMPLETE;
 
-    ErasePage(FLASH_PAGE_FOR_BKP,0);
+    if ((size % 8) != 0)
+        return FLASH_ERROR_PROGRAM; 
 
-    //update en memoria
-    p_param = &mem_conf;
+    if (size > 2048)
+        return FLASH_ERROR_PROGRAM; 
 
-    if (WriteFlash((unsigned int *) p_param, FLASH_PAGE_FOR_BKP, 1, sizeof(parameters_typedef)) == FAILED)
-        return FAILED;
+    
+    status = Flash_ErasePage (FLASH_PAGE_FOR_BKP, 0);
+    if (status != FLASH_COMPLETE)
+        return status;
 
-    return PASSED;
+    unsigned char size8 = size >> 3;
+    status = Flash_WriteFlash (FLASH_ADDRESS_FOR_BKP, Address, 1, size8);
+
+    return status;
 }
 
-unsigned char WriteFlash(unsigned int * p, uint32_t p_addr, unsigned char with_lock, unsigned char len_in_4)
+
+FLASH_Status Flash_WriteFlash (uint32_t dest_addr, uint32_t * origin_addr, uint8_t lock, uint8_t len8)
 {
-    unsigned short i;
-    unsigned int * p_verif;
+    FLASH_Status status = FLASH_COMPLETE;
+    uint64_t data64 = 0;
+    uint64_t * odata;
 
-    p_verif = (unsigned int *) p_addr;
+    FLASH->CR |= FLASH_CR_PG;
+    
+    status = FLASH_WaitForLastOperation(FLASH_ER_PRG_TIMEOUT);
+    if (status != FLASH_COMPLETE)
+        return status;
 
-    for (i = 0; i < len_in_4; i++)
+    
+    odata = (uint64_t *) origin_addr;
+    for (unsigned short i = 0; i < len8; i++)
     {
-        FLASH_ProgramWord(p_addr, *(p + i));
-        p_addr += 4;
+        data64 = *(odata + i);
+        FLASH_Program_DoubleWord((dest_addr + (i << 3)), data64);
+        
+        status = FLASH_WaitForLastOperation(FLASH_ER_PRG_TIMEOUT);
+        if (status != FLASH_COMPLETE)
+            return status;
+        
     }
 
-    if (with_lock)
-        FLASH_Lock();
+    FLASH->CR &= (~FLASH_CR_PG);
 
-    //verifico memoria
-    for (i = 0; i < len_in_4; i++)
-    {
-        if (*(p_verif + i) != *(p + i))
-            return FAILED;
-    }
-    return PASSED;
+    if (lock)
+        Flash_Lock();
+
+    status = FLASH_WaitForLastOperation(FLASH_ER_PRG_TIMEOUT);
+    return status;
+    
+    // //verifico memoria
+    // for (i = 0; i < len_in_4; i++)
+    // {
+    //     if (*(p_verif + i) != *(p + i))
+    //         return FAILED;
+    // }
+    // return PASSED;
 }
 
-void ErasePage(uint32_t p_addr, unsigned char with_lock)
+
+FLASH_Status Flash_ErasePage(uint8_t Page_Num, uint8_t lock)
 {
-	FLASH_Unlock();
-	FLASH_ErasePage(p_addr);
-	if (with_lock)
-		FLASH_Lock();
-}
+    FLASH_Status status = FLASH_COMPLETE;
+    
+    Flash_Unlock();
 
-/**
-  * @brief  Unlocks the FLASH control register and program memory access.
-  * @param  None
-  * @retval None
-  */
-void FLASH_Unlock(void)
-{
-  if((FLASH->CR & FLASH_CR_LOCK) != RESET)
-  {
-    /* Unlocking the program memory access */
-    FLASH->KEYR = FLASH_FKEY1;
-    FLASH->KEYR = FLASH_FKEY2;
-  }
-}
-
-/**
-  * @brief  Locks the Program memory access.
-  * @param  None
-  * @retval None
-  */
-void FLASH_Lock(void)
-{
-  /* Set the LOCK Bit to lock the FLASH control register and program memory access */
-  FLASH->CR |= FLASH_CR_LOCK;
-}
-
-/**
-  * @brief  Erases a specified page in program memory.
-  * @note   To correctly run this function, the FLASH_Unlock() function must be called before.
-  * @note   Call the FLASH_Lock() to disable the flash memory access (recommended
-  *         to protect the FLASH memory against possible unwanted operation)
-  * @param  Page_Address: The page address in program memory to be erased.
-  * @note   A Page is erased in the Program memory only if the address to load
-  *         is the start address of a page (multiple of 1024 bytes).
-  * @retval FLASH Status: The returned value can be:
-  *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
-  */
-FLASH_Status FLASH_ErasePage(uint32_t Page_Address)
-{
-  FLASH_Status status = FLASH_COMPLETE;
-
-  /* Check the parameters */
-//  assert_param(IS_FLASH_PROGRAM_ADDRESS(Page_Address));
-
-  /* Wait for last operation to be completed */
-  status = FLASH_WaitForLastOperation(FLASH_ER_PRG_TIMEOUT);
-
-  if(status == FLASH_COMPLETE)
-  {
-    /* If the previous operation is completed, proceed to erase the page */
-    FLASH->CR |= FLASH_CR_PER;
-    FLASH->AR  = Page_Address;
-    FLASH->CR |= FLASH_CR_STRT;
-
-    /* Wait for last operation to be completed */
     status = FLASH_WaitForLastOperation(FLASH_ER_PRG_TIMEOUT);
 
-    /* Disable the PER Bit */
-    FLASH->CR &= ~FLASH_CR_PER;
-  }
+    if(status == FLASH_COMPLETE)
+    {
+        /* If the previous operation is completed, proceed to erase the page */
+        FLASH->CR |= FLASH_CR_PER;
+        FLASH->CR |= (Page_Num << FLASH_CR_PNB_Pos);
+        FLASH->CR |= FLASH_CR_STRT;
 
-  /* Return the Erase Status */
-  return status;
+        /* Wait for last operation to be completed */
+        status = FLASH_WaitForLastOperation(FLASH_ER_PRG_TIMEOUT);
+
+        /* Disable the PER Bit */
+        FLASH->CR &= (~FLASH_CR_PER);
+
+        if (lock)
+            Flash_Lock();
+        
+    }
+
+    return status;
 }
 
-/**
-  * @brief  Waits for a FLASH operation to complete or a TIMEOUT to occur.
-  * @param  Timeout: FLASH programming Timeout
-  * @retval FLASH Status: The returned value can be: FLASH_BUSY,
-  *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
-  */
+
+void Flash_Unlock(void)
+{
+    if((FLASH->CR & FLASH_CR_LOCK) != RESET)
+    {
+        /* Unlocking the program memory access */
+        FLASH->KEYR = FLASH_FKEY1;
+        FLASH->KEYR = FLASH_FKEY2;
+    }
+}
+
+
+void Flash_Lock(void)
+{
+    /* Set the LOCK Bit to lock the FLASH control register and program memory access */
+    FLASH->CR |= FLASH_CR_LOCK;
+}
+
+
+// /**
+//   * @brief  Waits for a FLASH operation to complete or a TIMEOUT to occur.
+//   * @param  Timeout: FLASH programming Timeout
+//   * @retval FLASH Status: The returned value can be: FLASH_BUSY,
+//   *         FLASH_ERROR_PROGRAM, FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+//   */
 FLASH_Status FLASH_WaitForLastOperation(uint32_t Timeout)
 {
   FLASH_Status status = FLASH_COMPLETE;
@@ -208,7 +196,7 @@ FLASH_Status FLASH_GetStatus(void)
     }
     else
     {
-      if((FLASH->SR & (uint32_t)(FLASH_SR_PGERR)) != (uint32_t)0x00)
+      if((FLASH->SR & (uint32_t)(FLASH_FLAG_PGERR)) != (uint32_t)0x00)
       {
         FLASHstatus = FLASH_ERROR_PROGRAM;
       }
@@ -222,59 +210,27 @@ FLASH_Status FLASH_GetStatus(void)
   return FLASHstatus;
 }
 
+
 /**
-  * @brief  Programs a word at a specified address.
-  * @note   To correctly run this function, the FLASH_Unlock() function must be called before.
-  * @note   Call the FLASH_Lock() to disable the flash memory access (recommended
-  *         to protect the FLASH memory against possible unwanted operation)
-  * @param  Address: specifies the address to be programmed.
-  * @param  Data: specifies the data to be programmed.
-  * @retval FLASH Status: The returned value can be: FLASH_ERROR_PG,
-  *         FLASH_ERROR_WRP, FLASH_COMPLETE or FLASH_TIMEOUT.
+  * @brief  Program double-word (64-bit) at a specified address.
+  * @param  Address Specifies the address to be programmed.
+  * @param  Data Specifies the data to be programmed.
+  * @retval None
   */
-FLASH_Status FLASH_ProgramWord(uint32_t Address, uint32_t Data)
+static void FLASH_Program_DoubleWord(uint32_t Address, uint64_t Data)
 {
-  FLASH_Status status = FLASH_COMPLETE;
-  __IO uint32_t tmp = 0;
+  /* Set PG bit */
+  SET_BIT(FLASH->CR, FLASH_CR_PG);
 
-  /* Check the parameters */
-//  assert_param(IS_FLASH_PROGRAM_ADDRESS(Address));
+  /* Program first word */
+  *(uint32_t *)Address = (uint32_t)Data;
 
-  /* Wait for last operation to be completed */
-  status = FLASH_WaitForLastOperation(FLASH_ER_PRG_TIMEOUT);
+  /* Barrier to ensure programming is performed in 2 steps, in right order
+    (independently of compiler optimization behavior) */
+  __ISB();
 
-  if(status == FLASH_COMPLETE)
-  {
-    /* If the previous operation is completed, proceed to program the new first
-    half word */
-    FLASH->CR |= FLASH_CR_PG;
-
-    *(__IO uint16_t*)Address = (uint16_t)Data;
-
-    /* Wait for last operation to be completed */
-    status = FLASH_WaitForLastOperation(FLASH_ER_PRG_TIMEOUT);
-
-    if(status == FLASH_COMPLETE)
-    {
-      /* If the previous operation is completed, proceed to program the new second
-      half word */
-      tmp = Address + 2;
-
-      *(__IO uint16_t*) tmp = Data >> 16;
-
-      /* Wait for last operation to be completed */
-      status = FLASH_WaitForLastOperation(FLASH_ER_PRG_TIMEOUT);
-
-      /* Disable the PG Bit */
-      FLASH->CR &= ~FLASH_CR_PG;
-    }
-    else
-    {
-      /* Disable the PG Bit */
-      FLASH->CR &= ~FLASH_CR_PG;
-    }
-  }
-
-  /* Return the Program Status */
-  return status;
+  /* Program second word */
+  *(uint32_t *)(Address + 4U) = (uint32_t)(Data >> 32U);
 }
+
+//--- end of file ---//

@@ -1,27 +1,25 @@
 # Comunicador Vapore por SMS
-Basado en placa Kirno redonda, parte alta del control
-micro STM32F051C8T6
+micro STM32G030K8T6
 
-Antes de empezar revisar seleccion del micro y configuracion
-------------------------------------------------------------
+Before Begin, check micro selection and configurations
+------------------------------------------------------
 
-* work area size y flash image
->stm32f0_flash.cfg
+* work area size and flash image
+>stm32g0_flash.cfg
 
-* work area size y flash image
->stm32f0_flash_lock.cfg
-
-* work area size
->stm32f0_gdb.cfg
+* work area size and flash image
+>stm32g0_flash_lock.cfg
 
 * work area size
->stm32f0_reset.cfg
+>stm32g0_gdb.cfg
+
+* work area size
+>stm32g0_reset.cfg
 
 * end of ram; stack size; memory lenght
 >./cmsis_boot/startup/stm32_flash.ld
 
-* elegir procesador definiciones en linea 68 -> pero modificar en Makefile
->./cmsis_boot/stm32f0xx.h
+* Select Processor and firmware modules
 >.Makefile
 
 

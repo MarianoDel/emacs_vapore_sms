@@ -14,7 +14,7 @@
 
 // Includes for Configuration --------------------------------------------------
 #include "hard.h"
-#include "stm32f0xx.h"
+// #include "stm32f0xx.h"
 #include "funcs_gsm.h"
 
 

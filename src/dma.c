@@ -3,12 +3,13 @@
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
+// ## @CPU:    STM32G030
 // ##
 // #### DMA.C #################################
 //---------------------------------------------
 
 #include "dma.h"
-#include "stm32f0xx.h"
+#include "stm32g0xx.h"
 
 #include "adc.h"
 
@@ -39,7 +40,7 @@ void DMAConfig(void)
     //cicular mode
     DMA1_Channel1->CCR |= DMA_CCR_CIRC;
 
-    //Tamaño del buffer a transmitir
+    //Tamano del buffer a transmitir
     DMA1_Channel1->CNDTR = ADC_CHANNEL_QUANTITY;
 
     //Address del periferico
@@ -47,6 +48,10 @@ void DMAConfig(void)
 
     //Address en memoria
     DMA1_Channel1->CMAR = (uint32_t) &adc_ch[0];
+
+    //Mapeo los request del periferico al channel del dma en DMAMUX
+    //ch0 de dmamux = ch1 de dma
+    DMAMUX1_Channel0->CCR |= DMAMUX_CxCR_DMAREQ_ID_2 | DMAMUX_CxCR_DMAREQ_ID_0;
 
     //Enable
     //DMA1_Channel1->CCR |= DMA_CCR_EN;
@@ -56,17 +61,20 @@ void DMAConfig(void)
 #endif
 }
 
+
+#ifdef DMA_WITH_INTERRUPT
 void DMAEnableInterrupt (void)
 {
     DMA1_Channel1->CCR |= DMA_CCR_TCIE;
 }
+
 
 void DMADisableInterrupt (void)
 {
     DMA1_Channel1->CCR &= ~DMA_CCR_TCIE;
 }
 
-#ifdef DMA_WITH_INTERRUPT
+
 void DMA1_Channel1_IRQHandler (void)
 {
     if (sequence_ready)

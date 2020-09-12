@@ -23,13 +23,16 @@ CP   = $(TRGT)objcopy
 AS   = $(TRGT)gcc -x assembler-with-cpp
 HEX  = $(CP) -O ihex
 BIN  = $(CP) -O binary -S
-MCU  = cortex-m0
+MCU  = cortex-m0plus
 
 # List all default C defines here, like -D_DEBUG=1
 #para el micro STM32F051C8T6
-DDEFS = -DSTM32F051
+# DDEFS = -DSTM32F051
 #para el micro STM32F030K6T6
 # DDEFS = -DSTM32F030
+#para el micro STM32G030J6M6
+DDEFS = -DSTM32G030xx
+
 
 # List all default directories to look for include files here
 DINCDIR = ./src
@@ -49,8 +52,8 @@ DLIBS =
 #
 
 #
-# Define project name and Ram = 0/Flash = 1 mode here
-PROJECT        = Template_F050
+# Define project name
+PROJECT = Template_G030
 
 # List all user C define here, like -D_DEBUG=1
 UDEFS =
@@ -65,7 +68,7 @@ BOOTDIR = ./cmsis_boot
 LINKER = ./cmsis_boot/startup
 
 SRC  = ./src/main.c
-SRC += $(BOOTDIR)/system_stm32f0xx.c
+SRC += $(BOOTDIR)/system_stm32g0xx.c
 SRC += $(BOOTDIR)/syscalls/syscalls.c
 
 SRC += ./src/it.c
@@ -74,15 +77,16 @@ SRC += ./src/tim.c
 # SRC += ./src/spi.c
 SRC += ./src/adc.c
 SRC += ./src/dma.c
-SRC += ./src/uart.c
+SRC += ./src/usart.c
 SRC += ./src/flash_program.c
-SRC += ./src/dsp.c
+# SRC += ./src/dsp.c
 SRC += ./src/hard.c
+SRC += ./src/test_functions.c
 SRC += ./src/sim900_800.c
 SRC += ./src/funcs_gsm.c
 
 ## Core Support
-SRC += $(CORELIBDIR)/core_cm0.c
+# SRC += $(CORELIBDIR)/core_cm0.c
 
 
 ## used part of GSM_Library
@@ -94,7 +98,7 @@ SRC += $(CORELIBDIR)/core_cm0.c
 
 
 # List ASM source files here
-ASRC = ./cmsis_boot/startup/startup_stm32f0xx.s
+ASRC = ./cmsis_boot/startup/startup_stm32g030xx.s
 
 # List all user directories here
 UINCDIR = $(BOOTDIR) \
@@ -121,7 +125,7 @@ OPT = -O0
 #
 # Define linker script file here
 #
-LDSCRIPT = $(LINKER)/stm32_flash.ld
+LDSCRIPT = $(LINKER)/stm32_flash_g030.ld
 FULL_PRJ = $(PROJECT)_rom
 
 INCDIR  = $(patsubst %,-I%,$(DINCDIR) $(UINCDIR))
@@ -141,7 +145,7 @@ ASFLAGS = $(MCFLAGS) -g -gdwarf-2 -mthumb  -Wa,-amhls=$(<:.s=.lst) $(ADEFS)
 #CPFLAGS = $(MCFLAGS) $(OPT) -g -gdwarf-2 -mthumb -fomit-frame-pointer -Wall -fverbose-asm -Wa,-ahlms=$(<:.c=.lst) $(DEFS)
 
 # CON INFO PARA DEBUGGER + STRIP CODE
-CPFLAGS = $(MCFLAGS) $(OPT) -g -gdwarf-2 -mthumb -fomit-frame-pointer -Wall -fdata-sections -ffunction-sections -fverbose-asm -Wa,-ahlms=$(<:.c=.lst)
+CPFLAGS = $(MCFLAGS) $(OPT) -g -gdwarf-2 -mthumb -fomit-frame-pointer -Wall -fdata-sections -ffunction-sections -fverbose-asm -Wa,-ahlms=$(<:.c=.lst) $(DDEFS)
 
 # SIN DEAD CODE, hace el STRIP
 LDFLAGS = $(MCFLAGS) -mthumb --specs=nano.specs -Wl,--gc-sections -nostartfiles -T$(LDSCRIPT) -Wl,-Map=$(FULL_PRJ).map,--cref,--no-warn-mismatch $(LIBDIR)
@@ -180,16 +184,19 @@ $(assobjects): %.o: %.s
 	$(BIN)  $< $@
 
 flash:
-	sudo openocd -f stm32f0_flash.cfg
+	sudo openocd -f stm32g0_flash.cfg
 
 flash_lock:
-	sudo openocd -f stm32f0_flash_lock.cfg
+	sudo openocd -f stm32g0_flash_lock.cfg
+
+mass_erase:
+	sudo openocd -f stm32g0_flash_erase.cfg
 
 gdb:
-	sudo openocd -f stm32f0_gdb.cfg
+	sudo openocd -f stm32g0_gdb.cfg
 
 reset:
-	sudo openocd -f stm32f0_reset.cfg
+	sudo openocd -f stm32g0_reset.cfg
 
 clean:
 	rm -f $(OBJS)
@@ -199,5 +206,14 @@ clean:
 	rm -f $(FULL_PRJ).bin
 	rm -f $(SRC:.c=.lst)
 	rm -f $(ASRC:.s=.lst)
+
+tests:
+	# primero objetos de los modulos a testear, solo si son tipo HAL sin dependencia del hard
+	# gcc -c src/lcd.c -I. $(INCDIR)
+	# gcc src/tests.c lcd.o
+	# ./a.out
+	# sino copiar funcion a testear al main de tests.c
+	gcc src/tests.c
+	./a.out
 
 # *** EOF ***

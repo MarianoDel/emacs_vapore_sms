@@ -11,8 +11,8 @@
 // Includes --------------------------------------------------------------------
 #include "hard.h"
 #include "tim.h"
-#include "stm32f0xx.h"
-#include "uart.h"
+#include "stm32g0xx.h"
+#include "usart.h"
 
 #include <stdio.h>
 

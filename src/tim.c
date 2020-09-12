@@ -3,14 +3,14 @@
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
+// ## @CPU:    STM32G030
 // ##
 // #### TIM.C ################################
 //---------------------------------------------
 
 // Includes --------------------------------------------------------------------
 #include "tim.h"
-#include "stm32f0xx.h"
-#include "uart.h"
+#include "stm32g0xx.h"
 #include "hard.h"
 
 // Externals -------------------------------------------------------------------
@@ -67,15 +67,13 @@ void TIM3_IRQHandler (void)	//1 ms
 
 void TIM_3_Init (void)
 {
-    unsigned int temp;
-
     if (!RCC_TIM3_CLK)
         RCC_TIM3_CLK_ON;
 
     //Configuracion del timer.
     TIM3->CR1 = 0x00;		//clk int / 1; upcounting
     TIM3->CR2 |= TIM_CR2_MMS_1;		//UEV -> TRG0
-#if (defined VER_1_0) || (defined VER_1_1)
+
 //	TIM3->CCMR2 = 0x7070;			//CH4 y CH3 output PWM mode 2
     TIM3->CCMR1 = 0x0060;			//CH1 PWM mode 2
     TIM3->CCMR2 = 0x0000;			//
@@ -101,23 +99,19 @@ void TIM_3_Init (void)
     //TIM3->DIER |= TIM_DIER_UIE;
     TIM3->CR1 |= TIM_CR1_CEN;
 
-    //Timer sin Int
-    //NVIC_InitStructure.NVIC_IRQChannel = TIM3_IRQn;
-    //NVIC_InitStructure.NVIC_IRQChannelPriority = 5;
-    //NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    //NVIC_Init(&NVIC_InitStructure);
-
-    //Configuracion Pines
+    //Alternative pin config.
     //Alternate Fuction
+    unsigned int temp;
     temp = GPIOA->AFR[0];
     temp &= 0xF0FFFFFF;
     temp |= 0x01000000;	//PA6 -> AF1
     GPIOA->AFR[0] = temp;
     // GPIOB->AFR[0] = 0x00010000;	//PB4 -> AF1
-#endif
+
 
 }
 
+#ifdef STM32G070xx
 void TIM_6_Init (void)
 {
     if (!RCC_TIM6_CLK)
@@ -129,6 +123,7 @@ void TIM_6_Init (void)
     TIM6->ARR = 0xFFFF;			//para que arranque
     //TIM6->CR1 |= TIM_CR1_CEN;
 }
+#endif
 
 void TIM14_IRQHandler (void)	//100uS
 {

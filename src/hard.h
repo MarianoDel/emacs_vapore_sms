@@ -14,6 +14,7 @@
 
 
 //----------- Defines For Configuration -------------
+
 //----------- Hardware Board Version -------------
 #define VER_1_1		//esta es la placa kirno_redonda
 
@@ -24,6 +25,9 @@
 #define USE_REDONDA_BASIC
 // #define USE_GSM_GATEWAY
 
+//-------- Clock Frequency ------------------------------------
+#define CLOCK_FREQ_64_MHZ    //ojo modificar a mano system_stm32g0xx.c SystemInit
+// #define CLOCK_FREQ_16_MHZ    //ojo modificar a mano system_stm32g0xx.c SystemInit
 
 //-------- End Of Defines For Configuration ------
 

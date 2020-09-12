@@ -14,7 +14,7 @@
 
 // Includes for Configurations -------------------------------------------------
 #include "hard.h"
-#include "stm32f0xx.h"
+// #include "stm32f0xx.h"
 
 // Module Configurations -------------------------------------------------------
 // #define GSM_SEND_SMS_ON_START    //envia un SMS con el dato del IMEI al conseguir red

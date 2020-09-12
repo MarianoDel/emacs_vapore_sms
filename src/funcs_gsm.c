@@ -11,7 +11,7 @@
 // Includes --------------------------------------------------------------------
 #include "funcs_gsm.h"
 #include "sim900_800.h"
-#include "uart.h"
+#include "usart.h"
 #include "flash_program.h"
 #include <string.h>
 #include <stdio.h>

@@ -3,6 +3,7 @@
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
+// ## @CPU:    STM32G030
 // ##
 // #### TIM.H ################################
 //---------------------------------------------
@@ -16,36 +17,40 @@
 //--- Exported constants ---//
 
 //--- Exported macro ---//
-#define RCC_TIM1_CLK 		(RCC->APB2ENR & 0x00000800)
-#define RCC_TIM1_CLK_ON 	RCC->APB2ENR |= 0x00000800
-#define RCC_TIM1_CLK_OFF 	RCC->APB2ENR &= ~0x00000800
+#define RCC_TIM1_CLK    (RCC->APBENR2 & 0x00000800)
+#define RCC_TIM1_CLK_ON    (RCC->APBENR2 |= 0x00000800)
+#define RCC_TIM1_CLK_OFF    (RCC->APBENR2 &= ~0x00000800)
 
-#define RCC_TIM3_CLK 		(RCC->APB1ENR & 0x00000002)
-#define RCC_TIM3_CLK_ON 	RCC->APB1ENR |= 0x00000002
-#define RCC_TIM3_CLK_OFF 	RCC->APB1ENR &= ~0x00000002
+#define RCC_TIM3_CLK    (RCC->APBENR1 & 0x00000002)
+#define RCC_TIM3_CLK_ON    (RCC->APBENR1 |= 0x00000002)
+#define RCC_TIM3_CLK_OFF    (RCC->APBENR1 &= ~0x00000002)
 
-#define RCC_TIM6_CLK 		(RCC->APB1ENR & 0x00000010)
-#define RCC_TIM6_CLK_ON 	RCC->APB1ENR |= 0x00000010
-#define RCC_TIM6_CLK_OFF 	RCC->APB1ENR &= ~0x00000010
+#define RCC_TIM6_CLK    (RCC->APBENR1 & 0x00000010)
+#define RCC_TIM6_CLK_ON    (RCC->APBENR1 |= 0x00000010)
+#define RCC_TIM6_CLK_OFF    (RCC->APBENR1 &= ~0x00000010)
 
-#define RCC_TIM14_CLK 		(RCC->APB1ENR & 0x00000100)
-#define RCC_TIM14_CLK_ON 	RCC->APB1ENR |= 0x00000100
-#define RCC_TIM14_CLK_OFF 	RCC->APB1ENR &= ~0x00000100
+#define RCC_TIM7_CLK    (RCC->APBENR1 & 0x00000020)
+#define RCC_TIM7_CLK_ON    (RCC->APBENR1 |= 0x00000020)
+#define RCC_TIM7_CLK_OFF    (RCC->APBENR1 &= ~0x00000020)
 
-#define RCC_TIM15_CLK 		(RCC->APB2ENR & 0x00010000)
-#define RCC_TIM15_CLK_ON 	RCC->APB2ENR |= 0x00010000
-#define RCC_TIM15_CLK_OFF 	RCC->APB2ENR &= ~0x00010000
+#define RCC_TIM14_CLK    (RCC->APBENR2 & 0x00008000)
+#define RCC_TIM14_CLK_ON    (RCC->APBENR2 |= 0x00008000)
+#define RCC_TIM14_CLK_OFF    (RCC->APBENR2 &= ~0x00008000)
 
-#define RCC_TIM16_CLK 		(RCC->APB2ENR & 0x00020000)
-#define RCC_TIM16_CLK_ON 	RCC->APB2ENR |= 0x00020000
-#define RCC_TIM16_CLK_OFF 	RCC->APB2ENR &= ~0x00020000
+#define RCC_TIM15_CLK    (RCC->APBENR2 & 0x00010000)
+#define RCC_TIM15_CLK_ON    (RCC->APBENR2 |= 0x00010000)
+#define RCC_TIM15_CLK_OFF    (RCC->APBENR2 &= ~0x00010000)
 
-#define RCC_TIM17_CLK 		(RCC->APB2ENR & 0x00040000)
-#define RCC_TIM17_CLK_ON 	RCC->APB2ENR |= 0x00040000
-#define RCC_TIM17_CLK_OFF 	RCC->APB2ENR &= ~0x00040000
+#define RCC_TIM16_CLK    (RCC->APBENR2 & 0x00020000)
+#define RCC_TIM16_CLK_ON    (RCC->APBENR2 |= 0x00020000)
+#define RCC_TIM16_CLK_OFF    (RCC->APBENR2 &= ~0x00020000)
 
-//--- Exported functions ---//
-void TIM3_IRQHandler (void);
+#define RCC_TIM17_CLK    (RCC->APBENR2 & 0x00040000)
+#define RCC_TIM17_CLK_ON    (RCC->APBENR2 |= 0x00040000)
+#define RCC_TIM17_CLK_OFF    (RCC->APBENR2 &= ~0x00040000)
+
+// Module Exported Functions ---------------------------------------------------
+// void TIM3_IRQHandler (void);
 void TIM_3_Init(void);
 void TIM_6_Init (void);
 void TIM14_IRQHandler (void);

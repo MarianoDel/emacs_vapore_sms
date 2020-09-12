@@ -3,14 +3,14 @@
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
-// ## @CPU:    STM32F030
+// ## @CPU:    STM32G030
 // ##
 // #### ADC.C #################################
 //---------------------------------------------
 
 // Includes --------------------------------------------------------------------
 #include "adc.h"
-#include "stm32f0xx.h"
+#include "stm32g0xx.h"
 #include "hard.h"
 
 
@@ -19,7 +19,7 @@ extern volatile unsigned short adc_ch [];
 
 
 #ifdef ADC_WITH_INT
-extern volatile unsigned char seq_ready;
+extern volatile unsigned char adc_int_seq_ready;
 #endif
 
 #ifdef ADC_WITH_TEMP_SENSE
@@ -65,31 +65,36 @@ void AdcConfig (void)
     ADC1->CFGR1 = 0x00000000;
     ADC1->CFGR2 = 0x00000000;
     ADC1->SMPR = 0x00000000;
-    ADC1->TR = 0x0FFF0000;
     ADC1->CHSELR = 0x00000000;
 
-    //set clock
-    ADC1->CFGR2 = ADC_ClockMode_SynClkDiv4;
+    //set clock in sync
+    // ADC1->CFGR2 = ADC_ClockMode_SynClkDiv4;
+    // ADC1->CFGR2 = ADC_ClockMode_SynClkDiv2;
+    // ADC1->CFGR2 = ADC_ClockMode_SynClkDiv1;
+
+    //set clock async, expect some jitter, change RCC params too
+    ADC1->CFGR2 = ADC_ClockMode_AsynClk;
+    //check pllp divider on system clock config & enable it
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLPEN;
+    //set ADCSEL to PLLP
+    RCC->CCIPR |= RCC_CCIPR_ADCSEL_0;
+    //set the pre divider for async clocks /4 efective freq 8MHz
+    ADC1_COMMON->CCR |= ADC_CCR_PRESC_1;
+    
 
     //set resolution, trigger & Continuos or Discontinuous
-    ADC1->CFGR1 |= ADC_Resolution_10b | ADC_ExternalTrigConvEdge_Rising | ADC_ExternalTrigConv_T3_TRGO;	//recordar ADC1->CR |= ADC_CR_ADSTART
+    // ADC1->CFGR1 |= ADC_Resolution_10b | ADC_ExternalTrigConvEdge_Rising | ADC_ExternalTrigConv_T3_TRGO;	//recordar ADC1->CR |= ADC_CR_ADSTART
     // ADC1->CFGR1 |= ADC_Resolution_10b | ADC_ExternalTrigConvEdge_Rising | ADC_ExternalTrigConv_T1_TRGO;
-    //ADC1->CFGR1 |= ADC_Resolution_12b | ADC_CFGR1_DISCEN;
+    // ADC1->CFGR1 |= ADC_Resolution_12b | ADC_CFGR1_DISCEN;
+    ADC1->CFGR1 |= ADC_Resolution_12b | ADC_CFGR1_CONT;    
     // ADC1->CFGR1 |= ADC_Resolution_12b;
 
-    //DMA Config
-    //ADC1->CFGR1 |= ADC_CFGR1_DMAEN | ADC_CFGR1_DMACFG;
-
     //set sampling time
-    ADC1->SMPR |= ADC_SampleTime_71_5Cycles;
-    // ADC1->SMPR |= ADC_SampleTime_41_5Cycles;		//17.39 son SP 420    
-    // ADC1->SMPR |= ADC_SampleTime_28_5Cycles;		//17.39 son SP 420
-    //ADC1->SMPR |= ADC_SampleTime_7_5Cycles;		//17.36 de salida son SP 420 pero a veces pega
-    //las dos int (usar DMA?) y pierde el valor intermedio
-    //ADC1->SMPR |= ADC_SampleTime_1_5Cycles;			//20.7 de salida son SP 420 (regula mal)
-
+    ADC1->SMPR |= ADC_SMPR_SMP1_2 | ADC_SMPR_SMP1_1 | ADC_SMPR_SMP1_0 |
+        ADC_SMPR_SMP2_2 | ADC_SMPR_SMP2_1 | ADC_SMPR_SMP2_0;
+    
     //set channel selection
-    ADC1->CHSELR |= ADC_Channel_0 | ADC_Channel_1 | ADC_Channel_2;
+    ADC1->CHSELR |= ADC_All_Orer_Channels;
     
 #ifdef ADC_WITH_INT        
     //set interrupts
@@ -118,44 +123,31 @@ void AdcConfig (void)
 }
 
 #ifdef ADC_WITH_INT
-void ADC1_COMP_IRQHandler (void)
+void ADC1_IRQHandler (void)
 {
     if (ADC1->ISR & ADC_IT_EOC)
     {
-        if (ADC1->ISR & ADC_IT_EOSEQ)	//seguro que es channel4 en posicion 3 en ver_1_1, 3 y 2 en ver_1_0
-        {
-            p_channel = &adc_ch[ADC_LAST_CHANNEL_QUANTITY];
-            *p_channel = ADC1->DR;
-            p_channel = &adc_ch[0];
-            seq_ready = 1;
-        }
-        else
-        {
-            *p_channel = ADC1->DR;		//
-            if (p_channel < &adc_ch[ADC_LAST_CHANNEL_QUANTITY])
-                p_channel++;
-        }
+        // if (ADC1->ISR & ADC_IT_EOSEQ)
+        // {
+        //     p_channel = &adc_ch[ADC_LAST_CHANNEL_QUANTITY];
+        //     *p_channel = ADC1->DR;
+        //     p_channel = &adc_ch[0];
+        //     seq_ready = 1;
+        // }
+        // else
+        // {
+        //     *p_channel = ADC1->DR;		//
+        //     if (p_channel < &adc_ch[ADC_LAST_CHANNEL_QUANTITY])
+        //         p_channel++;
+        // }
+
+        adc_ch[0] = ADC1->DR;
+        adc_int_seq_ready = 1;
         //clear pending
         ADC1->ISR |= ADC_IT_EOC | ADC_IT_EOSEQ;
     }
 }
 #endif
-
-
-//Setea el sample time en el ADC
-void SetADC1_SampleTime (void)
-{
-    uint32_t tmpreg = 0;
-
-    /* Clear the Sampling time Selection bits */
-    tmpreg &= ~ADC_SMPR1_SMPR;
-
-    /* Set the ADC Sampling Time register */
-    tmpreg |= (uint32_t)ADC_SampleTime_239_5Cycles;
-
-    /* Configure the ADC Sample time register */
-    ADC1->SMPR = tmpreg ;
-}
 
 
 //lee el ADC sin cambiar el sample time anterior

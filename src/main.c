@@ -1,15 +1,15 @@
-//----------------------------------------------------
-// #### PROYECTO KIRNO REDONDA GSM - Custom Board ####
+//---------------------------------------------------------
+// #### PROYECTO COMUNICADOR VAPORE SMS - Custom Board ####
 // ##
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
 // ##
-// #### MAIN.C #######################################
-//----------------------------------------------------
+// #### MAIN.C ############################################
+//---------------------------------------------------------
 
 // Includes --------------------------------------------------------------------
-#include "stm32f0xx.h"
+#include "stm32g0xx.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -17,10 +17,10 @@
 
 #include "gpio.h"
 #include "tim.h"
-#include "uart.h"
+#include "usart.h"
 #include "hard.h"
 
-#include "core_cm0.h"
+#include "core_cm0plus.h"
 // #include "adc.h"
 // #include "dma.h"
 #include "flash_program.h"
@@ -95,38 +95,13 @@ volatile unsigned short tcp_kalive_timer;
 //volatile unsigned char display_timer;
 volatile unsigned char timer_meas;
 
-#ifdef WITH_HYST
-volatile unsigned short secs = 0;
-volatile unsigned char hours = 0;
-volatile unsigned char minutes = 0;
-#endif
-
-#ifdef POWER_MEAS_WITH_SAMPLES
-
-#ifdef POWER_MEAS_WITH_SAMPLES_MA32
-#define SIZEOF_POWER_VECT		32			//aunque en realidad es MA32
-#define SIZEOF_POWER_VECT_INDEX		10		//este lo dejo igual porque quiere mediciones cada 2 segundos
-#endif
-
-#ifdef POWER_MEAS_WITH_SAMPLES_BESTOF_10
-#define SIZEOF_POWER_VECT		10
-#define SIZEOF_POWER_VECT_INDEX		10
-#endif
-
-unsigned short power_vect [SIZEOF_POWER_VECT];
-#endif
-
-#ifdef POWER_MEAS_PEAK_TO_PEAK
-#define SIZEOF_POWER_VECT		10
-unsigned short power_vect [SIZEOF_POWER_VECT];
-#endif
-
 
 
 // Module Private Functions ----------------------------------------------------
 void TimingDelay_Decrement(void);
 void ConfigurationChange (void);
 void ConfigurationCheck (void);
+void SysTickError (void);
 
 
 //-------------------------------------------//
@@ -143,47 +118,34 @@ int main(void)
     GPIO_Config();
 
     //ACTIVAR SYSTICK TIMER
-    if (SysTick_Config(48000))
-    {
-        while (1)	/* Capture error */
-        {
-            if (LED)
-                LED_OFF;
-            else
-                LED_ON;
-
-            for (unsigned char i = 0; i < 255; i++)
-            {
-                asm (	"nop \n\t"
-                        "nop \n\t"
-                        "nop \n\t" );
-            }
-        }
-    }
-
+#ifdef CLOCK_FREQ_64_MHZ
+    if (SysTick_Config(64000))
+        SysTickError();
+#endif
+#ifdef CLOCK_FREQ_16_MHZ
+    if (SysTick_Config(16000))
+        SysTickError();
+#endif
 
     //--- Welcome code ---//
     LED_OFF;
     RELAY_OFF;
 
-    USART1Config();
-    USART2Config();
+    Usart1Config();
+    Usart2Config();
 
     EXTIOff();
 
-#ifdef USE_REDONDA_BASIC
-
     // Prendo todos los Timers
-    TIM_3_Init ();					//lo utilizo para 1 a 10V y para synchro ADC
-    TIM_16_Init();					//o utilizo para synchro de relay
-    TIM16Enable();
+    TIM_3_Init ();    //lo utilizo para 1 a 10V y para synchro ADC
+    // TIM_16_Init();    //o utilizo para synchro de relay
+    // TIM16Enable();
 
     WelcomeCodeFeatures(s_lcd);
     
     FuncsGSMReset();
 
     //--- Leo los parametros de memoria ---//
-#ifdef USE_REDONDA_BASIC
     memcpy(&mem_conf, pmem, sizeof(parameters_typedef));
     if (mem_conf.acumm_wh == 0xFFFFFFFF)
     {
@@ -198,16 +160,10 @@ int main(void)
         //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
         // strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
     
-#ifdef DEBUG_ON
         Usart2Send("Memory Empty\n");
-#endif        
     }
-#ifdef DEBUG_ON
     else
         Usart2Send("Memory Have Saved Data\n");
-#endif        
-
-#endif
 
 
 //--- Programa de Redonda Basic - Produccion ---
@@ -313,11 +269,6 @@ int main(void)
     }	//end while 1
 
 //---------- Fin Programa de Produccion Redonda Basic--------//
-#endif	//USE_REDONDA_BASIC
-
-//---------- Inicio Programa de Produccion Redonda Basic --------//
-
-
 
 
 //---------- Pruebas con GSM GATEWAY --------//
@@ -410,7 +361,7 @@ void ConfigurationChange (void)
     unsigned char saved_ok = 0;
 
     __disable_irq();
-    saved_ok = WriteConfigurations();
+    saved_ok = Flash_WriteConfigurations((uint32_t *)&mem_conf, sizeof(mem_conf));
     __enable_irq();                
 #ifdef DEBUG_ON
     if (saved_ok)
@@ -443,6 +394,25 @@ void TimingDelay_Decrement(void)
     GSMTimeoutCounters ();
 
     FuncsGSMTimeoutCounters ();
+}
+
+void SysTickError (void)
+{
+    //Capture systick error...
+    while (1)
+    {
+        if (LED)
+            LED_OFF;
+        else
+            LED_ON;
+
+        for (unsigned char i = 0; i < 255; i++)
+        {
+            asm ("nop \n\t"
+                 "nop \n\t"
+                 "nop \n\t" );
+        }
+    }
 }
 
 //--- end of file ---//

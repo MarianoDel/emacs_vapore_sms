@@ -3,8 +3,8 @@
 **
 **  File        : stm32_flash.ld
 **
-**  Abstract    : Linker script for STM32F051K8 Device with
-**                64KByte FLASH, 8KByte RAM
+**  Abstract    : Linker script for STM32G030J6 Device with
+**                32KByte FLASH, 8KByte RAM
 **
 **                Set heap size, stack size and stack location according
 **                to application requirements.
@@ -31,7 +31,7 @@
 ENTRY(Reset_Handler)
 
 /* Highest address of the user mode stack */
-_estack = 0x20001FFF;    /* end of RAM */
+_estack = 0x20002000;    /* end of RAM */
 
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0;      /* required amount of heap  */
@@ -40,7 +40,7 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 /* Specify the memory areas */
 MEMORY
 {
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 64K
+FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 32K
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 8K
 }
 
@@ -88,11 +88,10 @@ SECTIONS
     __exidx_end = .;
   } >FLASH
 
-  .memParams 0x08007C00 :
+  .memParams 0x08007800 :
   {
     . = ALIGN(4);
     KEEP(*(memParams)) /* direccion de memoria en que quiero esta estructura */
-    KEEP(*(memParams1)) /* direccion de memoria en que quiero esta estructura */
     . = ALIGN(4);
   } >FLASH
 

@@ -10,7 +10,7 @@
 
 // Includes --------------------------------------------------------------------
 #include "sim900_800.h"
-#include "uart.h"
+#include "usart.h"
 #include "tim.h"
 #include "funcs_gsm.h"		//para string flags
 #include "flash_program.h"
@@ -142,7 +142,7 @@ void GSMProcess (void)
     {
         gsm_have_data = 0;
         gsm_pckt_ready = 1;
-        gsm_pckt_bytes = ReadUsart1Buffer((unsigned char *) buffUARTGSMrx2, sizeof(buffUARTGSMrx2));
+        gsm_pckt_bytes = Usart1ReadBuffer((unsigned char *) buffUARTGSMrx2, sizeof(buffUARTGSMrx2));
         PacketReadyUARTGSM = 1;
 //		GSMReceive (unsigned char * pAlertasReportar, char * puserCode, unsigned char * pclaveAct, unsigned char * pActDact);
     }
@@ -152,7 +152,7 @@ void GSMProcess (void)
     {
         usart2_have_data = 0;
         usart2_pckt_ready = 1;
-        usart2_pckt_bytes = ReadUsart2Buffer((unsigned char *) buffUARTGSMrx2, sizeof(buffUARTGSMrx2));
+        usart2_pckt_bytes = Usart2ReadBuffer((unsigned char *) buffUARTGSMrx2, sizeof(buffUARTGSMrx2));
     }
 #endif
 }

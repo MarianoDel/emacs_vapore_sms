@@ -102,3 +102,56 @@
 
 
 
+
+* Migrar programa y herramientas de STM32F051 -> STM32G030
+** DONE Actualizar version OpenOCD
+   CLOSED: [2020-09-04 Fri 17:18]
+
+** DONE Archivos de configuracion de OpenOCD
+   CLOSED: [2020-09-12 Sat 10:19]
+*** DONE reset.cfg
+    CLOSED: [2020-09-04 Fri 17:21]
+*** gdb.cfg
+*** flash.cfg
+*** flash_lock.cfg
+
+** DONE Makefile
+   CLOSED: [2020-09-12 Sat 07:59]
+*** Nombre archivo salida
+
+** cambiar memoria a 64k
+** cambiar pagina de bkp de 15 a 31 (por la mayor memoria)
+
+** DONE Migrar CMSIS_CORE
+   CLOSED: [2020-09-12 Sat 08:53]
+*** quitar todos los .h sobrantes
+    - Dejo solo 5 archivos
+    - ademas en redpill dejo todos los archivos de la familia
+
+** DONE Migrar CMSIS_BOOT
+   CLOSED: [2020-09-12 Sat 08:53]
+*** quitar archivos .h sobrantes
+    - Dejo solo 2
+    - ademas en redpill dejo todos los archivos de la familia
+
+*** quitar archivos .s sobrantes
+    - Dejo solo un .s y el linker
+    - ademas en redpill dejo todos los archivos de la familia
+
+
+** DONE Migrar Modulos [11/11]
+   CLOSED: [2020-09-12 Sat 10:19]
+   - [X] adc.c
+   - [X] dma.c
+   - [X] flash_program.c
+   - [X] gpio.c
+   - [X] hard.h
+   - [X] it.c    ;;nothing to be done in here
+   - [X] test_functions.c    ;;just copy this module
+   - [X] tests.c    ;;just copy this module
+   - [X] tim.c
+   - [X] usart.c
+   - [X] main.c
+
+
+* Ultimas Mejoras al programa antes de produccion

@@ -3,12 +3,13 @@
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
+// ## @CPU:    STM32G030
 // ##
 // #### GPIO.C ################################
 //---------------------------------------------
 
 // Includes --------------------------------------------------------------------
-#include "stm32f0xx.h"
+#include "stm32g0xx.h"
 #include "gpio.h"
 #include "hard.h"
 
@@ -151,12 +152,12 @@ void GPIO_Config (void)
 
 inline void EXTIOff (void)
 {
-    EXTI->IMR &= ~0x00000100;
+    // EXTI->IMR &= ~0x00000100;
 }
 
 inline void EXTIOn (void)
 {
-    EXTI->IMR |= 0x00000100;
+    // EXTI->IMR |= 0x00000100;
 }
 
 //--- end of file ---//
