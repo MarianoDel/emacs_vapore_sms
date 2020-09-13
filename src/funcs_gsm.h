@@ -1,12 +1,12 @@
-//----------------------------------------------------
-// #### PROYECTO KIRNO REDONDA GSM - Custom Board ####
+//---------------------------------------------------------
+// #### PROYECTO COMUNICADOR VAPORE SMS - Custom Board ####
 // ##
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
 // ##
-// #### FUNCS_GSM.H ##################################
-//----------------------------------------------------
+// #### FUNCS_GSM.H #######################################
+//---------------------------------------------------------
 
 // Define to prevent recursive inclusion ---------------------------------------
 #ifndef _FUNCS_GSM_H_
@@ -14,7 +14,7 @@
 
 // Includes for Configurations -------------------------------------------------
 #include "hard.h"
-// #include "stm32f0xx.h"
+
 
 // Module Configurations -------------------------------------------------------
 // #define GSM_SEND_SMS_ON_START    //envia un SMS con el dato del IMEI al conseguir red
@@ -89,5 +89,6 @@ void FuncsGSMParser (unsigned char *, unsigned char *);
 void FuncsGSMGetSMSPayloadCallback (char *, char *);
 void FuncsGSMTimeoutCounters (void);
 
-#endif
+#endif    /* _FUNCS_GSM_H_ */
+
 //--- end of file ---//

@@ -84,6 +84,7 @@ SRC += ./src/hard.c
 SRC += ./src/test_functions.c
 SRC += ./src/sim900_800.c
 SRC += ./src/funcs_gsm.c
+SRC += ./src/funcs_gsm_gateway.c
 
 ## Core Support
 # SRC += $(CORELIBDIR)/core_cm0.c

@@ -27,6 +27,7 @@
 
 #include "sim900_800.h"
 #include "funcs_gsm.h"
+#include "funcs_gsm_gateway.h"
 
 #include "test_functions.h"
 
@@ -219,6 +220,11 @@ int main(void)
 
             ConfigurationCheck();
             break;
+
+        case main_in_gsm_gateway_mode:
+            FuncsGSMGateway();
+            
+            break;            
             
         default:
             main_state = main_init;
@@ -233,64 +239,6 @@ int main(void)
 //--- Fin Programa de Produccion Alarma SMS ---
 
 
-//---------- Pruebas con GSM GATEWAY --------//
-#ifdef USE_GSM_GATEWAY
-    LED_OFF;
-    for (unsigned char i = 0; i < 6; i++)
-    {
-        if (LED)
-            LED_OFF;
-        else
-            LED_ON;
-
-        Wait_ms (300);
-    }
-
-    Wait_ms (3000);
-    Usart2Send("GSM GATEWAY.. Cambio a GSM\r\n");
-
-    //mando start al gsm
-    Usart2Send("Reset y Start GSM\r\n");
-    //GPSStartResetSM ();
-    timer_standby = 60000;		//doy 1 minuto para prender modulo
-    unsigned char i = 0;
-    while (timer_standby)
-    {
-        i = GSM_Start();
-        if (i == 1)
-        {
-            Usart2Send("Start OK\r\n");
-            timer_standby = 0;
-        }
-
-        if (i > 1)
-        {
-            Usart2Send("Start NOK\r\n");
-            Usart2Send("Please reboot!\r\n");
-        }
-    }
-
-    Usart2Send("GSM GATEWAY Listo para empezar\r\n");
-
-    while (1)
-    {
-        GSMProcess();
-
-        if (usart2_pckt_ready)	//deja paquete en buffUARTGSMrx2
-        {
-            usart2_pckt_ready = 0;
-            Usart1SendUnsigned((unsigned char *) buffUARTGSMrx2, usart2_pckt_bytes);
-        }
-
-        if (gsm_pckt_ready)		//deja paquete en buffUARTGSMrx2
-        {
-            gsm_pckt_ready = 0;
-            Usart2SendUnsigned((unsigned char *) buffUARTGSMrx2, gsm_pckt_bytes);
-        }
-
-    }
-#endif
-//---------- Fin Prueba con GSM GATEWAY --------//
 
     return 0;
 }
@@ -351,6 +299,8 @@ void TimingDelay_Decrement(void)
     GSMTimeoutCounters ();
 
     FuncsGSMTimeoutCounters ();
+
+    FuncsGSMG_Timeouts ();
 }
 
 void SysTickError (void)
