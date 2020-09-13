@@ -135,5 +135,6 @@ typedef enum {
 void ChangeLed (unsigned char);
 void UpdateLed (void);
 void WelcomeCode (void);
+void HARD_Timeouts (void);
 
 #endif /* HARD_H_ */

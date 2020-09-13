@@ -43,6 +43,8 @@ void Usart1Send (char *);
 void Usart1SendUnsigned(unsigned char *, unsigned char);
 unsigned char Usart1ReadBuffer (unsigned char *, unsigned short);
 void USART1_IRQHandler(void);
+unsigned char Usart1HaveData (void);
+void Usart1HaveDataReset (void);
 
 void Usart2Config(void);
 void Usart2SendSingle (unsigned char);
@@ -50,7 +52,10 @@ void Usart2Send (char *);
 void Usart2SendUnsigned(unsigned char *, unsigned char);
 unsigned char Usart2ReadBuffer (unsigned char *, unsigned short);
 void USART2_IRQHandler(void);
+unsigned char Usart2HaveData (void);
+void Usart2HaveDataReset (void);
 
+void USART_Timeouts (void);
 
 #endif /* __USART.H */
 

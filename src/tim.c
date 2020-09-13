@@ -13,14 +13,12 @@
 #include "stm32g0xx.h"
 #include "hard.h"
 
+
 // Externals -------------------------------------------------------------------
-extern volatile unsigned char timer_1seg;
-extern volatile unsigned short timer_led_comm;
-extern volatile unsigned short wait_ms_var;
 
 
 // Globals ---------------------------------------------------------------------
-volatile unsigned short timer_1000 = 0;
+volatile unsigned short wait_ms_var = 0;
 
 
 // Module Private Functions ----------------------------------------------------
@@ -231,5 +229,13 @@ void TIM_17_Init (void)
     NVIC_EnableIRQ(TIM17_IRQn);
     NVIC_SetPriority(TIM17_IRQn, 8);
 }
+
+
+void TIM_Timeouts (void)
+{
+    if (wait_ms_var)
+        wait_ms_var--;
+}
+
 
 //--- end of file ---//

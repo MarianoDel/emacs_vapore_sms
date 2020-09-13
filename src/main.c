@@ -21,59 +21,26 @@
 #include "hard.h"
 
 #include "core_cm0plus.h"
-// #include "adc.h"
-// #include "dma.h"
+#include "adc.h"
+#include "dma.h"
 #include "flash_program.h"
 
 #include "sim900_800.h"
 #include "funcs_gsm.h"
 
+#include "test_functions.h"
+
 
 
 // Externals -------------------------------------------------------------------
-// - Externals del Puerto serie  -------
-volatile unsigned char tx2buff[SIZEOF_DATA];
-volatile unsigned char rx2buff[SIZEOF_DATA];
+// - Externals from ADC Converter -------
+volatile unsigned short adc_ch [ADC_CHANNEL_QUANTITY];
 
-volatile unsigned char tx1buff[SIZEOF_DATA];
-volatile unsigned char rx1buff[SIZEOF_DATA];
-
-
-// - Externals del GPS & GSM -----------
-volatile unsigned char usart1_mini_timeout;
-volatile unsigned char usart1_pckt_ready;
-volatile unsigned char usart1_have_data;
-unsigned char usart1_pckt_bytes;
-
-#define gps_mini_timeout	usart1_mini_timeout
-#define gps_pckt_ready		usart1_pckt_ready
-#define gps_have_data		usart1_have_data
-#define gps_pckt_bytes		usart1_pckt_bytes
-
-
-// ------- Externals del GSM -------
-#if (defined USE_GSM) || (defined USE_GSM_GATEWAY)
-#define gsm_mini_timeout	usart1_mini_timeout
-#define gsm_pckt_ready		usart1_pckt_ready
-#define gsm_have_data		usart1_have_data
-#define gsm_pckt_bytes		usart1_pckt_bytes
-
-volatile unsigned char usart2_mini_timeout;
-volatile unsigned char usart2_pckt_ready;
-volatile unsigned char usart2_have_data;
-unsigned char usart2_pckt_bytes;
-
-extern volatile char buffUARTGSMrx2[];
-#endif
-
-// ------- Externals de la Memoria y los modos -------
+// - Externals de la Memoria y los modos -------
 parameters_typedef * pmem = (parameters_typedef *) (unsigned int *) FLASH_PAGE_FOR_BKP;	//en flash
 parameters_typedef mem_conf;
 
-// ------- Externals para el LED state --------
-volatile unsigned short timer_led;
-
-// --- Externals Funcs GSM
+// - Externals Funcs GSM
 unsigned char register_status = 0;
 unsigned char rssi_level = 0;
 
@@ -82,19 +49,13 @@ unsigned char rssi_level = 0;
 unsigned short show_power_index = 0;	//lo uso como timer sincronizado con la medicion, tick 2 secs.
 unsigned short show_power_index_debug = 0;
 
-//para los msjs GSM
+// - Globals for GSM msjs -------
 char gsmNUM [20];
 char gsmMSG [180];
 
-
-// ------- de los timers -------
-volatile unsigned short wait_ms_var = 0;
+// - Globals from timers -------
 volatile unsigned short timer_standby = 0;
 volatile unsigned short timer_prender_ringing = 0;
-volatile unsigned short tcp_kalive_timer;
-//volatile unsigned char display_timer;
-volatile unsigned char timer_meas;
-
 
 
 // Module Private Functions ----------------------------------------------------
@@ -124,6 +85,19 @@ int main(void)
         SysTickError();
 #endif
 
+    //--- Funciones de Test Hardware ---
+    // TF_Led ();
+    // TF_Act_12V ();
+    // TF_Led_Blinking();
+    // TF_Usart2_TxRx ();
+    // TF_Usart2_NetLight_and_Status ();
+    // TF_Usart2_Adc_Dma ();
+    // TF_Usart2_Flash_Empty_Page ();
+    // TF_Usart2_Flash_Write_Data ();
+    
+    //--- Fin Funciones de Test Hardware ---    
+
+    
     //--- Welcome code ---//
     LED_OFF;
     ACT_12V_OFF;
@@ -359,25 +333,20 @@ void ConfigurationChange (void)
 #endif
 }
 
+
 void TimingDelay_Decrement(void)
 {
-    if (wait_ms_var)
-        wait_ms_var--;
+    TIM_Timeouts ();
 
     if (timer_standby)
         timer_standby--;
 
     if (timer_prender_ringing)
         timer_prender_ringing--;
-    
-    if (usart1_mini_timeout)
-        usart1_mini_timeout--;
-    
-    if (usart2_mini_timeout)
-        usart2_mini_timeout--;
 
-    if (timer_led)
-        timer_led--;
+    USART_Timeouts();
+
+    HARD_Timeouts();
     
     GSMTimeoutCounters ();
 

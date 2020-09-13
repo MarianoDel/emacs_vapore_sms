@@ -33,24 +33,13 @@ extern char SIM900CLAVESIM2[20];
 extern char SIM900IPREMOTE[20];
 extern char SIM900PORTREMOTE[20];
 
-extern volatile unsigned char usart1_mini_timeout;
-extern volatile unsigned char usart1_pckt_ready;
-extern volatile unsigned char usart1_have_data;
-extern unsigned char usart1_pckt_bytes;
-
-#ifdef USE_GSM_GATEWAY
-extern volatile unsigned char usart2_mini_timeout;
-extern volatile unsigned char usart2_pckt_ready;
-extern volatile unsigned char usart2_have_data;
-extern unsigned char usart2_pckt_bytes;
-#endif
 
 
 // Globals ---------------------------------------------------------------------
 //UART GSM.
 //RX.
 volatile char buffUARTGSMrx2[buffUARTGSMrx_dimension];
-volatile char PacketReadyUARTGSM;
+volatile unsigned char GSM_PacketReady = 0;
 //TX.
 
 //GSM Start.
@@ -127,101 +116,19 @@ unsigned char prestadorSimSelect = 0;
 unsigned char flagCloseIP = 0;
 
 
-#define gsm_mini_timeout	usart1_mini_timeout
-#define gsm_pckt_ready		usart1_pckt_ready
-#define gsm_have_data		usart1_have_data
-#define gsm_pckt_bytes		usart1_pckt_bytes
-
-
 // Module Functions ------------------------------------------------------------
 //Procesa respuestas del modulo GSM esperando el final de linea por timeout
-//carga el buffer buffUARTGSMrx2 y avisa con el flag PacketReadyUARTGSM
+//carga el buffer buffUARTGSMrx2 y avisa con el flag GSM_PacketReady
 void GSMProcess (void)
 {
-    if ((gsm_have_data) && (!gsm_mini_timeout))
+    if (Usart1HaveData())
     {
-        gsm_have_data = 0;
-        gsm_pckt_ready = 1;
-        gsm_pckt_bytes = Usart1ReadBuffer((unsigned char *) buffUARTGSMrx2, sizeof(buffUARTGSMrx2));
-        PacketReadyUARTGSM = 1;
-//		GSMReceive (unsigned char * pAlertasReportar, char * puserCode, unsigned char * pclaveAct, unsigned char * pActDact);
+        Usart1HaveDataReset();
+        Usart1ReadBuffer((unsigned char *) buffUARTGSMrx2, sizeof(buffUARTGSMrx2));
+        GSM_PacketReady = 1;
     }
-
-#ifdef USE_GSM_GATEWAY
-    if ((usart2_have_data) && (!usart2_mini_timeout))
-    {
-        usart2_have_data = 0;
-        usart2_pckt_ready = 1;
-        usart2_pckt_bytes = Usart2ReadBuffer((unsigned char *) buffUARTGSMrx2, sizeof(buffUARTGSMrx2));
-    }
-#endif
 }
 
-
-//------------------------------------//
-//
-//Wait: 1
-//OK: 	2
-//ERR:	3
-//TO:	4
-//------------------------------------//
-/*
-unsigned char GSM_Start(void)
-{
-
-	if (!GSM_STATUS || (GSMStartState > 1))
-	{
-		switch(GSMStartState)
-		{
-			case 0:
-				GSMStartTime = 40;
-				GSM_PWRKEY_ON;
-				LED_NETLIGHT_ON;
-				GSMStartState++;
-				break;
-			case 1:
-				if(GSMStartTime == 0) //Espera 4 segugundos.
-				{
-					LED_NETLIGHT_OFF;
-					GSM_PWRKEY_OFF;
-					GSMStartTime = 100; //10 segundos.
-					GSMStartState++;
-				}
-				break;
-			case 2:
-				if(GSM_STATUS)
-				{
-					//Encendio.
-					LED_NETLIGHT_ON;
-					GSMStartState++;
-					GSMStartTime = 30;
-				}
-				if(GSMStartTime == 0)
-				{
-					//Se agoto el tiempo de espera.
-					GSMStartState = 0;
-					return 4;
-				}
-				break;
-			case 3:
-				if(GSMStartTime == 0)
-				{
-					//1 segundo mas.
-					LED_NETLIGHT_OFF;
-					GSM_PWRKEY_ON;
-					GSMStartState = 0;
-					return 2;
-				}
-				break;
-		}
-	}
-	if (GSM_STATUS || (GSMStartState == 0))
-	{
-		return 2;
-	}
-	return 1;
-}
-*/
 
 //GSM_Start() contesta:
 //0 trabajando
@@ -603,14 +510,14 @@ char GSMCloseIP(void)
     return 0;
 }
 
-//Procesa respuestas del modulo GSM ubicadas en el buffer buffUARTGSMrx2 con flag PacketReadyUARTGSM
+//Procesa respuestas del modulo GSM ubicadas en el buffer buffUARTGSMrx2 con flag GSM_PacketReady
 //revisa los flag de estados GSMConfigGPRSflag GSMSendCommandFlag y revisa respuestas no esperadas
 //para respuestas no esperadas revisa SMS y avisa la cantidad con GSMCantSMS
 //void GSMReceive (unsigned char * pAlertasReportar, char * puserCode, unsigned char * pclaveAct, unsigned char * pActDact)
 void GSMReceive (void)
 {
     //---- Comunicacion con modulo GSM ----//
-    if (PacketReadyUARTGSM)
+    if (GSM_PacketReady)
     {
         FuncsGSMParser((unsigned char *)buffUARTGSMrx2, (unsigned char *)buffUARTGSMrx2);
 #ifdef DEBUG_ON
@@ -732,7 +639,7 @@ void GSMReceive (void)
             flagCloseIP = 1;
         }
 
-        PacketReadyUARTGSM = 0;
+        GSM_PacketReady = 0;
     }
 }
 
@@ -1586,36 +1493,6 @@ char GSMSendIP (char *ptrMSG, unsigned short timeOut)
 }
 
 
-void GSMTimeoutCounters (void)
-{
-    if (GSMStartTime)
-        GSMStartTime--;
-
-    if(GSMSendCommandTimeOut)
-        GSMSendCommandTimeOut--;
-
-    if(GSMConfigTimeOut)
-        GSMConfigTimeOut--;
-
-    if(GSMConfigTime)
-        GSMConfigTime--;
-
-    if(GSMSendSMSTimeOut)
-        GSMSendSMSTimeOut--;
-
-    if(GSMConfigGPRSTimeOut)
-        GSMConfigGPRSTimeOut--;
-
-    if(GSMSendIPTimeOut)
-        GSMSendIPTimeOut--;
-
-    if (prestadorSimTime)
-        prestadorSimTime--;
-
-    if(GSMGeneralTimeOut)
-        GSMGeneralTimeOut--;
-
-}
 
 
 char last_num [20] = { '\0' };
@@ -2419,6 +2296,38 @@ char GSMConfigPDPGPRS (char sim,
 unsigned char SMSLeft (void)
 {
     return GSMCantSMS;
+}
+
+
+void GSMTimeoutCounters (void)
+{
+    if (GSMStartTime)
+        GSMStartTime--;
+
+    if(GSMSendCommandTimeOut)
+        GSMSendCommandTimeOut--;
+
+    if(GSMConfigTimeOut)
+        GSMConfigTimeOut--;
+
+    if(GSMConfigTime)
+        GSMConfigTime--;
+
+    if(GSMSendSMSTimeOut)
+        GSMSendSMSTimeOut--;
+
+    if(GSMConfigGPRSTimeOut)
+        GSMConfigGPRSTimeOut--;
+
+    if(GSMSendIPTimeOut)
+        GSMSendIPTimeOut--;
+
+    if (prestadorSimTime)
+        prestadorSimTime--;
+
+    if(GSMGeneralTimeOut)
+        GSMGeneralTimeOut--;
+
 }
 
 

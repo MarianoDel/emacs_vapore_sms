@@ -25,13 +25,12 @@
 #endif
 //----------- End of ADC Configurations --------------//
 
-#define V_Sense		adc_ch[0]
-#define Light_Sense	adc_ch[1]
-#define I_Sense		adc_ch[2]
-#define ADC_CHANNEL_QUANTITY         3
+#define V_Sense_4V    adc_ch[0]
+#define V_Sense_12V    adc_ch[1]
+#define ADC_CHANNEL_QUANTITY         2
 #define ADC_LAST_CHANNEL_QUANTITY    (ADC_CHANNEL_QUANTITY - 1)
 
-#define ADC_All_Orer_Channels    (ADC_Channel_8)
+#define ADC_All_Orer_Channels    (ADC_Channel_1 | ADC_Channel_10)
 
 
 

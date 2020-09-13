@@ -25,18 +25,18 @@
 
 
 // Externals -------------------------------------------------------------------
-extern volatile unsigned char usart1_have_data;
-extern volatile unsigned char usart2_have_data;
+
 
 // Globals ---------------------------------------------------------------------
-volatile unsigned char usart1_mini_timeout;
+volatile unsigned char usart1_have_data = 0;
+volatile unsigned char usart1_mini_timeout = 0;
 volatile unsigned char * ptx1;
 volatile unsigned char * ptx1_pckt_index;
 volatile unsigned char * prx1;
 volatile unsigned char tx1buff[SIZEOF_DATA];
 volatile unsigned char rx1buff[SIZEOF_DATA];
 
-volatile unsigned char usart2_mini_timeout;
+volatile unsigned char usart2_have_data = 0;
 volatile unsigned char * ptx2;
 volatile unsigned char * ptx2_pckt_index;
 volatile unsigned char * prx2;
@@ -185,6 +185,23 @@ void USART1_IRQHandler(void)
 }
 
 
+unsigned char Usart1HaveData (void)
+{
+    unsigned char answer = 0;
+    
+    if ((usart1_have_data) && (!usart1_mini_timeout))
+        answer = 1;
+
+    return answer;
+}
+
+
+void Usart1HaveDataReset (void)
+{
+    usart1_have_data = 0;
+}
+
+
 //////////////////////
 // USART2 Functions //
 //////////////////////
@@ -328,6 +345,24 @@ void USART2_IRQHandler(void)
     }
 }
 
+
+unsigned char Usart2HaveData (void)
+{
+    return usart2_have_data;
+}
+
+
+void Usart2HaveDataReset (void)
+{
+    usart2_have_data = 0;
+}
+
+
+void USART_Timeouts (void)
+{
+    if (usart1_mini_timeout)
+        usart1_mini_timeout--;
+}
 
 
 //--- end of file ---//

@@ -24,7 +24,6 @@
 
 
 // Externals -------------------------------------------------------------------
-extern volatile unsigned short timer_led;
 
 
 // Private Types ---------------------------------------------------------------
@@ -41,6 +40,7 @@ typedef enum
 
 // Globals ---------------------------------------------------------------------
 // for the led
+volatile unsigned short timer_led;
 led_state_t led_state = START_BLINKING;
 unsigned char blink = 0;
 unsigned char how_many_blinks = 0;
@@ -153,6 +153,14 @@ void WelcomeCode (void)
     Wait_ms(30);    
 #endif
     
+}
+
+
+void HARD_Timeouts (void)
+{
+    if (timer_led)
+        timer_led--;
+
 }
 
 

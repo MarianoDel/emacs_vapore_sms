@@ -68,7 +68,10 @@ void OneShootTIM16 (unsigned short);
 void TIM16Enable (void);
 void TIM16Disable (void);
 
-void Wait_ms (unsigned short wait);
+void Wait_ms (unsigned short);
+void TIM_Timeouts (void);
+
+
 #endif
 //--- End ---//
 

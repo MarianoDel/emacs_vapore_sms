@@ -22,6 +22,14 @@
 
 // Exported Functions ----------------------------------------------------------
 void TF_Led (void);
+void TF_Act_12V (void);
+void TF_Led_Blinking (void);
+void TF_Usart2_TxRx (void);
+void TF_Usart2_NetLight_and_Status (void);
+void TF_Usart2_Adc_Dma (void);
+void TF_Usart2_Flash_Empty_Page (void);
+void TF_Usart2_Flash_Write_Data (void);
+
 void TF_Gpio_Input (void);
 void TF_Gpio_Share_Outputs (void);
 void TF_Usart1_Single (void);

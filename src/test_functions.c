@@ -54,482 +54,347 @@ void TF_Led (void)
 }
 
 
-// void TF_Gpio_Input (void)
-// {
-//     while (1)
-//     {
-//         if (PIN2_IN)
-//             PIN1_ON;
-//         else
-//             PIN1_OFF;
+void TF_Act_12V (void)
+{
+    while (1)
+    {
+        if (ACT_12V)
+            ACT_12V_OFF;
+        else
+            ACT_12V_ON;
 
-//         Wait_ms(100);
-//     }
-// }
-
-
-// //PB5 & PB6 are in the same pin
-// void TF_Gpio_Share_Outputs (void)
-// {
-//     while (1)
-//     {
-//         if (LED)
-//         {
-//             PB5_PB6_ON;
-//             LED_OFF;
-//         }
-//         else
-//         {
-//             PB5_PB6_OFF;
-//             LED_ON;
-//         }
-
-//         Wait_ms(300);
-//     }
-// }
+        Wait_ms(300);
+    }
+}
 
 
-// void TF_Usart1_Single (void)
-// {
-//     Usart1Config();
-
-//     while (1)
-//     {
-//         Usart1SendSingle('M');
-//         Wait_ms(1000);
-
-//         if (LED)
-//             LED_OFF;
-//         else
-//             LED_ON;
-//     }
-// }
-
-
-// void TF_Usart1_Multiple (void)
-// {
-//     for (unsigned char i = 0; i < 5; i++)
-//     {
-//         LED_ON;
-//         Wait_ms(250);
-//         LED_OFF;
-//         Wait_ms(250);
-//     }
+void TF_Led_Blinking (void)
+{
+    unsigned int cntr = 0;
     
-//     Usart1Config();
+    while (1)
+    {
+        for (unsigned char i = 0; i < LED_LOW_VOLTAGE; i++)
+        {
+            ChangeLed(i);
+            cntr = 640000;
+            do {
+                UpdateLed();
+                cntr--;
+            } while (cntr);
+        }
+    }
+}
 
-//     while (1)
-//     {
-//         Usart1Send("Mariano\n");
-//         Wait_ms(1000);
 
-//         if (LED)
-//             LED_OFF;
-//         else
-//             LED_ON;
-//     }
-// }
-
-
-// void TF_Usart1_TxRx (void)
-// {
-//     for (unsigned char i = 0; i < 5; i++)
-//     {
-//         LED_ON;
-//         Wait_ms(250);
-//         LED_OFF;
-//         Wait_ms(250);
-//     }
+void TF_Usart2_TxRx (void)
+{
+    for (unsigned char i = 0; i < 5; i++)
+    {
+        LED_ON;
+        Wait_ms(250);
+        LED_OFF;
+        Wait_ms(250);
+    }
     
-//     Usart1Config();
+    Usart2Config();
 
-//     char s_to_send [100] = { 0 };
-//     Usart1Send("Ready to test...\n");
-//     while (1)
-//     {
-//         if (usart1_have_data)
-//         {
-//             usart1_have_data = 0;
+    char s_to_send [100] = { 0 };
+    Usart2Send("Ready to test...\n");
+    while (1)
+    {
+        if (usart2_have_data)
+        {
+            usart2_have_data = 0;
             
-//             if (LED)
-//                 LED_OFF;
-//             else
-//                 LED_ON;
+            if (LED)
+                LED_OFF;
+            else
+                LED_ON;
             
-//             Usart1ReadBuffer((unsigned char *) s_to_send, 100);
-//             Wait_ms(1000);
-//             Usart1Send(s_to_send);
-//         }
-//     }
-// }
+            Usart2ReadBuffer((unsigned char *) s_to_send, 100);
+            Wait_ms(1000);
+            Usart2Send(s_to_send);
+        }
+    }
+}
 
 
-// void TF_Usart1_Adc (void)
-// {
-//     for (unsigned char i = 0; i < 5; i++)
-//     {
-//         LED_ON;
-//         Wait_ms(250);
-//         LED_OFF;
-//         Wait_ms(250);
-//     }
+void TF_Usart2_NetLight_and_Status (void)
+{
+    for (unsigned char i = 0; i < 5; i++)
+    {
+        LED_ON;
+        Wait_ms(250);
+        LED_OFF;
+        Wait_ms(250);
+    }
     
-//     Usart1Config();
-//     AdcConfig();
-
-//     unsigned short adc_sample = 0;
-//     unsigned char cntr = 0;
-//     char s_to_send [100] = { 0 };
-//     Usart1Send("\nTesting ADC...\n");
-//     while (1)
-//     {
-//         Wait_ms(1000);
-//         adc_sample = ReadADC1_SameSampleTime (ADC_Channel_8);
-//         sprintf(s_to_send, "index: %d sample: %d\n", cntr, adc_sample);
-//         Usart1Send(s_to_send);
-//         cntr++;
-
-//         if (LED)
-//             LED_OFF;
-//         else
-//             LED_ON;
-
-//     }
-// }
-
-
-// void TF_Usart1_Adc_Int (void)
-// {
-//     for (unsigned char i = 0; i < 5; i++)
-//     {
-//         LED_ON;
-//         Wait_ms(250);
-//         LED_OFF;
-//         Wait_ms(250);
-//     }
+    Usart2Config();
+    Usart2Send("Ready to test NetLight and Status...\n");
     
-//     Usart1Config();
-//     AdcConfig();
+    unsigned char netlight_state = 0;
+    unsigned char status_state = 0;
+    while (1)
+    {
+        if (NETLIGHT)
+        {
+            if (netlight_state != NETLIGHT)
+            {
+                netlight_state = NETLIGHT;
+                Usart2Send("NetLight is ON\n");
+            }
+        }
+        else
+        {
+            if (netlight_state != NETLIGHT)
+            {
+                netlight_state = NETLIGHT;
+                Usart2Send("NetLight is OFF\n");
+            }
+        }
 
-//     unsigned short cntr = 0;
-//     char s_to_send [100] = { 0 };
-//     Usart1Send("\nTesting ADC with ints...\n");
-
-//     // Start the conversion
-//     ADC1->CR |= (uint32_t)ADC_CR_ADSTART;
-
-//     while (1)
-//     {
-//         if (adc_int_seq_ready)
-//         {
-//             adc_int_seq_ready = 0;
-//             if (cntr < 10000)
-//                 cntr++;
-//             else
-//             {
-//                 sprintf(s_to_send, "index: %d sample: %d\n", cntr, adc_ch[0]);
-//                 Usart1Send(s_to_send);
-//                 cntr = 0;
-//             }
-//         }
-//     }
-// }
+        if (STATUS)
+        {
+            if (status_state != STATUS)
+            {
+                status_state = STATUS;
+                Usart2Send("Status is ON\n");
+            }
+        }
+        else
+        {
+            if (status_state != STATUS)
+            {
+                status_state = STATUS;
+                Usart2Send("Status is OFF\n");
+            }
+        }
+    }
+}
 
 
-// void TF_Usart1_Adc_Dma (void)
-// {
-//     for (unsigned char i = 0; i < 5; i++)
-//     {
-//         LED_ON;
-//         Wait_ms(250);
-//         LED_OFF;
-//         Wait_ms(250);
-//     }
+void TF_Usart2_Adc_Dma (void)
+{
+    for (unsigned char i = 0; i < 5; i++)
+    {
+        LED_ON;
+        Wait_ms(250);
+        LED_OFF;
+        Wait_ms(250);
+    }
     
-//     Usart1Config();
+    Usart2Config();
 
-//     //-- ADC Init
-//     AdcConfig();
+    //-- ADC Init
+    AdcConfig();
 
-//     //-- DMA configuration and Init
-//     DMAConfig();
-//     DMA1_Channel1->CCR |= DMA_CCR_EN;
+    //-- DMA configuration and Init
+    DMAConfig();
+    DMA1_Channel1->CCR |= DMA_CCR_EN;
 
-//     ADC1->CR |= ADC_CR_ADSTART;
+    ADC1->CR |= ADC_CR_ADSTART;
 
+    unsigned short cntr = 0;
+    char s_to_send [100] = { 0 };
+    Usart2Send("\nTesting ADC with dma transfers...\n");
 
-//     unsigned short cntr = 0;
-//     char s_to_send [100] = { 0 };
-//     Usart1Send("\nTesting ADC with dma transfers...\n");
-//     // DMAEnableInterrupt();
-
-//     while (1)
-//     {
-//         if (sequence_ready)
-//         {
-//             sequence_ready_reset;
-//             if (cntr < 10000)
-//                 cntr++;
-//             else
-//             {
-//                 sprintf(s_to_send, "index: %d sample: %d\n", cntr, adc_ch[0]);
-//                 Usart1Send(s_to_send);
-//                 cntr = 0;
-//             }
-//         }            
-//     }
-// }
-
-
-// void TF_Usart2_Single (void)
-// {
-//     Usart2Config();
-
-//     while (1)
-//     {
-//         Usart2SendSingle('M');
-//         Wait_ms(1000);
-
-//         if (LED)
-//             LED_OFF;
-//         else
-//             LED_ON;
-//     }
-// }
+    while (1)
+    {
+        if (sequence_ready)
+        {
+            sequence_ready_reset;
+            if (cntr < 10000)
+                cntr++;
+            else
+            {
+                sprintf(s_to_send, "V_Sense_4V: %d V_Sense_12V: %d\n",
+                        V_Sense_4V,
+                        V_Sense_12V);
+                
+                Usart2Send(s_to_send);
+                cntr = 0;
+            }
+        }            
+    }
+}
 
 
-// void TF_Usart2_Multiple (void)
-// {
-//     for (unsigned char i = 0; i < 5; i++)
-//     {
-//         LED_ON;
-//         Wait_ms(250);
-//         LED_OFF;
-//         Wait_ms(250);
-//     }
+void TF_Usart2_Flash_Empty_Page (void)
+{
+    for (unsigned char i = 0; i < 5; i++)
+    {
+        LED_ON;
+        Wait_ms(250);
+        LED_OFF;
+        Wait_ms(250);
+    }
     
-//     Usart2Config();
+    Usart2Config();
 
-//     while (1)
-//     {
-//         Usart2Send("Mariano\n");
-//         Wait_ms(1000);
+    char s_to_send [100] = { 0 };
+    unsigned char * p;
+    p = (unsigned char *) PAGE15_ADDR;
+    
+    Usart2Send("\nReading Flash Data...\n");
 
-//         if (LED)
-//             LED_OFF;
-//         else
-//             LED_ON;
-//     }
-// }
-
-
-// void TF_Tim3_Pwm (void)
-// {
-//     TIM_3_Init();
-
-//     while (1)
-//     {
-//         for (unsigned short i = 0; i < 1000; i++)
-//         {
-//             Update_TIM3_CH3 (i);
-//             Wait_ms(2);            
-//         }
-
-//         if (LED)
-//             LED_OFF;
-//         else
-//             LED_ON;
-
-//         for (unsigned short i = 1000; i > 0; i--)
-//         {
-//             Update_TIM3_CH3 (i);
-//             Wait_ms(2);            
-//         }
-
-//         if (LED)
-//             LED_OFF;
-//         else
-//             LED_ON;
+    for (unsigned char i = 0; i < 64; i+=8)
+    {
+        sprintf(s_to_send, "0x%x %d %d %d %d %d %d %d %d\n",
+                (unsigned int) (p + i),
+                *(p + i + 0),
+                *(p + i + 1),
+                *(p + i + 2),
+                *(p + i + 3),
+                *(p + i + 4),
+                *(p + i + 5),
+                *(p + i + 6),
+                *(p + i + 7));
         
-//     }
-// }
+        Usart2Send(s_to_send);
+        Wait_ms(20);
+    }
 
+    Usart2Send("\nBlanking flash...\n");
+    Wait_ms(500);
+    if (Flash_ErasePage(FLASH_PAGE_FOR_BKP, 1) == FLASH_COMPLETE)
+    {
+        Usart2Send("Blank OK\n");
+        Wait_ms(100);
+    }
+    else
+    {
+        Usart2Send("Blank NOK\n");
+        Wait_ms(100);
+    }
 
-// void TF_Usart1_Flash_Empty_Page (void)
-// {
-//     for (unsigned char i = 0; i < 5; i++)
-//     {
-//         LED_ON;
-//         Wait_ms(250);
-//         LED_OFF;
-//         Wait_ms(250);
-//     }
-    
-//     Usart1Config();
+    Usart2Send("\nReading Flash Data...\n");
 
-//     char s_to_send [100] = { 0 };
-//     unsigned char * p;
-//     p = (unsigned char *) PAGE15_ADDR;
-    
-//     Usart1Send("\nReading Flash Data...\n");
-
-//     for (unsigned char i = 0; i < 64; i+=8)
-//     {
-//         sprintf(s_to_send, "0x%x %d %d %d %d %d %d %d %d\n",
-//                 (unsigned int) (p + i),
-//                 *(p + i + 0),
-//                 *(p + i + 1),
-//                 *(p + i + 2),
-//                 *(p + i + 3),
-//                 *(p + i + 4),
-//                 *(p + i + 5),
-//                 *(p + i + 6),
-//                 *(p + i + 7));
+    for (unsigned char i = 0; i < 64; i+=8)
+    {
+        sprintf(s_to_send, "0x%x %d %d %d %d %d %d %d %d\n",
+                (unsigned int) (p + i),
+                *(p + i + 0),
+                *(p + i + 1),
+                *(p + i + 2),
+                *(p + i + 3),
+                *(p + i + 4),
+                *(p + i + 5),
+                *(p + i + 6),
+                *(p + i + 7));
         
-//         Usart1Send(s_to_send);
-//         Wait_ms(20);
-//     }
-
-//     Usart1Send("\nBlanking flash...\n");
-//     Wait_ms(500);
-//     if (Flash_ErasePage(PAGE15, 1) == FLASH_COMPLETE)
-//     {
-//         Usart1Send("Blank OK\n");
-//         Wait_ms(100);
-//     }
-//     else
-//     {
-//         Usart1Send("Blank NOK\n");
-//         Wait_ms(100);
-//     }
-
-//     Usart1Send("\nReading Flash Data...\n");
-
-//     for (unsigned char i = 0; i < 64; i+=8)
-//     {
-//         sprintf(s_to_send, "0x%x %d %d %d %d %d %d %d %d\n",
-//                 (unsigned int) (p + i),
-//                 *(p + i + 0),
-//                 *(p + i + 1),
-//                 *(p + i + 2),
-//                 *(p + i + 3),
-//                 *(p + i + 4),
-//                 *(p + i + 5),
-//                 *(p + i + 6),
-//                 *(p + i + 7));
-        
-//         Usart1Send(s_to_send);
-//         Wait_ms(20);
-//     }
+        Usart2Send(s_to_send);
+        Wait_ms(20);
+    }
     
-//     while (1)
-//     {
-//         Wait_ms(300);
-//         if (LED)
-//             LED_OFF;
-//         else
-//             LED_ON;
+    while (1)
+    {
+        Wait_ms(300);
+        if (LED)
+            LED_OFF;
+        else
+            LED_ON;
 
-//     }
-// }
+    }
+}
 
 
-// void TF_Usart1_Flash_Write_Data (void)
-// {
-//     for (unsigned char i = 0; i < 5; i++)
-//     {
-//         LED_ON;
-//         Wait_ms(250);
-//         LED_OFF;
-//         Wait_ms(250);
-//     }
+void TF_Usart2_Flash_Write_Data (void)
+{
+    for (unsigned char i = 0; i < 5; i++)
+    {
+        LED_ON;
+        Wait_ms(250);
+        LED_OFF;
+        Wait_ms(250);
+    }
     
-//     Usart1Config();
+    Usart2Config();
 
-//     char s_to_send [100] = { 0 };
-//     unsigned char * p;
-//     p = (unsigned char *) PAGE15_ADDR;
+    char s_to_send [100] = { 0 };
+    unsigned char * p;
+    p = (unsigned char *) PAGE15_ADDR;
     
-//     Usart1Send("\nReading Flash Data...\n");
+    Usart2Send("\nReading Flash Data...\n");
 
-//     for (unsigned char i = 0; i < 64; i+=8)
-//     {
-//         sprintf(s_to_send, "0x%x %d %d %d %d %d %d %d %d\n",
-//                 (unsigned int) (p + i),
-//                 *(p + i + 0),
-//                 *(p + i + 1),
-//                 *(p + i + 2),
-//                 *(p + i + 3),
-//                 *(p + i + 4),
-//                 *(p + i + 5),
-//                 *(p + i + 6),
-//                 *(p + i + 7));
+    for (unsigned char i = 0; i < 64; i+=8)
+    {
+        sprintf(s_to_send, "0x%x %d %d %d %d %d %d %d %d\n",
+                (unsigned int) (p + i),
+                *(p + i + 0),
+                *(p + i + 1),
+                *(p + i + 2),
+                *(p + i + 3),
+                *(p + i + 4),
+                *(p + i + 5),
+                *(p + i + 6),
+                *(p + i + 7));
         
-//         Usart1Send(s_to_send);
-//         Wait_ms(20);
-//     }
+        Usart2Send(s_to_send);
+        Wait_ms(20);
+    }
 
-//     //write mem conf
-//     struct mem_conf_st {
-//         uint32_t d0;
-//         uint32_t d1;
-//         uint32_t d2;
-//         uint32_t d3;
-//     };
+    //write mem conf
+    struct mem_conf_st {
+        uint32_t d0;
+        uint32_t d1;
+        uint32_t d2;
+        uint32_t d3;
+    };
 
-//     struct mem_conf_st mem_conf;
-//     mem_conf.d0 = 0x5555;
-//     mem_conf.d1 = 0xAAAA;
-//     mem_conf.d2 = 0x0000;
-//     mem_conf.d3 = 0x7777;
+    struct mem_conf_st mem_conf;
+    mem_conf.d0 = 0x5555;
+    mem_conf.d1 = 0xAAAA;
+    mem_conf.d2 = 0x0000;
+    mem_conf.d3 = 0x7777;
 
-//     Usart1Send("\nWriting Flash...\n");
-//     Wait_ms(300);
-//     if (Flash_WriteConfigurations((uint32_t *) &mem_conf, sizeof(mem_conf)) == FLASH_COMPLETE)
-//         Usart1Send("Seems all good\n");
+    Usart2Send("\nWriting Flash...\n");
+    Wait_ms(300);
+    if (Flash_WriteConfigurations((uint32_t *) &mem_conf, sizeof(mem_conf)) == FLASH_COMPLETE)
+        Usart2Send("Seems all good\n");
 
-//     Wait_ms(300);
-//     for (unsigned char i = 0; i < 64; i+=8)
-//     {
-//         sprintf(s_to_send, "0x%x %x %x %x %x %x %x %x %x\n",
-//                 (unsigned int) (p + i),
-//                 *(p + i + 0),
-//                 *(p + i + 1),
-//                 *(p + i + 2),
-//                 *(p + i + 3),
-//                 *(p + i + 4),
-//                 *(p + i + 5),
-//                 *(p + i + 6),
-//                 *(p + i + 7));
+    Wait_ms(300);
+    for (unsigned char i = 0; i < 64; i+=8)
+    {
+        sprintf(s_to_send, "0x%x %x %x %x %x %x %x %x %x\n",
+                (unsigned int) (p + i),
+                *(p + i + 0),
+                *(p + i + 1),
+                *(p + i + 2),
+                *(p + i + 3),
+                *(p + i + 4),
+                *(p + i + 5),
+                *(p + i + 6),
+                *(p + i + 7));
         
-//         Usart1Send(s_to_send);
-//         Wait_ms(20);
-//     }
+        Usart2Send(s_to_send);
+        Wait_ms(20);
+    }
 
-//     Wait_ms(300);
-//     Usart1Send("\nVerifing Flash Backuped Data...\n");
-//     Wait_ms(300);
+    Wait_ms(300);
+    Usart2Send("\nVerifing Flash Backuped Data...\n");
+    Wait_ms(300);
 
-//     struct mem_conf_st mem_backuped;
-//     memcpy(&mem_backuped, (uint32_t *) FLASH_ADDRESS_FOR_BKP, sizeof(mem_backuped));
+    struct mem_conf_st mem_backuped;
+    memcpy(&mem_backuped, (uint32_t *) FLASH_ADDRESS_FOR_BKP, sizeof(mem_backuped));
 
-//     if ((mem_conf.d0 == mem_backuped.d0) &&
-//         (mem_conf.d1 == mem_backuped.d1) &&
-//         (mem_conf.d2 == mem_backuped.d2) &&
-//         (mem_conf.d3 == mem_backuped.d3))
-//         Usart1Send("Verified OK!!!\n");
-//     else
-//         Usart1Send("Verified NOK errors in backuped data\n");
+    if ((mem_conf.d0 == mem_backuped.d0) &&
+        (mem_conf.d1 == mem_backuped.d1) &&
+        (mem_conf.d2 == mem_backuped.d2) &&
+        (mem_conf.d3 == mem_backuped.d3))
+        Usart2Send("Verified OK!!!\n");
+    else
+        Usart2Send("Verified NOK errors in backuped data\n");
         
-//     while (1)
-//     {
-//         Wait_ms(300);
-//         if (LED)
-//             LED_OFF;
-//         else
-//             LED_ON;
+    while (1)
+    {
+        Wait_ms(300);
+        if (LED)
+            LED_OFF;
+        else
+            LED_ON;
 
-//     }
-// }
+    }
+}
 
 //--- end of file ---//
