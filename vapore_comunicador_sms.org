@@ -157,5 +157,9 @@
 * Ultimas Mejoras al programa antes de produccion
 ** DONE Configurar Gpios
    CLOSED: [2020-09-12 Sat 13:03]
-** Armar Tests de Hardware
-** Posibilidad de armar GSM Gateway en el programa principal
+** DONE Armar Tests de Hardware
+   CLOSED: [2020-09-14 Mon 09:04]
+** DONE Posibilidad de armar GSM Gateway en el programa principal
+   CLOSED: [2020-09-14 Mon 09:04]
+
+** TODO Modificar memoria bkp cuando este disponible placa/micro
