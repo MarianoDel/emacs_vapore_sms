@@ -220,11 +220,6 @@ int main(void)
 
             ConfigurationCheck();
             break;
-
-        case main_in_gsm_gateway_mode:
-            FuncsGSMGateway();
-            
-            break;            
             
         default:
             main_state = main_init;
@@ -234,6 +229,8 @@ int main(void)
         // The things that do not depend on the program state
         UpdateLed ();
         FuncsGSM ();
+        FuncsGSMG_Entering();
+        
     }	//end while 1
 
 //--- Fin Programa de Produccion Alarma SMS ---

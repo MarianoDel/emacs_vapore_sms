@@ -24,7 +24,7 @@
 
 
 // Exported Functions ----------------------------------------------------------
-void FuncsGSMGateway (void);
+void FuncsGSMG_Entering (void);
 void FuncsGSMG_Timeouts (void);
 
 #endif    /* _FUNCS_GSM_GATEWAY_H_ */

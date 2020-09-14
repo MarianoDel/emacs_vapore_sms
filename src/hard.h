@@ -104,8 +104,7 @@ typedef enum
     main_init = 0,
     main_wait_for_gsm_network,
     main_ready,
-    main_enable_output,
-    main_in_gsm_gateway_mode
+    main_enable_output
 
 } main_state_t;
 
