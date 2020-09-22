@@ -141,12 +141,6 @@ void WelcomeCode (void)
     Wait_ms(30);
 #endif
 
-#ifdef USE_REDONDA_BASIC
-    sprintf(str,"[%s] %s\n", __FILE__, str_macro(USE_REDONDA_BASIC));
-    Usart2Send(str);
-    Wait_ms(30);    
-#endif
-
 #ifdef DEBUG_ON
     sprintf(str,"[%s] %s\n", __FILE__, str_macro(DEBUG_ON));
     Usart2Send(str);

@@ -154,7 +154,7 @@
    - [X] main.c
 
 
-* Ultimas Mejoras al programa antes de produccion
+* TODO Ultimas Mejoras al programa antes de produccion
 ** DONE Configurar Gpios
    CLOSED: [2020-09-12 Sat 13:03]
 ** DONE Armar Tests de Hardware
@@ -163,3 +163,12 @@
    CLOSED: [2020-09-14 Mon 09:04]
 
 ** TODO Modificar memoria bkp cuando este disponible placa/micro
+
+* Placa nueva ver1.0
+** mejorar algunos strings
+** no dice version en placa
+** la tension del regulador 3.3V es mas baja porque sale de 4V
+   - 3.15V
+
+** Las seniales estan bien
+   se quemo el pin del micro al led, habra que investigar...

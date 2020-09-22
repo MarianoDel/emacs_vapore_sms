@@ -16,14 +16,13 @@
 //----------- Defines For Configuration -------------
 
 //----------- Hardware Board Version -------------
-#define HARD    "Hardware version 1.0"
-#define SOFT    "Firmware version 1.0"
+#define HARD    "Hardware version 1.0\n"
+#define SOFT    "Firmware version 1.0\n"
 
 //-------- Type of Program ----------------
 //OJO --- los dos que siguen van juntos
 #define USE_GSM
 #define DEBUG_ON
-#define USE_REDONDA_BASIC
 // #define USE_GSM_GATEWAY
 
 //-------- Clock Frequency ------------------------------------

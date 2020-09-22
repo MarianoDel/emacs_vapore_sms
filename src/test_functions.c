@@ -70,20 +70,10 @@ void TF_Act_12V (void)
 
 void TF_Led_Blinking (void)
 {
-    unsigned int cntr = 0;
-    
+    ChangeLed(LED_GSM_NETWORK_LOW_RSSI);
     while (1)
-    {
-        for (unsigned char i = 0; i < LED_LOW_VOLTAGE; i++)
-        {
-            ChangeLed(i);
-            cntr = 640000;
-            do {
-                UpdateLed();
-                cntr--;
-            } while (cntr);
-        }
-    }
+        UpdateLed();
+
 }
 
 
