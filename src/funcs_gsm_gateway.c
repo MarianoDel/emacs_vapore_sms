@@ -15,11 +15,15 @@
 #include "tim.h"
 #include "hard.h"
 #include "stm32g0xx.h"
+#include "flash_program.h"
+
 #include <string.h>
 #include <stdio.h>
 
 
 // Externals -------------------------------------------------------------------
+parameters_typedef * pmem;
+parameters_typedef mem_conf;
 
 
 // Globals ---------------------------------------------------------------------
@@ -31,7 +35,7 @@ volatile unsigned short timer_gsm_gw = 0;
 void FuncsGSMGateway (void);
 void FuncsGSMG_SendStatus (char *);
 unsigned char FuncsGSMG_ProcessCommands (char *);
-
+void FuncsGSMG_ShowMemory (parameters_typedef *);
 
 // Module Functions ------------------------------------------------------------
 void FuncsGSMG_Entering (void)
@@ -51,6 +55,11 @@ void FuncsGSMG_Entering (void)
 }
 
 
+#define LED_TOGGLE    do {    if (LED) \
+                                  LED_OFF; \
+                              else \
+                                  LED_ON; \
+                         } while (0)
 //Procesa toda la pila del GSM (por lo menos para los SMS)
 //los comandos que necesita el modulo se envian por otras funciones
 void FuncsGSMGateway (void)
@@ -68,31 +77,11 @@ void FuncsGSMGateway (void)
         Wait_ms (300);
     }
 
-    Wait_ms (3000);
-    Usart2Send("GSM GATEWAY.. Cambio a GSM\r\n");
-
-    //mando start al gsm
-    Usart2Send("Reset y Start GSM\r\n");
-    //GPSStartResetSM ();
-    timer_gsm_gw = 60000;		//doy 1 minuto para prender modulo
-    unsigned char i = 0;
-    while (timer_gsm_gw)
-    {
-        i = GSM_Start();
-        if (i == 1)
-        {
-            Usart2Send("Start OK\r\n");
-            timer_gsm_gw = 0;
-        }
-
-        if (i > 1)
-        {
-            Usart2Send("Start NOK\r\n");
-            Usart2Send("Please reboot!\r\n");
-        }
-    }
-
+    Wait_ms (100);
+    Usart2Send("GSM GATEWAY.. sin reboot al modulo\r\n");
+    Wait_ms (100);
     Usart2Send("GSM GATEWAY Listo para empezar\r\n");
+    Wait_ms (100);
 
     char buff [256] = { 0 };
     unsigned char this_mode = 1;
@@ -100,6 +89,7 @@ void FuncsGSMGateway (void)
     {
         if (Usart2HaveData())
         {
+            LED_TOGGLE;
             Usart2HaveDataReset();
             Usart2ReadBuffer((unsigned char *)buff, sizeof(buff));
             
@@ -112,7 +102,7 @@ void FuncsGSMGateway (void)
                 Usart2Send("Going to SMS Mode...\n");
                 this_mode = 0;
             }
-            else if (cmd_type == 1)
+            else if (cmd_type == 1)    //own commands
             {
             }
             else if (cmd_type == 0)    //not a command, send it to gsm
@@ -148,19 +138,19 @@ unsigned char FuncsGSMG_ProcessCommands (char * buff)
         unsigned char resp = 0;
 
         Usart2Send("Stopping GSM...\n");
-        
+        GSM_Start_Stop_ResetSM ();
         do {
             resp = GSM_Stop();
         } while (resp == 0);
 
         if (resp == 1)
-            Usart2Send("Stop OK\n");            
+            Usart2Send("Stop OK\n");
 
         if (resp == 2)
-            Usart2Send("Error\n");            
+            Usart2Send("Error\n");
 
         if (resp == 3)
-            Usart2Send("Timeout\n");            
+            Usart2Send("Timeout\n");
 
         FuncsGSMG_SendStatus(answers);
         result = 1;
@@ -171,7 +161,7 @@ unsigned char FuncsGSMG_ProcessCommands (char * buff)
         unsigned char resp = 0;
 
         Usart2Send("Starting GSM...\n");
-        
+        GSM_Start_Stop_ResetSM ();
         do {
             resp = GSM_Start();
         } while (resp == 0);
@@ -189,6 +179,18 @@ unsigned char FuncsGSMG_ProcessCommands (char * buff)
         result = 1;
     }
 
+    if (!strncmp(buff, "gsm_bkp_mem", sizeof ("gsm_bkp_mem") -1))
+    {
+        FuncsGSMG_ShowMemory(pmem);
+        result = 1;
+    }
+
+    if (!strncmp(buff, "gsm_current_mem", sizeof ("gsm_current_mem") -1))
+    {
+        FuncsGSMG_ShowMemory(&mem_conf);
+        result = 1;
+    }
+    
     if (!strncmp(buff, "gsm_sms_mode", sizeof ("gsm_sms_mode") -1))
         result = 2;
 
@@ -211,6 +213,37 @@ void FuncsGSMG_Timeouts (void)
 {
     if (timer_gsm_gw)
         timer_gsm_gw--;
+}
+
+
+void FuncsGSMG_ShowMemory (parameters_typedef * pmemory)
+{
+    char s_send [40] = { 0 };
+
+    // sprintf(s_send, "num_reportar: %s\n", pmemory->num_reportar);
+    // Usart2Send(s_send);
+    // Wait_ms(100);
+
+    // sprintf(s_send, "imei: %s\n", pmemory->imei);
+    // Usart2Send(s_send);
+    // Wait_ms(100);
+
+    // sprintf(s_send, "num_propio: %s\n", pmemory->num_propio);
+    // Usart2Send(s_send);
+    // Wait_ms(100);
+
+    sprintf(s_send, "envios_ok: %d\n", pmemory->bkp_envios_ok);
+    Usart2Send(s_send);
+    Wait_ms(100);
+
+    sprintf(s_send, "timer_reportar: %d\n", pmemory->bkp_timer_reportar);
+    Usart2Send(s_send);
+    Wait_ms(100);
+
+    sprintf(s_send, "prender_ring: %d\n", pmemory->bkp_prender_ring);
+    Usart2Send(s_send);
+    Wait_ms(100);
+
 }
 
 

@@ -43,6 +43,7 @@ void TF_Usart2_Multiple (void);
 void TF_Tim3_Pwm (void);
 void TF_Usart1_Flash_Empty_Page (void);
 void TF_Usart1_Flash_Write_Data (void);
+void TF_ReadMemory (void);
 
 #endif    /* _TEST_FUNTIONS_H_ */
 

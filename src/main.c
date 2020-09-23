@@ -38,7 +38,7 @@
 volatile unsigned short adc_ch [ADC_CHANNEL_QUANTITY];
 
 // - Externals de la Memoria y los modos -------
-parameters_typedef * pmem = (parameters_typedef *) (unsigned int *) FLASH_PAGE_FOR_BKP;	//en flash
+parameters_typedef * pmem = (parameters_typedef *) (unsigned int *) FLASH_ADDRESS_FOR_BKP;	//en flash
 parameters_typedef mem_conf;
 
 // - Externals Funcs GSM
@@ -128,6 +128,8 @@ int main(void)
         envios_ok = 0;
         prender_ring = 0;
         memset(num_tel_rep, '\0', sizeof(num_tel_rep));
+        memset(num_tel_imei, '\0', sizeof(num_tel_imei));
+        memset(num_tel_prop, '\0', sizeof(num_tel_prop));        
         //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
         // strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
     
@@ -136,6 +138,8 @@ int main(void)
     else
         Usart2Send("Memory Have Saved Data\n");
 
+    // Wait_ms(500);
+    // TF_ReadMemory ();
 
 //--- Programa de Activacion SMS - Produccion ---
     main_state_t main_state = main_init;

@@ -387,4 +387,30 @@ void TF_Usart2_Flash_Write_Data (void)
     }
 }
 
+
+void TF_ReadMemory (void)
+{
+    char s_to_send [100] = { 0 };
+    unsigned char * p;
+    p = (unsigned char *) PAGE15_ADDR;
+    
+    Usart2Send("\nReading Flash Data...\n");
+
+    for (unsigned char i = 0; i < 127; i+=8)
+    {
+        sprintf(s_to_send, "0x%x %d %d %d %d %d %d %d %d\n",
+                (unsigned int) (p + i),
+                *(p + i + 0),
+                *(p + i + 1),
+                *(p + i + 2),
+                *(p + i + 3),
+                *(p + i + 4),
+                *(p + i + 5),
+                *(p + i + 6),
+                *(p + i + 7));
+        
+        Usart2Send(s_to_send);
+        Wait_ms(20);
+    }
+}
 //--- end of file ---//

@@ -100,8 +100,16 @@
 
    AT+CMGL,"REC UNREAD",1    #lista de mensajes no leidos, no cambia el estado
 
+** Modo gsm gateway
+   gsm_gw_mode    ;; entrar en el modo
 
+   gsm_status    ;; muestra el estado de las seniales STATUS NETLIGHT y PWRKEY
+                 ;; NETLIGHT sube y baja
+                 
+   gsm_power_off    ;;
+   gsm_power_on
 
+   gsm_sms_mode
 
 * Migrar programa y herramientas de STM32F051 -> STM32G030
 ** DONE Actualizar version OpenOCD
@@ -171,4 +179,4 @@
    - 3.15V
 
 ** Las seniales estan bien
-   se quemo el pin del micro al led, habra que investigar...
+   se quemo el pin del micro al led PA12, habra que investigar...

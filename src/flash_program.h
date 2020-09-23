@@ -32,34 +32,36 @@ typedef struct parameters {
     unsigned int acumm_w2s;				//72
     unsigned short acumm_w2s_index;	//74
 
-    unsigned char timer_reportar;		//75
-    unsigned char envios_ok;			//76
+    unsigned char bkp_timer_reportar;		//75
+    unsigned char bkp_envios_ok;			//76
 
     unsigned char send_energy_flag;	//77
     //dummys para completar
-    unsigned char prender_ring;			//78
+    unsigned char bkp_prender_ring;			//78
     unsigned char dummy1;			//79
     unsigned char dummy2;			//80
 
 } parameters_typedef;
 
 // Configuration Change
-#define envios_ok		(mem_conf.envios_ok)
+#define envios_ok		(mem_conf.bkp_envios_ok)
 #define envios_ok_change	(mem_conf.send_energy_flag & 0x80)
 #define envios_ok_change_set	(mem_conf.send_energy_flag |= 0x80)
 #define envios_ok_change_reset	(mem_conf.send_energy_flag &= 0x7F)
 
-#define timer_rep		(mem_conf.timer_reportar)
+#define timer_rep		(mem_conf.bkp_timer_reportar)
 #define timer_rep_change	(mem_conf.send_energy_flag & 0x40)
 #define timer_rep_change_set	(mem_conf.send_energy_flag |= 0x40)
 #define timer_rep_change_reset	(mem_conf.send_energy_flag &= 0xBF)
 
-#define prender_ring		(mem_conf.prender_ring)
+#define prender_ring		(mem_conf.bkp_prender_ring)
 #define prender_ring_change	(mem_conf.send_energy_flag & 0x20)
 #define prender_ring_change_set	(mem_conf.send_energy_flag |= 0x20)
 #define prender_ring_change_reset	(mem_conf.send_energy_flag &= 0xDF)
 
 #define num_tel_rep			(mem_conf.num_reportar)
+#define num_tel_imei			(mem_conf.imei)
+#define num_tel_prop			(mem_conf.num_propio)
 
 // Flags
 #define diag_prender		(mem_conf.send_energy_flag & 0x08)
