@@ -36,6 +36,7 @@ void FuncsGSMGateway (void);
 void FuncsGSMG_SendStatus (char *);
 unsigned char FuncsGSMG_ProcessCommands (char *);
 void FuncsGSMG_ShowMemory (parameters_typedef *);
+void FuncsGSMG_ShowVoltage (void);
 
 // Module Functions ------------------------------------------------------------
 void FuncsGSMG_Entering (void)
@@ -244,6 +245,23 @@ void FuncsGSMG_ShowMemory (parameters_typedef * pmemory)
     Usart2Send(s_send);
     Wait_ms(100);
 
+}
+
+
+#define K4V    560
+#define K12V    183
+void FuncsGSMG_ShowVoltage (void)
+{
+    char s_send [40] = { 0 };
+
+    unsigned short vint = V_Sense_4V
+    sprintf(s_send, "V_Sense4V: %d\n", pmemory->bkp_envios_ok);
+    Usart2Send(s_send);
+    Wait_ms(100);
+
+    sprintf(s_send, "V_Sense12V: %d\n", pmemory->bkp_timer_reportar);
+    Usart2Send(s_send);
+    Wait_ms(100);
 }
 
 

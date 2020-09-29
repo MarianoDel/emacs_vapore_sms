@@ -179,4 +179,5 @@
    - 3.15V
 
 ** Las seniales estan bien
-   se quemo el pin del micro al led PA12, habra que investigar...
+   - se quemo el pin del micro al led PA12, habra que investigar...
+   - agrego un capa 100pF en la linea del micro para evitar un posible problema de rf
