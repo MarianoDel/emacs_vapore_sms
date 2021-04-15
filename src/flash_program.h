@@ -27,19 +27,20 @@ typedef struct parameters {
     char num_reportar [20];			//20
     char imei [24];					//44
     char num_propio [20];			//64
+    char sitio_propio [60];			//124    
 
-    unsigned int acumm_wh;				//68
-    unsigned int acumm_w2s;				//72
-    unsigned short acumm_w2s_index;	//74
+    unsigned int acumm_wh;				//128
+    unsigned int acumm_w2s;				//132
+    unsigned short acumm_w2s_index;	//134
 
-    unsigned char bkp_timer_reportar;		//75
-    unsigned char bkp_envios_ok;			//76
+    unsigned char bkp_timer_reportar;		//135
+    unsigned char bkp_envios_ok;			//136
 
-    unsigned char send_energy_flag;	//77
+    unsigned char send_energy_flag;	//137
     //dummys para completar
-    unsigned char bkp_prender_ring;			//78
-    unsigned char dummy1;			//79
-    unsigned char dummy2;			//80
+    unsigned char bkp_prender_ring;			//138
+    unsigned char dummy1;			//139
+    unsigned char dummy2;			//140
 
 } parameters_typedef;
 
@@ -59,7 +60,6 @@ typedef struct parameters {
 #define prender_ring_change_set	(mem_conf.send_energy_flag |= 0x20)
 #define prender_ring_change_reset	(mem_conf.send_energy_flag &= 0xDF)
 
-#define num_tel_rep			(mem_conf.num_reportar)
 #define num_tel_imei			(mem_conf.imei)
 #define num_tel_prop			(mem_conf.num_propio)
 
@@ -72,13 +72,16 @@ typedef struct parameters {
 #define diag_ringing_set	(mem_conf.send_energy_flag |= 0x04)
 #define diag_ringing_reset	(mem_conf.send_energy_flag &= 0xFB)
 
-// #define send_energy		(mem_conf.send_energy_flag & 0x01)
-// #define send_energy_set		(mem_conf.send_energy_flag |= 0x01)
-// #define send_energy_reset	(mem_conf.send_energy_flag &= 0xFE)
+#define sitio_prop        (mem_conf.sitio_propio)
+#define sitio_prop_change		(mem_conf.send_energy_flag & 0x02)
+#define sitio_prop_change_set		(mem_conf.send_energy_flag |= 0x02)
+#define sitio_prop_change_reset	(mem_conf.send_energy_flag &= 0xFD)
 
-// #define send_sms_ok		(mem_conf.send_energy_flag & 0x02)
-// #define send_sms_ok_set		(mem_conf.send_energy_flag |= 0x02)
-// #define send_sms_ok_reset	(mem_conf.send_energy_flag &= 0xFD)
+#define num_tel_rep		(mem_conf.num_reportar)
+#define num_tel_rep_change		(mem_conf.send_energy_flag & 0x01)
+#define num_tel_rep_change_set		(mem_conf.send_energy_flag |= 0x01)
+#define num_tel_rep_change_reset	(mem_conf.send_energy_flag &= 0xFE)
+
 
 // #define diag_apagar		(mem_conf.send_energy_flag & 0x20)
 // #define diag_apagar_set		(mem_conf.send_energy_flag |= 0x20)

@@ -1,18 +1,20 @@
-//---------------------------------------------------------
-// #### PROYECTO COMUNICADOR VAPORE SMS - Custom Board ####
+//--------------------------------------------------
+// #### VAPORE SMS COMMS PROJECT - Custom Board ####
 // ##
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
 // ##
-// #### FUNCS_GSM.C #######################################
-//---------------------------------------------------------
+// #### FUNCS_GSM.C ################################
+//--------------------------------------------------
 
 // Includes --------------------------------------------------------------------
 #include "funcs_gsm.h"
 #include "sim900_800.h"
 #include "usart.h"
 #include "flash_program.h"
+#include "comm.h"
+
 #include <string.h>
 #include <stdio.h>
 
@@ -37,6 +39,7 @@ char s_msg [100];
 //flags
 unsigned short GSMFlags = 0;
 
+//TODO: estas tres trabajan juntas, pasar a estructura
 unsigned char enviar_sms = 0;
 char enviar_sms_num [20] = { '\0' };
 char enviar_sms_msg [160] = { '\0' };
@@ -461,115 +464,7 @@ void FuncsGSM (void)
 // debe interpretar el mensaje o descartar
 void FuncsGSMGetSMSPayloadCallback (char * orig_num, char * payload)
 {
-    unsigned char index = 0;
-
-    // Configurations
-    if (!strncmp(payload, "REPORTAR_OK:1", sizeof ("REPORTAR_OK:1") -1))
-    {
-        envios_ok = 1;
-        envios_ok_change_set;
-
-        enviar_sms = 1;
-        strcpy(enviar_sms_num, orig_num);
-        strcpy(enviar_sms_msg, "OK");
-    }
-
-    if (!strncmp(payload, "REPORTAR_OK:0", sizeof ("REPORTAR_OK:0") -1))
-    {
-        envios_ok = 0;
-        envios_ok_change_set;
-    }
-
-    if (!strncmp(payload, "PRENDER_RING:0", sizeof ("PRENDER_RING:0") -1))
-    {
-        prender_ring = 0;
-        prender_ring_change_set;
-
-        if (envios_ok)
-        {
-            enviar_sms = 1;
-            strcpy(enviar_sms_num, orig_num);
-            strcpy(enviar_sms_msg, "OK");
-        }
-    }
-
-    if (!strncmp(payload, "PRENDER_RING:1", sizeof ("PRENDER_RING:1") -1))
-    {
-        prender_ring = 1;
-        prender_ring_change_set;
-
-        if (envios_ok)
-        {
-            enviar_sms = 1;
-            strcpy(enviar_sms_num, orig_num);
-            strcpy(enviar_sms_msg, "OK");
-        }        
-    }
-    
-    if (!strncmp(payload, (const char *)"TIMER:", sizeof ("TIMER:") -1))
-    {
-        index = 0;
-        index += (*(payload + 6) - 48) * 10;
-        index += *(payload + 7) - 48;
-
-        if ((*(payload + 6) == 'F') && (*(payload + 7) == 'F'))
-        {
-            timer_rep = 0;
-        }
-        else if ((index > 1) && (index <= 60))
-        {
-#ifdef DEBUG_ON
-            char debug [60] = {'\0'};
-            sprintf(debug, "nuevo timer %d", index);
-            Usart2Send(debug);
-#endif
-            timer_rep = index;
-            timer_rep_change_set;
-        }
-
-        if (envios_ok)
-        {
-            enviar_sms = 1;
-            strcpy(enviar_sms_num, orig_num);
-            strcpy(enviar_sms_msg, "OK");
-        }
-    }
-
-    // if (!strncmp(payload, (const char *)"TIMERD:", sizeof ("TIMERD:") -1))
-    // {
-    //     index = 0;
-    //     index += (*(payload + 7) - 48) * 10;
-    //     index += *(payload + 8) - 48;
-
-    //     if ((*(payload + 7) == 'F') && (*(payload + 8) == 'F'))
-    //     {
-    //         timer_debug = 0;
-    //         send_sms_ok_set;
-    //     }
-    //     else if ((index > 1) && (index <= 60))
-    //     {
-    //         timer_debug = index;
-    //         send_sms_ok_set;
-    //     }
-    // }
-
-    if (!strncmp(payload, (const char *)"PRENDER:", sizeof ("PRENDER:") -1))
-    {
-        diag_prender_set;
-        if (envios_ok)
-        {
-            enviar_sms = 1;
-            strcpy(enviar_sms_num, orig_num);
-            strcpy(enviar_sms_msg, "OK");
-        }
-    }
-
-    // if (!strncmp(payload, (const char *)"APAGAR:", sizeof ("APAGAR:") -1))
-    //     diag_apagar_set;
-
-    // if (!strncmp(payload, (const char *)"ENERGIA:", sizeof ("ENERGIA:") -1))
-    //     send_energy_set;
-
+    CommsProcessSMSPayload(orig_num, payload);
 }
 
 

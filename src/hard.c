@@ -16,17 +16,7 @@
 
 #include <stdio.h>
 
-// Configs. --------------------------------------------------------------------
-#define LED_BLINK_ON    LED_ON
-#define LED_BLINK_OFF    LED_OFF
-#define TIMER_BLINK    200
-#define TIMER_BLINK_NEXT_CYCLE    2000
-
-
-// Externals -------------------------------------------------------------------
-
-
-// Private Types ---------------------------------------------------------------
+// Module Private Types Constants and Macros -----------------------------------
 // led states
 typedef enum
 {    
@@ -37,6 +27,19 @@ typedef enum
     
 } led_state_t;
 
+// Configs
+#define LED_BLINK_ON    LED_ON
+#define LED_BLINK_OFF    LED_OFF
+#define TIMER_BLINK    200
+#define TIMER_BLINK_NEXT_CYCLE    2000
+
+
+#define SWITCHES_ROOF    80
+#define SWITCHES_THRESHOLD_MIN	50
+
+
+// Externals -------------------------------------------------------------------
+
 
 // Globals ---------------------------------------------------------------------
 // for the led
@@ -44,6 +47,8 @@ volatile unsigned short timer_led;
 led_state_t led_state = START_BLINKING;
 unsigned char blink = 0;
 unsigned char how_many_blinks = 0;
+
+volatile unsigned char s_alarm_input_cntr = 0;
 
 
 
@@ -155,8 +160,29 @@ void HARD_Timeouts (void)
     if (timer_led)
         timer_led--;
 
+    if (ALARM_INPUT)
+    {
+        if (s_alarm_input_cntr < SWITCHES_ROOF)
+            s_alarm_input_cntr++;
+    }
+    else if (s_alarm_input_cntr)
+    {
+        if (s_alarm_input_cntr > 10)
+            s_alarm_input_cntr -= 5;
+        else
+            s_alarm_input_cntr--;
+    }
 }
 
+
+
+unsigned char Check_Alarm_Input (void)
+{
+    if (s_alarm_input_cntr > SWITCHES_THRESHOLD_MIN)
+        return 1;
+    else
+        return 0;
+}
 
 
 //--- end of file ---//

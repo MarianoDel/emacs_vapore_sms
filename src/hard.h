@@ -14,10 +14,20 @@
 
 
 //----------- Defines For Configuration -------------
+// #define WITH_PA1_V4V_SENSE    //normal mode
+#define WITH_PA1_TEST1_INPUT    //change in hardware test1 is re-routed to PA1 for 12V inputs signals
+
+// #define ACTIVATION_BY_SMS
+#define ACTIVATION_BY_12V_INPUT
 
 //----------- Hardware Board Version -------------
-#define HARD    "Hardware version 1.0\n"
+#define HARD    "Hardware version 1.1\n"
+#ifdef WITH_PA1_TEST1_INPUT
+#define SOFT    "Firmware version 1.1\n"
+#endif
+#ifdef WITH_PA1_V4V_SENSE
 #define SOFT    "Firmware version 1.0\n"
+#endif
 
 //-------- Type of Program ----------------
 //OJO --- los dos que siguen van juntos
@@ -36,7 +46,16 @@
 
 //GPIOA pin0    nc
 
+#ifdef WITH_PA1_V4V_SENSE
 //GPIOA pin1	V_Sense_4V
+#endif
+#ifdef WITH_PA1_TEST1_INPUT
+//GPIOA pin1	re-routed from test1
+#define ALARM_INPUT    ((GPIOA->IDR & 0x0002) != 0)
+#define ALARM_ON    (GPIOA->BSRR = 0x00000002)
+#define ALARM_OFF    (GPIOA->BSRR = 0x00020000)
+
+#endif
 
 //GPIOA pin2    usart2 tx
 //GPIOA pin3	usart2 rx (para debug)
@@ -103,7 +122,9 @@ typedef enum
     main_init = 0,
     main_wait_for_gsm_network,
     main_ready,
-    main_enable_output
+    main_enable_output,
+    main_enable_act_12V_input,
+    main_sms_not_sended
 
 } main_state_t;
 
@@ -135,5 +156,6 @@ void ChangeLed (unsigned char);
 void UpdateLed (void);
 void WelcomeCode (void);
 void HARD_Timeouts (void);
+unsigned char Check_Alarm_Input (void);
 
 #endif /* HARD_H_ */

@@ -19,6 +19,7 @@
 #include "tim.h"
 #include "usart.h"
 #include "hard.h"
+#include "comm.h"
 
 #include "core_cm0plus.h"
 #include "adc.h"
@@ -88,6 +89,9 @@ int main(void)
 
     //--- Funciones de Test Hardware ---
     // TF_Led ();
+    // TF_Led_Alarm_Input ();
+    // TF_Alarm_Input_As_Output ();
+    // TF_Led_Alarm_Input_Filtered ();
     // TF_Act_12V ();
     // TF_Led_Blinking();
     // TF_Usart2_TxRx ();
@@ -144,7 +148,7 @@ int main(void)
 //--- Programa de Activacion SMS - Produccion ---
     main_state_t main_state = main_init;
     unsigned char led_rssi_high = 0;
-
+    unsigned char blink_act = 0;
     while (1)
     {
         switch (main_state)
@@ -173,6 +177,9 @@ int main(void)
             break;
 
         case main_ready:
+
+#ifdef ACTIVATION_BY_SMS
+            // activate from SMS
             if (diag_prender)
             {
                 diag_prender_reset;
@@ -182,9 +189,10 @@ int main(void)
                 Usart2Send("ACT_12V ACTIVO\n");
             }
 
-            if ((diag_ringing) &&
-                (prender_ring) &&
-                (!timer_prender_ringing))
+            // activate from phone ringing
+            else if ((diag_ringing) &&
+                     (prender_ring) &&
+                     (!timer_prender_ringing))
             {
                 diag_ringing_reset;
                 timer_prender_ringing = 12000;
@@ -193,8 +201,63 @@ int main(void)
                 timer_standby = timer_rep * 1000;
                 Usart2Send("ACT_12V ACTIVO\n");
             }
+#endif
 
-            if (FuncsGSMStateAsk() < gsm_state_ready)
+#ifdef ACTIVATION_BY_12V_INPUT
+#ifdef WITH_PA1_TEST1_INPUT
+            // activate from 12V on test1 input
+            if (Check_Alarm_Input())
+            {
+                unsigned char sms_ready = 1;
+
+                //check num_tel_rep before send sms
+                if (sms_ready)
+                {
+                    sms_ready = VerifyNumberString(num_tel_rep);
+
+                    if (!sms_ready)
+                        blink_act = 1;
+                }
+
+                //check sitio_prop before send sms
+                if (sms_ready)
+                {
+                    sms_ready = VerifySiteString(sitio_prop);
+
+                    if (!sms_ready)
+                        blink_act = 2;
+                }
+
+
+                if (sms_ready)
+                {
+                    char buff [80] = { 0 };
+
+                    ACT_12V_ON;                
+                    strcpy(buff, "Activacion en: ");
+                    strcat(buff, sitio_prop);
+                    if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
+                    {
+                        main_state = main_enable_act_12V_input;
+                        sms_ready = 1;
+                    }
+                    else
+                    {
+                        sms_ready = 0;
+                        blink_act = 3;
+                    }
+                }
+
+                if (!sms_ready)
+                {
+                    main_state = main_sms_not_sended;
+                    timer_standby = 6000;
+                }
+            }
+#endif
+#endif
+
+            else if (FuncsGSMStateAsk() < gsm_state_ready)
             {
                 main_state = main_wait_for_gsm_network;
                 ChangeLed(LED_STANDBY);
@@ -224,6 +287,60 @@ int main(void)
 
             ConfigurationCheck();
             break;
+
+        case main_enable_act_12V_input:
+            if (!Check_Alarm_Input())
+            {
+                main_state = main_ready;
+                ACT_12V_OFF;
+            }
+
+            ConfigurationCheck();
+            break;
+
+        case main_sms_not_sended:
+            switch (blink_act)
+            {
+            case 1:
+                ACT_12V_ON;
+                Wait_ms(250);
+                ACT_12V_OFF;
+                Wait_ms(1750);
+                break;
+
+            case 2:
+                ACT_12V_ON;
+                Wait_ms(250);
+                ACT_12V_OFF;
+                Wait_ms(250);
+                ACT_12V_ON;
+                Wait_ms(250);
+                ACT_12V_OFF;
+                Wait_ms(1250);
+                break;
+
+            case 3:
+                ACT_12V_ON;
+                Wait_ms(250);
+                ACT_12V_OFF;
+                Wait_ms(250);
+                ACT_12V_ON;
+                Wait_ms(250);
+                ACT_12V_OFF;
+                Wait_ms(250);                
+                ACT_12V_ON;
+                Wait_ms(250);
+                ACT_12V_OFF;
+                Wait_ms(750);
+                break;
+            }
+
+            ConfigurationCheck();
+
+            if (!timer_standby)
+                main_state = main_ready;
+            
+            break;
             
         default:
             main_state = main_init;
@@ -246,6 +363,7 @@ int main(void)
 
 //--- End of Main ---//
 
+
 void ConfigurationCheck (void)
 {
     if (timer_rep_change)
@@ -265,8 +383,21 @@ void ConfigurationCheck (void)
         prender_ring_change_reset;
         ConfigurationChange();
     }
+
+    if (num_tel_rep_change)
+    {
+        num_tel_rep_change_reset;
+        ConfigurationChange();
+    }
+
+    if (sitio_prop_change)
+    {
+        sitio_prop_change_reset;
+        ConfigurationChange();
+    }
 }
-    
+
+
 void ConfigurationChange (void)
 {
     unsigned char saved_ok = 0;

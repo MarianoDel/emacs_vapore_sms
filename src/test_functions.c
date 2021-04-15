@@ -54,6 +54,48 @@ void TF_Led (void)
 }
 
 
+void TF_Led_Alarm_Input (void)
+{
+    while (1)
+    {
+        if (ALARM_INPUT)
+            LED_ON;
+        else
+            LED_OFF;
+
+        Wait_ms(300);
+    }
+}
+
+
+void TF_Led_Alarm_Input_Filtered (void)
+{
+    while (1)
+    {
+        if (Check_Alarm_Input())
+            LED_ON;
+        else
+            LED_OFF;
+
+    }
+}
+
+
+void TF_Alarm_Input_As_Output (void)
+{
+    while (1)
+    {
+        LED_ON;
+        ALARM_ON;
+        Wait_ms(100);
+        LED_OFF;
+        ALARM_OFF;
+        Wait_ms(100);
+        
+    }
+}
+
+
 void TF_Act_12V (void)
 {
     while (1)

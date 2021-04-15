@@ -85,6 +85,8 @@ SRC += ./src/test_functions.c
 SRC += ./src/sim900_800.c
 SRC += ./src/funcs_gsm.c
 SRC += ./src/funcs_gsm_gateway.c
+SRC += ./src/comm.c
+
 
 ## Core Support
 # SRC += $(CORELIBDIR)/core_cm0.c
@@ -207,14 +209,22 @@ clean:
 	rm -f $(FULL_PRJ).bin
 	rm -f $(SRC:.c=.lst)
 	rm -f $(ASRC:.s=.lst)
+	rm -f *.o
+	rm -f *.out
+
 
 tests:
-	# primero objetos de los modulos a testear, solo si son tipo HAL sin dependencia del hard
-	# gcc -c src/lcd.c -I. $(INCDIR)
-	# gcc src/tests.c lcd.o
-	# ./a.out
-	# sino copiar funcion a testear al main de tests.c
+	# simple functions tests, copy functions to tests module into main
 	gcc src/tests.c
 	./a.out
+
+tests_comm:
+	# first module objects to test
+	gcc -c src/comm.c -I. $(INCDIR) $(DDEFS)
+	# second auxiliary helper modules
+	gcc -c src/tests_ok.c -I $(INCDIR)
+	gcc src/tests_comm.c comm.o tests_ok.o -I $(INCDIR) $(DDEFS)
+	./a.out
+
 
 # *** EOF ***

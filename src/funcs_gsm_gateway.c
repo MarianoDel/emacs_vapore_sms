@@ -14,6 +14,7 @@
 #include "usart.h"
 #include "tim.h"
 #include "hard.h"
+#include "adc.h"
 #include "stm32g0xx.h"
 #include "flash_program.h"
 
@@ -24,7 +25,7 @@
 // Externals -------------------------------------------------------------------
 parameters_typedef * pmem;
 parameters_typedef mem_conf;
-
+extern volatile unsigned short adc_ch [ADC_CHANNEL_QUANTITY];
 
 // Globals ---------------------------------------------------------------------
 volatile unsigned short timer_gsm_gw = 0;
@@ -254,14 +255,14 @@ void FuncsGSMG_ShowVoltage (void)
 {
     char s_send [40] = { 0 };
 
-    unsigned short vint = V_Sense_4V
-    sprintf(s_send, "V_Sense4V: %d\n", pmemory->bkp_envios_ok);
-    Usart2Send(s_send);
-    Wait_ms(100);
+    unsigned short vint = V_Sense_4V;
+    // sprintf(s_send, "V_Sense4V: %d\n", pmemory->bkp_envios_ok);
+    // Usart2Send(s_send);
+    // Wait_ms(100);
 
-    sprintf(s_send, "V_Sense12V: %d\n", pmemory->bkp_timer_reportar);
-    Usart2Send(s_send);
-    Wait_ms(100);
+    // sprintf(s_send, "V_Sense12V: %d\n", pmemory->bkp_timer_reportar);
+    // Usart2Send(s_send);
+    // Wait_ms(100);
 }
 
 

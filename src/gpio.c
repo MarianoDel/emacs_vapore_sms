@@ -1,5 +1,4 @@
 //---------------------------------------------
-// ##
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
@@ -14,13 +13,37 @@
 #include "hard.h"
 
 
+// Module Private Types Constants and Macros -----------------------------------
+// - Port enables
+#define GPIOA_ENABLE
+#define GPIOB_ENABLE
+//#define GPIOC_ENABLE
 
-//--- Private typedef ---//
-//--- Private define ---//
-//--- Private macro ---//
-//--- Private variables ---//
-//--- Private function prototypes ---//
-//--- Private functions ---//
+// - Ports Clocks
+#define GPIOA_CLK (RCC->IOPENR & 0x00000001)
+#define GPIOA_CLK_ON (RCC->IOPENR |= 0x00000001)
+#define GPIOA_CLK_OFF (RCC->IOPENR &= ~0x00000001)
+
+#define GPIOB_CLK (RCC->IOPENR & 0x00000002)
+#define GPIOB_CLK_ON (RCC->IOPENR |= 0x00000002)
+#define GPIOB_CLK_OFF (RCC->IOPENR &= ~0x00000002)
+
+#define GPIOC_CLK (RCC->IOPENR & 0x00000004)
+#define GPIOC_CLK_ON (RCC->IOPENR |= 0x00000004)
+#define GPIOC_CLK_OFF (RCC->IOPENR &= ~0x00000004)
+
+#define GPIOD_CLK (RCC->IOPENR & 0x00000008)
+#define GPIOD_CLK_ON (RCC->IOPENR |= 0x00000008)
+#define GPIOD_CLK_OFF (RCC->IOPENR &= ~0x00000008)
+
+#define GPIOF_CLK (RCC->IOPENR & 0x00000020)
+#define GPIOF_CLK_ON (RCC->IOPENR |= 0x00000020)
+#define GPIOF_CLK_OFF (RCC->IOPENR &= ~0x00000020)
+
+// #define SYSCFG_CLK (RCC->APB2ENR & 0x00000001)
+// #define SYSCFG_CLK_ON RCC->APB2ENR |= 0x00000001
+// #define SYSCFG_CLK_OFF RCC->APB2ENR &= ~0x00000001
+
 
 //-------------------------------------------//
 // @brief  GPIO configure.
@@ -32,10 +55,10 @@ void GPIO_Config (void)
     unsigned long temp;
 
     //--- MODER ---//
-    //00: Input mode (reset state)
+    //00: Input mode 
     //01: General purpose output mode
     //10: Alternate function mode
-    //11: Analog mode
+    //11: Analog mode (reset state)
 
     //--- OTYPER ---//
     //These bits are written by software to configure the I/O output type.
@@ -57,12 +80,19 @@ void GPIO_Config (void)
     //11: Reserved
 
     //--- GPIO A ---//
+#ifdef GPIOA_ENABLE
     if (!GPIOA_CLK)
         GPIOA_CLK_ON;
 
     temp = GPIOA->MODER;    //2 bits por pin
+#ifdef WITH_PA1_V4V_SENSE    
     temp &= 0xFC033F03;    //PA1 analog; PA2 - PA3 alternate; PA7 output
     temp |= 0x016840AC;    //PA9 - PA10 alternative; PA11 - PA12 output
+#endif
+#ifdef WITH_PA1_TEST1_INPUT
+    temp &= 0xFC033F03;    //PA1 input; PA2 - PA3 alternate; PA7 output
+    temp |= 0x016840A0;    //PA9 - PA10 alternative; PA11 - PA12 output
+#endif
     GPIOA->MODER = temp;
 
     temp = GPIOA->OTYPER;	//1 bit por pin
@@ -76,9 +106,18 @@ void GPIO_Config (void)
     GPIOA->OSPEEDR = temp;
 
     temp = GPIOA->PUPDR;	//2 bits por pin
+#ifdef WITH_PA1_V4V_SENSE    
     temp &= 0xFFFFFFFF;
     temp |= 0x00000000;
+#endif
+#ifdef WITH_PA1_TEST1_INPUT
+    temp &= 0xFFFFFFF3;    //PA1 pulldwn
+    temp |= 0x00000008;
+#endif
     GPIOA->PUPDR = temp;
+
+#endif    // GPIOA_ENABLE
+    
 
     //--- GPIO B ---//
 #ifdef GPIOB_ENABLE
@@ -105,7 +144,7 @@ void GPIO_Config (void)
     temp |= 0x00000000;
     GPIOB->PUPDR = temp;
 
-#endif
+#endif    // GPIOB_ENABLE
 
     //--- GPIO C ---//
 #ifdef GPIOC_ENABLE
@@ -132,7 +171,7 @@ void GPIO_Config (void)
     temp |= 0x00000000;
     GPIOC->PUPDR = temp;
 
-#endif
+#endif    // GPIOC_ENABLE
     
 
 //	//Interrupt en PB8
