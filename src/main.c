@@ -133,7 +133,8 @@ int main(void)
         prender_ring = 0;
         memset(num_tel_rep, '\0', sizeof(num_tel_rep));
         memset(num_tel_imei, '\0', sizeof(num_tel_imei));
-        memset(num_tel_prop, '\0', sizeof(num_tel_prop));        
+        memset(num_tel_prop, '\0', sizeof(num_tel_prop));
+        memset(sitio_prop, '\0', sizeof(sitio_prop));                
         //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
         // strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
     
@@ -148,7 +149,7 @@ int main(void)
 //--- Programa de Activacion SMS - Produccion ---
     main_state_t main_state = main_init;
     unsigned char led_rssi_high = 0;
-    unsigned char blink_act = 0;
+
     while (1)
     {
         switch (main_state)
@@ -166,6 +167,10 @@ int main(void)
             envios_ok_change_reset;
             timer_rep_change_reset;
             prender_ring_change_reset;
+
+            //reset de comunicaciones
+            sitio_prop_change_reset;
+            num_tel_rep_change_reset;
             break;
 
         case main_wait_for_gsm_network:
@@ -210,13 +215,17 @@ int main(void)
             {
                 unsigned char sms_ready = 1;
 
+                Usart2Send("ACT_12V ACTIVO: ");
                 //check num_tel_rep before send sms
                 if (sms_ready)
                 {
                     sms_ready = VerifyNumberString(num_tel_rep);
 
                     if (!sms_ready)
-                        blink_act = 1;
+                    {
+                        ChangeLedActivate(1);
+                        Usart2Send("sin numero\n");
+                    }
                 }
 
                 //check sitio_prop before send sms
@@ -225,7 +234,10 @@ int main(void)
                     sms_ready = VerifySiteString(sitio_prop);
 
                     if (!sms_ready)
-                        blink_act = 2;
+                    {
+                        ChangeLedActivate(2);
+                        Usart2Send("sin sitio\n");
+                    }
                 }
 
 
@@ -240,11 +252,13 @@ int main(void)
                     {
                         main_state = main_enable_act_12V_input;
                         sms_ready = 1;
+                        Usart2Send("OK\n");
                     }
                     else
                     {
                         sms_ready = 0;
-                        blink_act = 3;
+                        ChangeLedActivate(3);
+                        Usart2Send("sin red\n");
                     }
                 }
 
@@ -299,46 +313,15 @@ int main(void)
             break;
 
         case main_sms_not_sended:
-            switch (blink_act)
-            {
-            case 1:
-                ACT_12V_ON;
-                Wait_ms(250);
-                ACT_12V_OFF;
-                Wait_ms(1750);
-                break;
-
-            case 2:
-                ACT_12V_ON;
-                Wait_ms(250);
-                ACT_12V_OFF;
-                Wait_ms(250);
-                ACT_12V_ON;
-                Wait_ms(250);
-                ACT_12V_OFF;
-                Wait_ms(1250);
-                break;
-
-            case 3:
-                ACT_12V_ON;
-                Wait_ms(250);
-                ACT_12V_OFF;
-                Wait_ms(250);
-                ACT_12V_ON;
-                Wait_ms(250);
-                ACT_12V_OFF;
-                Wait_ms(250);                
-                ACT_12V_ON;
-                Wait_ms(250);
-                ACT_12V_OFF;
-                Wait_ms(750);
-                break;
-            }
+            UpdateLedActivate();
 
             ConfigurationCheck();
 
             if (!timer_standby)
+            {
+                ACT_12V_OFF;
                 main_state = main_ready;
+            }
             
             break;
             
@@ -406,7 +389,7 @@ void ConfigurationChange (void)
     saved_ok = Flash_WriteConfigurations((uint32_t *)&mem_conf, sizeof(mem_conf));
     __enable_irq();                
 #ifdef DEBUG_ON
-    if (saved_ok)
+    if (saved_ok == FLASH_COMPLETE)
         Usart2Send("Memory Saved OK!\n");
     else
         Usart2Send("Memory Error!!!\n");

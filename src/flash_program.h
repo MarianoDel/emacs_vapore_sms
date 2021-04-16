@@ -37,10 +37,15 @@ typedef struct parameters {
     unsigned char bkp_envios_ok;			//136
 
     unsigned char send_energy_flag;	//137
-    //dummys para completar
     unsigned char bkp_prender_ring;			//138
+
+    //dummys para completar
     unsigned char dummy1;			//139
     unsigned char dummy2;			//140
+    unsigned char dummy3;			//141
+    unsigned char dummy4;			//142
+    unsigned char dummy5;			//143
+    unsigned char dummy6;			//144    
 
 } parameters_typedef;
 

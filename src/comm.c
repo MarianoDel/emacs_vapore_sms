@@ -227,7 +227,7 @@ unsigned char VerifyNumberString (char * number)
     unsigned char len = 0;
     len = strlen(number);
 
-    if (len > 19)
+    if ((len > 19) || (len < 3))
         return 0;
 
     for (unsigned char i = 0; i < len; i++)
@@ -250,7 +250,7 @@ unsigned char VerifySiteString (char * site)
     unsigned char len = 0;
     len = strlen(site);
 
-    if (len > 59)
+    if ((len > 59) || (len < 3))
         return 0;
 
     for (unsigned char i = 0; i < len; i++)

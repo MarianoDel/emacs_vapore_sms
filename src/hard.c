@@ -48,6 +48,12 @@ led_state_t led_state = START_BLINKING;
 unsigned char blink = 0;
 unsigned char how_many_blinks = 0;
 
+// for the led_activate
+volatile unsigned short timer_led_activate;
+led_state_t led_activate_state = START_BLINKING;
+unsigned char blink_activate = 0;
+unsigned char how_many_blinks_activate = 0;
+
 volatile unsigned char s_alarm_input_cntr = 0;
 
 
@@ -117,6 +123,69 @@ void UpdateLed (void)
 }
 
 
+void ChangeLedActivate (unsigned char how_many)
+{
+    how_many_blinks_activate = how_many;
+    led_activate_state = START_BLINKING;
+}
+
+
+void UpdateLedActivate (void)
+{
+    switch (led_activate_state)
+    {
+        case START_BLINKING:
+            blink_activate = how_many_blinks_activate;
+            
+            if (blink_activate)
+            {
+                ACT_12V_ON;
+                timer_led_activate = TIMER_BLINK;
+                led_activate_state++;
+                blink_activate--;
+            }
+            break;
+
+        case WAIT_TO_OFF:
+            if (!timer_led_activate)
+            {
+                ACT_12V_OFF;
+                timer_led_activate = TIMER_BLINK;
+                led_activate_state++;
+            }
+            break;
+
+        case WAIT_TO_ON:
+            if (!timer_led_activate)
+            {
+                if (blink_activate)
+                {
+                    blink_activate--;
+                    timer_led_activate = TIMER_BLINK;
+                    led_activate_state = WAIT_TO_OFF;
+                    ACT_12V_ON;
+                }
+                else
+                {
+                    led_activate_state = WAIT_NEW_CYCLE;
+                    timer_led_activate = TIMER_BLINK_NEXT_CYCLE;
+                }
+            }
+            break;
+
+        case WAIT_NEW_CYCLE:
+            if (!timer_led_activate)
+                led_activate_state = START_BLINKING;
+
+            break;
+
+        default:
+            led_activate_state = START_BLINKING;
+            break;
+    }
+}
+
+
 void WelcomeCode (void)
 {
     char str [128] = { 0 };
@@ -160,6 +229,9 @@ void HARD_Timeouts (void)
     if (timer_led)
         timer_led--;
 
+    if (timer_led_activate)
+        timer_led_activate--;
+    
     if (ALARM_INPUT)
     {
         if (s_alarm_input_cntr < SWITCHES_ROOF)
