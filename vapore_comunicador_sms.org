@@ -186,8 +186,10 @@
 ** Falla de Hardware
    - pin desconectado del micro, pata 5 debe ser gnd, quedo desconectada
 
-** TODO Modificacion Soft, para reportar a un numero especial las activaciones
-** TODO Modificacion Hard, se cambia la entrada de sensado de 4V para tomar la activacion
+** DONE Modificacion Soft, para reportar a un numero especial las activaciones
+   CLOSED: [2021-04-16 Fri 15:40]
+** DONE Modificacion Hard, se cambia la entrada de sensado de 4V para tomar la activacion
+   CLOSED: [2021-04-16 Fri 15:40]
    - R10 se desconecta de 4V y pasa a conectarse a la pista de test1
      se debe desconectar test1 del micro
    - el conector de test1 se cambia a .1 blanco
