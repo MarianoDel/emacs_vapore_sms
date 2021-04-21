@@ -134,7 +134,9 @@ int main(void)
         memset(num_tel_rep, '\0', sizeof(num_tel_rep));
         memset(num_tel_imei, '\0', sizeof(num_tel_imei));
         memset(num_tel_prop, '\0', sizeof(num_tel_prop));
-        memset(sitio_prop, '\0', sizeof(sitio_prop));                
+        memset(sitio_prop, '\0', sizeof(sitio_prop));
+        strcpy(num_tel_rep, "1141747063");
+        strcpy(sitio_prop, "Prueba Kirno");
         //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
         // strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
     
