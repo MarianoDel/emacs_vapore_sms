@@ -223,7 +223,8 @@ tests_comm:
 	gcc -c src/comm.c -I. $(INCDIR) $(DDEFS)
 	# second auxiliary helper modules
 	gcc -c src/tests_ok.c -I $(INCDIR)
-	gcc src/tests_comm.c comm.o tests_ok.o -I $(INCDIR) $(DDEFS)
+	gcc -c src/tests_mock_usart.c -I $(INCDIR)
+	gcc src/tests_comm.c comm.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
 	./a.out
 
 

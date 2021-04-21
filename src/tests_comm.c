@@ -9,11 +9,13 @@
 
 // Includes Modules for tests --------------------------------------------------
 #include "comm.h"
-#include "tests_ok.h"
 #include "flash_program.h"
 
+//helper modules
+#include "tests_ok.h"
+#include "tests_mock_usart.h"
+
 #include <stdio.h>
-// #include <stdlib.h>
 #include <string.h>
 
 
@@ -85,7 +87,7 @@ void Test_Comms (void)
     char my_new_number [] = {"1145376762"};
     printf("Test REPORTAR_NUM: %s\n", my_new_number);
     
-    strcpy(payload, "REPORTAR_NUM:1145376762");    
+    strcpy(payload, "REPORTAR_NUM:1145376762OK");    //+trailing OK
     CommsProcessSMSPayload (orig_num, payload);
 
     if ((num_tel_rep_change) &&
@@ -103,7 +105,8 @@ void Test_Comms (void)
     printf("Test REPORTAR_SITIO: %s\n", my_new_site);
     
     strcpy(payload, "REPORTAR_SITIO:");
-    strcat(payload, my_new_site);        
+    strcat(payload, my_new_site);
+    strcat(payload, "OK");        //+trailing OK
     CommsProcessSMSPayload (orig_num, payload);
 
     if ((sitio_prop_change) &&
