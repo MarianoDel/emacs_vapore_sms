@@ -17,8 +17,8 @@
 // #define WITH_PA1_V4V_SENSE    //normal mode
 #define WITH_PA1_TEST1_INPUT    //change in hardware test1 is re-routed to PA1 for 12V inputs signals
 
-// #define ACTIVATION_BY_SMS
-#define ACTIVATION_BY_12V_INPUT
+#define ACTIVATION_BY_SMS
+// #define ACTIVATION_BY_12V_INPUT
 
 //----------- Hardware Board Version -------------
 #define HARD    "Hardware version 1.1\n"
