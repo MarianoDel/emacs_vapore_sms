@@ -118,19 +118,13 @@ unsigned char Usart1ReadBuffer (unsigned char * bout, unsigned short max_len)
     len = prx1 - rx1buff;
 
     if (len < max_len)
-    {
-        //el prx1 siempre llega adelantado desde la int, lo corto con un 0
-        *prx1 = '\0';
-        len += 1;    //me aseguro que entre el '\0' en buffer out (bout)
-        memcpy(bout, (unsigned char *) rx1buff, len);
-    }
+        len += 1;    //space for '\0' from int
     else
-    {
-        memcpy(bout, (unsigned char *) rx1buff, len);
         len = max_len;
-    }
 
-    //ajusto punteros de rx luego de la copia
+    memcpy(bout, (unsigned char *) rx1buff, len);
+
+    //pointer adjust after copy
     prx1 = rx1buff;
     return (unsigned char) len;
 }
@@ -272,15 +266,11 @@ unsigned char Usart2ReadBuffer (unsigned char * bout, unsigned short max_len)
     len = prx2 - rx2buff;
 
     if (len < max_len)
-    {
         len += 1;    //space for '\0' from int
-        memcpy(bout, (unsigned char *) rx2buff, len);
-    }
     else
-    {
         len = max_len;
-        memcpy(bout, (unsigned char *) rx2buff, len);
-    }
+
+    memcpy(bout, (unsigned char *) rx2buff, len);
 
     //pointer adjust after copy
     prx2 = rx2buff;
