@@ -81,6 +81,7 @@ void TF_Led_Alarm_Input_Filtered (void)
 }
 
 
+#ifndef HARDWARE_VER_1_2
 void TF_Alarm_Input_As_Output (void)
 {
     while (1)
@@ -94,6 +95,7 @@ void TF_Alarm_Input_As_Output (void)
         
     }
 }
+#endif
 
 
 void TF_Act_12V (void)

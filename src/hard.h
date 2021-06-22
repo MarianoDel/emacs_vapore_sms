@@ -21,6 +21,16 @@
 // #define ACTIVATION_BY_12V_INPUT
 
 //----------- Hardware Board Version -------------
+#define HARDWARE_VER_1_2
+// #define HARDWARE_VER_1_1
+// #define HARDWARE_VER_1_0
+
+#ifdef HARDWARE_VER_1_2
+#define HARD    "Hardware version 1.2\n"
+#define SOFT    "Firmware version 1.2\n"
+#endif    //#ifdef HARDWARE_VER_1_2
+
+#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
 #define HARD    "Hardware version 1.1\n"
 #ifdef WITH_PA1_TEST1_INPUT
 #define SOFT    "Firmware version 1.1\n"
@@ -28,6 +38,7 @@
 #ifdef WITH_PA1_V4V_SENSE
 #define SOFT    "Firmware version 1.0\n"
 #endif
+#endif    //#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
 
 //-------- Type of Program ----------------
 //OJO --- los dos que siguen van juntos
@@ -42,6 +53,67 @@
 //-------- End Of Defines For Configuration ------
 
 // Gpios Configuration ------------------------------
+#ifdef HARDWARE_VER_1_2
+//GPIOA pin0    nc
+
+//GPIOA pin1	V_Sense_4V
+
+//GPIOA pin2    usart2 tx
+//GPIOA pin3	usart2 rx (para debug)
+
+//GPIOA pin4
+//GPIOA pin5
+//GPIOA pin6	nc
+
+//GPIOA pin7
+#define PWRKEY    ((GPIOA->ODR & 0x0080) != 0)
+#define PWRKEY_ON    (GPIOA->BSRR = 0x00000080)
+#define PWRKEY_OFF    (GPIOA->BSRR = 0x00800000)
+
+//GPIOB pin0 
+//GPIOB pin1    nc
+
+//GPIOB pin2    V_Sense_12V
+
+//GPIOA pin8    nc
+
+//GPIOA pin9    usart1 tx (para el SIM)
+
+//GPIOC pin6    nc
+
+//GPIOA pin10	usart1 rx (para el SIM)
+
+//GPIOA pin11
+#define ACT_12V    ((GPIOA->ODR & 0x0800) != 0)
+#define ACT_12V_ON    (GPIOA->BSRR = 0x00000800)
+#define ACT_12V_OFF    (GPIOA->BSRR = 0x08000000)
+
+//GPIOA pin12
+#define LED    ((GPIOA->ODR & 0x1000) != 0)
+#define LED_ON    (GPIOA->BSRR = 0x00001000)
+#define LED_OFF    (GPIOA->BSRR = 0x10000000)
+
+//GPIOA pin13    swdio
+//GPIOA pin14    swclk
+//GPIOA pin15    nc
+
+//GPIOB pin3    nc
+
+//GPIOB pin4
+#define STATUS    ((GPIOB->IDR & 0x0010) != 0)
+
+//GPIOB pin5
+#define NETLIGHT    ((GPIOB->IDR & 0x0020) != 0)
+
+//GPIOB pin6
+#define ALARM_INPUT    ((GPIOB->IDR & 0x0040) != 0)
+
+//GPIOB pin7    test2
+//GPIOB pin8    test3
+//GPIOB pin9    nc
+#endif     //#ifdef HARDWARE_VER_1_2
+
+#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
 //GPIOB pin9    nc
 
 //GPIOA pin0    nc
@@ -107,6 +179,7 @@
 //GPIOB pin6    test1
 //GPIOB pin7    test2
 //GPIOB pin8    test3
+#endif     //#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
 
 
 // Exported Types Constants & Macros  ------------------------------------------

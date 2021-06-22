@@ -185,6 +185,92 @@ int main(void)
 
         case main_ready:
 
+#ifdef HARDWARE_VER_1_2
+            // activate from SMS
+            if (diag_prender)
+            {
+                diag_prender_reset;
+                main_state = main_enable_output;
+                ACT_12V_ON;
+                timer_standby = timer_rep * 1000;
+                Usart2Send("ACT_12V ACTIVO\n");
+            }
+
+            // activate from phone ringing
+            else if ((diag_ringing) &&
+                     (prender_ring) &&
+                     (!timer_prender_ringing))
+            {
+                diag_ringing_reset;
+                timer_prender_ringing = 12000;
+                main_state = main_enable_output;
+                ACT_12V_ON;
+                timer_standby = timer_rep * 1000;
+                Usart2Send("ACT_12V ACTIVO\n");
+            }
+
+            // activate from 12V on test1 input
+            if (Check_Alarm_Input())
+            {
+                unsigned char sms_ready = 1;
+
+                Usart2Send("ACT_12V ACTIVO: ");
+                //check num_tel_rep before send sms
+                if (sms_ready)
+                {
+                    sms_ready = VerifyNumberString(num_tel_rep);
+
+                    if (!sms_ready)
+                    {
+                        ChangeLedActivate(1);
+                        Usart2Send("sin numero\n");
+                    }
+                }
+
+                //check sitio_prop before send sms
+                if (sms_ready)
+                {
+                    sms_ready = VerifySiteString(sitio_prop);
+
+                    if (!sms_ready)
+                    {
+                        ChangeLedActivate(2);
+                        Usart2Send("sin sitio\n");
+                    }
+                }
+
+
+                if (sms_ready)
+                {
+                    char buff [SITE_MAX_LEN + 20] = { 0 };
+
+                    ACT_12V_ON;                
+                    strcpy(buff, "Activacion en: ");
+                    strcat(buff, sitio_prop);
+                    if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
+                    {
+                        main_state = main_enable_act_12V_input;
+                        sms_ready = 1;
+                        Usart2Send("OK\n");
+                    }
+                    else
+                    {
+                        sms_ready = 0;
+                        ChangeLedActivate(3);
+                        Usart2Send("sin red\n");
+                    }
+                }
+
+                if (!sms_ready)
+                {
+                    main_state = main_sms_not_sended;
+                    timer_standby = 6000;
+                }
+            }
+            
+#endif    //HARDWARE_VER_1_2
+            
+#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
 #ifdef ACTIVATION_BY_SMS
             // activate from SMS
             if (diag_prender)
@@ -208,7 +294,8 @@ int main(void)
                 timer_standby = timer_rep * 1000;
                 Usart2Send("ACT_12V ACTIVO\n");
             }
-#endif
+
+#endif    //ACTIVATION_BY_SMS
 
 #ifdef ACTIVATION_BY_12V_INPUT
 #ifdef WITH_PA1_TEST1_INPUT
@@ -270,8 +357,9 @@ int main(void)
                     timer_standby = 6000;
                 }
             }
-#endif
-#endif
+#endif    //WITH_PA1_TEST1_INPUT
+#endif    //ACTIVATION_BY_12V_INPUT
+#endif    //#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
 
             else if (FuncsGSMStateAsk() < gsm_state_ready)
             {

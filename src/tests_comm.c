@@ -120,6 +120,28 @@ void Test_Comms (void)
         printf("el sitio errado es: %s\n", mem_conf.sitio_propio);
     }
 
+    // char my_new_site2 [] = {"ALARMA VECINAL QUIRNO 457 CIUDAD AUT”NOMA DE BUENOS AIRES ENTRE CALLE AV DIRECTORIO Y TANDIL CODIGO POSTAL 1406"};
+    char my_new_site2 [] = {"ALARMA VECINAL QUIRNO 457 CIUDAD AUTONOMA DE BUENOS AIRES ENTRE CALLE AV DIRECTORIO Y TANDIL CODIGO POSTAL 1406"};
+    // char my_new_site2 [] = {"ALARMA VECINAL QUIRNO 457 CIUDAD AUT”NOMA DE BUENOS AIRES ENTRE CALLE AV DIRECTORIO"};
+    // char my_new_site2 [] = {"AL¡RMA"};
+    printf("Test REPORTAR_SITIO: %s, largo: %d\n", my_new_site2, strlen(my_new_site2));
+    
+    strcpy(payload, "REPORTAR_SITIO:");
+    strcat(payload, my_new_site2);
+    strcat(payload, "OK");        //+trailing OK
+    CommsProcessSMSPayload (orig_num, payload);
+
+    if ((sitio_prop_change) &&
+        (strcmp(mem_conf.sitio_propio, my_new_site2) == 0))
+    {
+        PrintOK();
+    }
+    else
+    {
+        PrintERR();
+        printf("el sitio errado es: %s\n", mem_conf.sitio_propio);
+    }
+    
     printf("\n");
     char number_test [40] = { 0 };
     strcpy(number_test, "11567");
@@ -173,7 +195,20 @@ void Test_Comms (void)
         PrintOK();
     else
         PrintERR();
-    
+
+    strcpy(site_test, my_new_site2);
+    printf("Test verify site: %s: ", site_test);
+    if (VerifySiteString(site_test))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("after verifing: %s\n", site_test);
+
+    // printf("Prueba de letras con acentos A E I O U\n");
+    // strcpy(site_test, "¡…Õ”⁄");
+    // for (int i = 0; i < strlen(site_test); i++)
+    //     printf("0x%x  dec: %d\n", (unsigned char) site_test[i], (unsigned char) site_test[i]);
 }
 
 

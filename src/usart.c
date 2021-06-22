@@ -118,7 +118,10 @@ unsigned char Usart1ReadBuffer (unsigned char * bout, unsigned short max_len)
     len = prx1 - rx1buff;
 
     if (len < max_len)
-        len += 1;    //space for '\0' from int
+    {
+        *prx1 = '\0';    //buffer from int isnt ended with '\0' do it now
+        len += 1;    //space for '\0'
+    }
     else
         len = max_len;
 

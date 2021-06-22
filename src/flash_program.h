@@ -27,27 +27,31 @@ typedef struct parameters {
     char num_reportar [20];			//20
     char imei [24];					//44
     char num_propio [20];			//64
-    char sitio_propio [60];			//124    
+    char sitio_propio [172];			//236
 
-    unsigned int acumm_wh;				//128
-    unsigned int acumm_w2s;				//132
-    unsigned short acumm_w2s_index;	//134
+    unsigned int acumm_wh;				//240
+    unsigned int acumm_w2s;				//244
+    unsigned short acumm_w2s_index;	//246
 
-    unsigned char bkp_timer_reportar;		//135
-    unsigned char bkp_envios_ok;			//136
+    unsigned char bkp_timer_reportar;		//247
+    unsigned char bkp_envios_ok;			//248
 
-    unsigned char send_energy_flag;	//137
-    unsigned char bkp_prender_ring;			//138
+    unsigned char send_energy_flag;	//249
+    unsigned char bkp_prender_ring;			//250
 
     //dummys para completar
-    unsigned char dummy1;			//139
-    unsigned char dummy2;			//140
-    unsigned char dummy3;			//141
-    unsigned char dummy4;			//142
-    unsigned char dummy5;			//143
-    unsigned char dummy6;			//144    
+    unsigned char dummy1;			//251
+    unsigned char dummy2;			//252
+    unsigned char dummy3;			//253
+    unsigned char dummy4;			//254
+    unsigned char dummy5;			//255
+    unsigned char dummy6;			//256
 
 } parameters_typedef;
+
+#define SITE_MAX_LEN    145
+// #define SITE_MAX_LEN    20
+
 
 // Configuration Change
 #define envios_ok		(mem_conf.bkp_envios_ok)

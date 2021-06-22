@@ -189,13 +189,13 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         unsigned char report_ok = 0;
 
         unsigned char len = strlen(p_new_place);
-        if (len < (60 + 2))
+        if (len < (SITE_MAX_LEN + 2))
         {
-            char new_site [60] = { 0 };
-            strncpy(new_site, p_new_place, (len - 2));
+            char new_site [SITE_MAX_LEN + 1] = { 0 };
+            strncpy(new_site, p_new_place, len - 2);    //quito el trailing OK
 
 #ifdef COMM_DEBUG_ON
-            char debug [80] = {'\0'};
+            char debug [SITE_MAX_LEN + 20] = {'\0'};
             sprintf(debug, "nuevo lugar %s\n", new_site);
             Usart2Send(debug);
 #endif
@@ -250,13 +250,31 @@ unsigned char VerifySiteString (char * site)
     unsigned char len = 0;
     len = strlen(site);
 
-    if ((len > 59) || (len < 3))
+    if ((len > SITE_MAX_LEN) || (len < 3))
         return 0;
 
     for (unsigned char i = 0; i < len; i++)
     {
-        if ((*(site + i) > '~') ||
-            (*(site + i) < ' '))
+        if ((*(site + i) == 'á') ||
+            (*(site + i) == 'é') ||
+            (*(site + i) == 'í') ||
+            (*(site + i) == 'ó') ||
+            (*(site + i) == 'ú'))
+        {
+            // do nothing here
+        }
+        else if ((unsigned char) *(site + i) == 193)
+            *(site + i) = 'A';
+        else if ((unsigned char) *(site + i) == 201)
+            *(site + i) = 'E';
+        else if ((unsigned char) *(site + i) == 205)
+            *(site + i) = 'I';
+        else if ((unsigned char) *(site + i) == 211)
+            *(site + i) = 'O';
+        else if ((unsigned char) *(site + i) == 218)
+            *(site + i) = 'U';
+        else if ((*(site + i) > '~') ||
+                 (*(site + i) < ' '))
             return 0;
     }
 
