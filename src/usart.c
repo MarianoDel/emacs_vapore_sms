@@ -123,7 +123,10 @@ unsigned char Usart1ReadBuffer (unsigned char * bout, unsigned short max_len)
         len += 1;    //space for '\0'
     }
     else
-        len = max_len;
+    {
+        *(bout + max_len - 1) = '\0';
+        len = max_len - 1;
+    }
 
     memcpy(bout, (unsigned char *) rx1buff, len);
 

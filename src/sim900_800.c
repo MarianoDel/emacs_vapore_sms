@@ -1569,11 +1569,19 @@ t_RespGsm GSMReceivSMS (void)
                 GSMCantSMS--;
                 GSMReadSMSState++;
             }
+            else    //es una respuesta pero no parece un sms
+            {
+                //TODO: debiera contar errores antes de borrar este sms
+                GSMCantSMS--;
+                GSMReadSMSState++;
+            }
         }
 
-        if (i > 2)
-            GSMReadSMSState = 0;
-
+        // if (i > 2)
+        // {
+        //     GSMReadSMSState = 0;
+        //     resp = resp_gsm_timeout;
+        // }
         break;
 
     case 2:

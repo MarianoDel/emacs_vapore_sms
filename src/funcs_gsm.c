@@ -374,11 +374,15 @@ void FuncsGSM (void)
         break;
         
     case gsm_state_reading_sms:
-        //TODO: poner aca timeout???
+
         resp = GSMReceivSMS();
 
         if (resp == resp_gsm_ok)
             gsm_state = gsm_state_ready;
+
+        // if (resp == resp_gsm_timeout)    //TODO: agregado 23-06-2021 problemas con buffers grandes
+        //     gsm_state = resp_gsm_ok;    //tengo que borrar los sms?
+            
 
         break;
 
