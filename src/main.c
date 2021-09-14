@@ -268,6 +268,8 @@ int main(void)
                         main_state = main_enable_act_12V_input;
                         sms_ready = 1;
                         Usart2Send("OK\n");
+                        if (panel_input)
+                            timer_standby = 1000;
                     }
                     else
                     {
@@ -409,7 +411,7 @@ int main(void)
             break;
 
         case main_enable_act_12V_input:
-            if (!Check_Alarm_Input())
+            if (!Check_Alarm_Input() && (!timer_standby))
             {
                 main_state = main_ready;
                 ACT_12V_OFF;
@@ -439,7 +441,7 @@ int main(void)
         // The things that do not depend on the program state
         UpdateLed ();
         FuncsGSM ();
-        FuncsGSMG_Entering();
+        FuncsGSMG_Entering();    //check config entry and clean the usart2 buffer
         
     }	//end while 1
 

@@ -19,7 +19,8 @@
 
 
 // Externals -------------------------------------------------------------------
-
+extern volatile char comm_from_panel_local_buffer [];
+extern volatile unsigned char usart2_have_activation_buffer;
 
 // Globals ---------------------------------------------------------------------
 
@@ -48,6 +49,8 @@ void Test_Comms_From_Panel (void)
     char payload [160] = { 0 };
 
     Usart2FillRxBuffer("Activo: ");
+    strcpy((char *) comm_from_panel_local_buffer, "Activo: ");
+    usart2_have_activation_buffer = 1;
     printf("Test only Activo: ");
     answer = Panel_Check_Alarm (&number);
 
@@ -57,6 +60,8 @@ void Test_Comms_From_Panel (void)
         PrintOK();
 
     Usart2FillRxBuffer("Activo: CCC B1");
+    strcpy((char *) comm_from_panel_local_buffer, "Activo: CCC B1");
+    usart2_have_activation_buffer = 1;    
     printf("Test only Activo: CCC B1: ");
     answer = Panel_Check_Alarm (&number);
 
@@ -66,6 +71,8 @@ void Test_Comms_From_Panel (void)
         PrintOK();
 
     Usart2FillRxBuffer("Activo: 000 B2");
+    strcpy((char *) comm_from_panel_local_buffer, "Activo: 000 B2");
+    usart2_have_activation_buffer = 1;    
     printf("Test only Activo: 000 B2: ");
     answer = Panel_Check_Alarm (&number);
 
@@ -76,6 +83,8 @@ void Test_Comms_From_Panel (void)
 
 
     Usart2FillRxBuffer("Activo: 000 B1");
+    strcpy((char *) comm_from_panel_local_buffer, "Activo: 000 B1");
+    usart2_have_activation_buffer = 1;    
     printf("Test only Activo: 000 B1: ");
     answer = Panel_Check_Alarm (&number);
 
@@ -85,6 +94,8 @@ void Test_Comms_From_Panel (void)
         PrintERR();
 
     Usart2FillRxBuffer("Activo: 999 B1");
+    strcpy((char *) comm_from_panel_local_buffer, "Activo: 999 B1");
+    usart2_have_activation_buffer = 1;    
     printf("Test only Activo: 999 B1: ");
     answer = Panel_Check_Alarm (&number);
 

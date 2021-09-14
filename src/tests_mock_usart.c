@@ -26,6 +26,7 @@ char usart1_msg_sended [200] = { 0 };
 
 // Mock the Usart2
 unsigned char usart2_have_data = 0;
+unsigned char usart2_have_activation_buffer = 0;
 char usart2_msg_received [200] = { 0 };
 char usart2_msg_sended [200] = { 0 };
 
@@ -100,6 +101,18 @@ unsigned char Usart2HaveData (void)
 void Usart2HaveDataReset (void)
 {
     usart2_have_data = 0;
+}
+
+
+unsigned char Usart2HaveActivationBuffer (void)
+{
+    return usart2_have_activation_buffer;
+}
+
+
+void Usart2HaveActivationBufferReset (void)
+{
+    usart2_have_activation_buffer = 0;
 }
 
 

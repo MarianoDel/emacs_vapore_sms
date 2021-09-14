@@ -54,6 +54,8 @@ unsigned char Usart2ReadBuffer (unsigned char *, unsigned short);
 void USART2_IRQHandler(void);
 unsigned char Usart2HaveData (void);
 void Usart2HaveDataReset (void);
+unsigned char Usart2HaveActivationBuffer (void);
+void Usart2HaveActivationBufferReset (void);
 
 void USART_Timeouts (void);
 

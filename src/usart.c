@@ -25,7 +25,7 @@
 
 
 // Externals -------------------------------------------------------------------
-
+extern volatile char comm_from_panel_local_buffer [];
 
 // Globals ---------------------------------------------------------------------
 volatile unsigned char usart1_have_data = 0;
@@ -37,6 +37,7 @@ volatile unsigned char tx1buff[SIZEOF_DATA];
 volatile unsigned char rx1buff[SIZEOF_DATA];
 
 volatile unsigned char usart2_have_data = 0;
+volatile unsigned char usart2_have_activation_buffer = 0;
 volatile unsigned char * ptx2;
 volatile unsigned char * ptx2_pckt_index;
 volatile unsigned char * prx2;
@@ -301,7 +302,16 @@ void USART2_IRQHandler(void)
             else if ((dummy == '\n') || (dummy == 26))    //CTRL+J ("\r\n"); CTRL-Z (26)
             {
                 *prx2 = '\0';
-                usart2_have_data = 1;
+                if ((prx2 - rx2buff) == 14)
+                {
+                    memcpy((char *) comm_from_panel_local_buffer, (char *) rx2buff, 14);
+                    prx2 = rx2buff;    // pointer adjust after copy or flush
+                    usart2_have_activation_buffer = 1;
+                    // Usart2SendUnsigned("new data\n", sizeof("new data\n") - 1);
+                }
+                else
+                    usart2_have_data = 1;
+
             }
             else
             {
@@ -350,6 +360,18 @@ unsigned char Usart2HaveData (void)
 void Usart2HaveDataReset (void)
 {
     usart2_have_data = 0;
+}
+
+
+unsigned char Usart2HaveActivationBuffer (void)
+{
+    return usart2_have_activation_buffer;
+}
+
+
+void Usart2HaveActivationBufferReset (void)
+{
+    usart2_have_activation_buffer = 0;
 }
 
 

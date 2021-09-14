@@ -24,7 +24,7 @@
 
 
 // Globals ---------------------------------------------------------------------
-char local_buffer [100] = { 0 };
+volatile char comm_from_panel_local_buffer [100] = { 0 };
 
 
 // Module Private Functions ----------------------------------------------------
@@ -36,18 +36,21 @@ unsigned char Panel_Check_Alarm (unsigned short * number)
 {
     unsigned char answer = 0;
     
-    if (Usart2HaveData())
+    if (Usart2HaveActivationBuffer())
     {
-        Usart2HaveDataReset();
-        Usart2ReadBuffer((unsigned char *) local_buffer, sizeof(local_buffer));
+        Usart2HaveActivationBufferReset();
+        // Usart2SendUnsigned("algo nuevo\n", sizeof("algo nuevo\n") - 1);
 
-        if (!strncmp(local_buffer, "Activo: ", sizeof("Activo: ") -1))
+        // buffer is already copied from int
+        char * pStr = (char *) comm_from_panel_local_buffer;
+        if (!strncmp(pStr, "Activo: ", sizeof("Activo: ") -1))
         {
-            char * pStr = (local_buffer + sizeof("Activo: XXX ") - 1);
+            // Usart2SendUnsigned("en activo\n", sizeof("en activo\n") - 1);
+            pStr += sizeof("Activo: XXX ") - 1;
             if (!strncmp(pStr, "B1", sizeof("B1") -1))
             {
                 unsigned short my_number;
-                pStr = (local_buffer + sizeof("Activo: ") - 1);
+                pStr = ((char *) comm_from_panel_local_buffer + sizeof("Activo: ") - 1);
 
                 if (StringIsANumber (pStr, &my_number) == 3)
                 {
