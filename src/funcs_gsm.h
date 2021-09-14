@@ -33,6 +33,10 @@ typedef enum {
 	gsm_state_verify_reg,
 	gsm_state_dell_all,
 	gsm_state_get_imei,
+	gsm_state_shutdown,
+	gsm_state_stop_wait,
+	gsm_state_shutdown_always,
+	gsm_state_stop_always,
 	gsm_state_ready,
 	gsm_state_sending_conf,
 	gsm_state_sending_sms,
@@ -43,11 +47,7 @@ typedef enum {
         gsm_state_check_rssi,
         gsm_state_check_network,        
 	gsm_state_reading_sms,
-	gsm_state_disconnected,
-	gsm_state_shutdown,
-	gsm_state_stop_wait,
-	gsm_state_shutdown_always,
-	gsm_state_stop_always
+	gsm_state_disconnected
 
 } t_GsmState;
 

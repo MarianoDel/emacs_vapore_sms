@@ -361,10 +361,24 @@ void FuncsGSM (void)
                 char s_ser [20] = { 0 };
                 sprintf(s_ser, "REG: %d\n", register_status);
                 Usart2Send(s_ser);
+                if ((register_status == 1) || (register_status == 5))
+                {
+                    gsm_error_counter = 0;
+                    funcs_gsm_timeout_timer = 20000;
+                    gsm_state = gsm_state_ready;
+                }
+                else if (gsm_error_counter > 1)
+                {
+                    GSM_Start_Stop_ResetSM ();
+                    gsm_state = gsm_state_shutdown;
+                }
+                else
+                {
+                    gsm_error_counter++;
+                    gsm_state = gsm_state_ready;
+                    funcs_gsm_timeout_timer = 10000;
+                }
             }
-
-            gsm_state = gsm_state_ready;
-            funcs_gsm_timeout_timer = 20000;
         }
         else if (resp > 2)
         {
