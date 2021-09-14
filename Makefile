@@ -86,6 +86,7 @@ SRC += ./src/sim900_800.c
 SRC += ./src/funcs_gsm.c
 SRC += ./src/funcs_gsm_gateway.c
 SRC += ./src/comm.c
+SRC += ./src/comms_from_panel.c
 
 
 ## Core Support
@@ -225,6 +226,15 @@ tests_comm:
 	gcc -c src/tests_ok.c -I $(INCDIR)
 	gcc -c src/tests_mock_usart.c -I $(INCDIR)
 	gcc src/tests_comm.c comm.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
+	./a.out
+
+tests_comms_from_panel:
+	# first module objects to test
+	gcc -c src/comms_from_panel.c -I. $(INCDIR) $(DDEFS)
+	# second auxiliary helper modules
+	gcc -c src/tests_ok.c -I $(INCDIR)
+	gcc -c src/tests_mock_usart.c -I $(INCDIR)
+	gcc src/tests_comms_from_panel.c comms_from_panel.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
 	./a.out
 
 

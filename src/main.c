@@ -20,6 +20,7 @@
 #include "usart.h"
 #include "hard.h"
 #include "comm.h"
+#include "comms_from_panel.h"
 
 #include "core_cm0plus.h"
 #include "adc.h"
@@ -152,6 +153,10 @@ int main(void)
     main_state_t main_state = main_init;
     unsigned char led_rssi_high = 0;
 
+    unsigned char alarm_input = 0;
+    unsigned char panel_input = 0;
+    unsigned short remote_number = 0;
+
     while (1)
     {
         switch (main_state)
@@ -209,12 +214,19 @@ int main(void)
                 Usart2Send("ACT_12V ACTIVO\n");
             }
 
-            // activate from 12V on test1 input
-            if (Check_Alarm_Input())
+            // activate from 12V on test1 input or activation by panel
+            alarm_input = Check_Alarm_Input();
+            panel_input = Panel_Check_Alarm (&remote_number);
+            if ((alarm_input) || (panel_input))
             {
                 unsigned char sms_ready = 1;
 
-                Usart2Send("ACT_12V ACTIVO: ");
+                if (alarm_input)
+                    Usart2Send("External 12V: ");    // 12V input alarm activate
+
+                if (panel_input)
+                    Usart2Send("Keypad ACT: ");
+                    
                 //check num_tel_rep before send sms
                 if (sms_ready)
                 {
@@ -239,13 +251,17 @@ int main(void)
                     }
                 }
 
-
                 if (sms_ready)
                 {
                     char buff [SITE_MAX_LEN + 20] = { 0 };
 
-                    ACT_12V_ON;                
-                    strcpy(buff, "Activacion en: ");
+                    ACT_12V_ON;
+                    if (alarm_input)
+                        strcpy(buff, "Activacion en: ");
+
+                    if (panel_input)
+                        sprintf(buff, "Activo %03d en: ", remote_number);
+                        
                     strcat(buff, sitio_prop);
                     if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
                     {

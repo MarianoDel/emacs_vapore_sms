@@ -15,6 +15,8 @@ void Usart1FillRxBuffer (char * msg);
 void Usart2Send (char * msg);
 unsigned char Usart2ReadBuffer (unsigned char * bout, unsigned short max_len);
 void Usart2FillRxBuffer (char * msg);
+unsigned char Usart2HaveData (void);
+void Usart2HaveDataReset (void);
 
 
 //--- end of file ---//

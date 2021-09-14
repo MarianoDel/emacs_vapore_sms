@@ -91,6 +91,17 @@ void Usart2FillRxBuffer (char * msg)
 }
 
 
+unsigned char Usart2HaveData (void)
+{
+    return usart2_have_data;
+}
+
+
+void Usart2HaveDataReset (void)
+{
+    usart2_have_data = 0;
+}
+
 
 
 
