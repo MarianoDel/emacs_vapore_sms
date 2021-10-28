@@ -235,4 +235,14 @@ void WelcomeCode (void);
 void HARD_Timeouts (void);
 unsigned char Check_Alarm_Input (void);
 
+void Led_Off (void);
+void Led_On (void);
+unsigned char Led_Status (void);
+
+unsigned char Status_Status (void);
+void PwrKey_On (void);
+void PwrKey_Off (void);
+unsigned char PwrKey_Status (void);
+unsigned char NetLight_Status (void);
+
 #endif /* HARD_H_ */

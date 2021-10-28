@@ -30,19 +30,21 @@
 #define GSM_NRESET_OFF	asm ("nop \n\t")
 
 //--- POWER KEY - salida al modulo ---//
-#define GSM_PWRKEY 		PWRKEY
-#define GSM_PWRKEY_ON	PWRKEY_ON
-#define GSM_PWRKEY_OFF	PWRKEY_OFF
+#define GSM_PWRKEY 		(PwrKey_Status())
+#define GSM_PWRKEY_ON	(PwrKey_On())
+#define GSM_PWRKEY_OFF	(PwrKey_Off())
 
 //--- STATUS - entrada desde el modulo---//
-#define GSM_STATUS 		STATUS
+#define GSM_STATUS 		(Status_Status())
 
 //--- NETLIGHT - entrada desde el modulo---//
-#define GSM_NETLIGHT 	NETLIGHT
+#define GSM_NETLIGHT 	(NetLight_Status())
 
 //--- LED NETLIGHT - led de indicaciones ---//
-#define LED_NETLIGHT_ON 	LED_ON
-#define LED_NETLIGHT_OFF 	LED_OFF
+// #define LED_NETLIGHT_ON 	LED_ON
+// #define LED_NETLIGHT_OFF 	LED_OFF
+#define LED_NETLIGHT_ON 	(Led_On())
+#define LED_NETLIGHT_OFF 	(Led_Off())
 //#define LED_NETLIGHT_ON 	asm ("nop \n\t")
 //#define LED_NETLIGHT_OFF 	asm ("nop \n\t")
 

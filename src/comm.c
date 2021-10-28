@@ -10,7 +10,8 @@
 
 // Includes --------------------------------------------------------------------
 #include "comm.h"
-#include "flash_program.h"
+// #include "flash_program.h"
+#include "parameters.h"
 
 #include <string.h>
 #include <stdio.h>

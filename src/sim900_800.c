@@ -13,7 +13,10 @@
 #include "usart.h"
 #include "tim.h"
 #include "funcs_gsm.h"		//para string flags
-#include "flash_program.h"
+// #include "flash_program.h"
+#include "parameters.h"
+// #include "hard.h"
+// #include "stm32g0xx.h"
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -12,7 +12,8 @@
 #include "funcs_gsm.h"
 #include "sim900_800.h"
 #include "usart.h"
-#include "flash_program.h"
+// #include "flash_program.h"
+#include "parameters.h"
 #include "comm.h"
 
 #include <string.h>

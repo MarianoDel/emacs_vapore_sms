@@ -1,5 +1,6 @@
-# Comunicador Vapore por SMS
+# Vapore Communicator by SMS and GPRS
 micro STM32G030K8T6
+comms SIM800C
 
 Before Begin, check micro selection and configurations
 ------------------------------------------------------

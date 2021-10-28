@@ -15,8 +15,9 @@
 #include "tim.h"
 #include "hard.h"
 #include "adc.h"
-#include "stm32g0xx.h"
-#include "flash_program.h"
+// #include "stm32g0xx.h"
+// #include "flash_program.h"
+#include "parameters.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -38,6 +39,7 @@ void FuncsGSMG_SendStatus (char *);
 unsigned char FuncsGSMG_ProcessCommands (char *);
 void FuncsGSMG_ShowMemory (parameters_typedef *);
 void FuncsGSMG_ShowVoltage (void);
+void LedToggle (void);
 
 // Module Functions ------------------------------------------------------------
 void FuncsGSMG_Entering (void)
@@ -57,24 +59,19 @@ void FuncsGSMG_Entering (void)
 }
 
 
-#define LED_TOGGLE    do {    if (LED) \
-                                  LED_OFF; \
-                              else \
-                                  LED_ON; \
-                         } while (0)
 //Procesa toda la pila del GSM (por lo menos para los SMS)
 //los comandos que necesita el modulo se envian por otras funciones
 void FuncsGSMGateway (void)
 {
 
 //---------- Pruebas con GSM GATEWAY --------//
-    LED_OFF;
+    Led_Off();
     for (unsigned char i = 0; i < 6; i++)
     {
-        if (LED)
-            LED_OFF;
+        if (Led_Status())
+            Led_Off();
         else
-            LED_ON;
+            Led_On();
 
         Wait_ms (300);
     }
@@ -91,7 +88,7 @@ void FuncsGSMGateway (void)
     {
         if (Usart2HaveData())
         {
-            LED_TOGGLE;
+            LedToggle();
             Usart2HaveDataReset();
             Usart2ReadBuffer((unsigned char *)buff, sizeof(buff));
             
@@ -203,9 +200,9 @@ unsigned char FuncsGSMG_ProcessCommands (char * buff)
 void  FuncsGSMG_SendStatus (char * buff)
 {
     sprintf(buff, "STATUS: %d NETLIGHT: %d PWRKEY: %d\n",
-            STATUS,
-            NETLIGHT,
-            PWRKEY);
+            Status_Status(),
+            NetLight_Status(),
+            PwrKey_Status());
         
     Usart2Send(buff);
 }
@@ -265,6 +262,15 @@ void FuncsGSMG_ShowVoltage (void)
     // Wait_ms(100);
 }
 
+
+void LedToggle (void)
+{
+    if (Led_Status())
+        Led_Off();
+    else
+        Led_On();
+    
+}
 
 //--- end of file ---//
 

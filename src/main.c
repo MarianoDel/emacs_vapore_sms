@@ -21,6 +21,7 @@
 #include "hard.h"
 #include "comm.h"
 #include "comms_from_panel.h"
+#include "parameters.h"
 
 #include "core_cm0plus.h"
 #include "adc.h"

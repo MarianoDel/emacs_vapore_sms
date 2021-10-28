@@ -257,4 +257,52 @@ unsigned char Check_Alarm_Input (void)
 }
 
 
+void Led_Off (void)
+{
+    LED_OFF;
+}
+
+
+void Led_On (void)
+{
+    LED_ON;
+}
+
+
+unsigned char Led_Status (void)
+{
+    return LED;
+}
+
+
+unsigned char Status_Status (void)
+{
+    return STATUS;
+}
+
+
+void PwrKey_Off (void)
+{
+    PWRKEY_OFF;
+}
+
+
+void PwrKey_On (void)
+{
+    PWRKEY_ON;
+}
+
+
+unsigned char PwrKey_Status (void)
+{
+    return PWRKEY;
+}
+
+
+unsigned char NetLight_Status (void)
+{
+    return NETLIGHT;
+}
+
+
 //--- end of file ---//
