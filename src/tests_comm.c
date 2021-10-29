@@ -9,7 +9,7 @@
 
 // Includes Modules for tests --------------------------------------------------
 #include "comm.h"
-#include "flash_program.h"
+#include "parameters.h"
 
 //helper modules
 #include "tests_ok.h"

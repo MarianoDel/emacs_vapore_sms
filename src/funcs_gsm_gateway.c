@@ -15,8 +15,6 @@
 #include "tim.h"
 #include "hard.h"
 #include "adc.h"
-// #include "stm32g0xx.h"
-// #include "flash_program.h"
 #include "parameters.h"
 
 #include <string.h>
@@ -29,9 +27,12 @@ parameters_typedef mem_conf;
 extern volatile unsigned short adc_ch [ADC_CHANNEL_QUANTITY];
 
 // Globals ---------------------------------------------------------------------
-volatile unsigned short timer_gsm_gw = 0;
+volatile unsigned short timer_gsm_gw = 0;    //TODO: not in use
+unsigned char gw_mode = 0;
+
 
 // Constants -------------------------------------------------------------------
+
 
 // Module Private Functions ----------------------------------------------------
 void FuncsGSMGateway (void);
@@ -41,29 +42,122 @@ void FuncsGSMG_ShowMemory (parameters_typedef *);
 void FuncsGSMG_ShowVoltage (void);
 void LedToggle (void);
 
+void FuncsGSMGateway_SM_Reset (void);
+unsigned char FuncsGSMGateway_SM (void);
+
+
+
 // Module Functions ------------------------------------------------------------
 void FuncsGSMG_Entering (void)
 {
     char buff [40] = { 0 };
 
     // check if we need to enter in this mode
-    if (Usart2HaveData())
+    if (!gw_mode)
     {
-        Usart2HaveDataReset();
-        Usart2ReadBuffer((unsigned char *)buff, sizeof(buff));
-        if (!strncmp(buff, "gsm_gw_mode", sizeof ("gsm_gw_mode") -1))
+        if (Usart2HaveData())
         {
-            FuncsGSMGateway ();
+            Usart2HaveDataReset();
+            Usart2ReadBuffer((unsigned char *)buff, sizeof(buff));
+            if (!strncmp(buff, "gsm_gw_mode", sizeof ("gsm_gw_mode") -1))
+            {
+                gw_mode = 1;
+                FuncsGSMGateway_SM_Reset();
+            }
         }
+    }
+    
+    if (gw_mode)
+    {
+        if (FuncsGSMGateway_SM () != 0)    //gw mode continue
+            gw_mode = 0;
     }
 }
 
 
 //Procesa toda la pila del GSM (por lo menos para los SMS)
 //los comandos que necesita el modulo se envian por otras funciones
+#define INIT    0
+#define LOOPING    1
+unsigned char gw_mode_state = INIT;
+void FuncsGSMGateway_SM_Reset (void)
+{
+    gw_mode_state = 0;
+}
+
+
+unsigned char FuncsGSMGateway_SM (void)
+{
+    unsigned char gw_out = 0;
+    char buff [256] = { 0 };
+    
+//---------- Pruebas con GSM GATEWAY --------//
+    switch (gw_mode_state)
+    {
+    case INIT:
+        Led_Off();
+        for (unsigned char i = 0; i < 6; i++)
+        {
+            if (Led_Status())
+                Led_Off();
+            else
+                Led_On();
+
+            Wait_ms (300);
+        }
+
+        Wait_ms (100);
+        Usart2Send("GSM GATEWAY.. sin reboot al modulo\r\n");
+        Wait_ms (100);
+        Usart2Send("GSM GATEWAY Listo para empezar\r\n");
+        Wait_ms (100);
+        gw_mode_state = LOOPING;
+        break;
+
+    case LOOPING:
+        if (Usart2HaveData())
+        {
+            LedToggle();
+            Usart2HaveDataReset();
+            Usart2ReadBuffer((unsigned char *)buff, sizeof(buff));
+            
+            //here process the commands from the PC
+            unsigned char cmd_type = 0;
+            cmd_type = FuncsGSMG_ProcessCommands(buff);
+            
+            if (cmd_type == 2)    //go out of this mode (gw_mode)
+            {
+                Usart2Send("Going to SMS Mode...\n");
+                gw_out = 1;
+            }
+            else if (cmd_type == 1)    //own commands
+            {
+            }
+            else if (cmd_type == 0)    //not a command, send it to gsm
+            {
+                Usart1Send(buff);
+            }
+        }
+
+        if (Usart1HaveData())
+        {
+            Usart1HaveDataReset();
+            Usart1ReadBuffer((unsigned char *)buff, sizeof(buff));
+            Usart2Send(buff);
+        }
+        break;
+
+    default:
+        gw_mode_state = INIT;
+        break;
+    }
+
+    return gw_out;
+}
+
+
 void FuncsGSMGateway (void)
 {
-
 //---------- Pruebas con GSM GATEWAY --------//
     Led_Off();
     for (unsigned char i = 0; i < 6; i++)
@@ -189,6 +283,12 @@ unsigned char FuncsGSMG_ProcessCommands (char * buff)
         FuncsGSMG_ShowMemory(&mem_conf);
         result = 1;
     }
+
+    if (!strncmp(buff, "gsm_current_voltage", sizeof ("gsm_current_voltage") -1))
+    {
+        FuncsGSMG_ShowVoltage();
+        result = 1;
+    }
     
     if (!strncmp(buff, "gsm_sms_mode", sizeof ("gsm_sms_mode") -1))
         result = 2;
@@ -197,7 +297,7 @@ unsigned char FuncsGSMG_ProcessCommands (char * buff)
 }
 
 
-void  FuncsGSMG_SendStatus (char * buff)
+void FuncsGSMG_SendStatus (char * buff)
 {
     sprintf(buff, "STATUS: %d NETLIGHT: %d PWRKEY: %d\n",
             Status_Status(),
