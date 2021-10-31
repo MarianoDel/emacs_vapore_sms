@@ -13,14 +13,18 @@
 #include "usart.h"
 #include "tim.h"
 #include "funcs_gsm.h"		//para string flags
-// #include "flash_program.h"
 #include "parameters.h"
-// #include "hard.h"
-// #include "stm32g0xx.h"
+
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+// Local Module Configs --------------------------------------------------------
+// #define USE_SIM800C    //start and stop sequence with SM (powerkey and status lines)
+#define USE_SIM800L    //no start nor stop sequence - always on
+#define DEBUG_ON
+
 
 
 // Externals -------------------------------------------------------------------
@@ -133,6 +137,8 @@ void GSMProcess (void)
 }
 
 
+//TODO: revisar esta secuencia de encendido, si ya estaba prendido
+// setear pines y volver
 //GSM_Start() contesta:
 //0 trabajando
 //1 terminado OK
@@ -140,6 +146,12 @@ void GSMProcess (void)
 //3 Timeout
 unsigned char GSM_Start (void)
 {
+    
+#ifdef USE_SIM800L
+    return 1;
+#endif    //USE_SIM800L
+    
+#ifdef USE_SIM800C
     switch(GSMStartState)
     {
     case 0:
@@ -191,6 +203,7 @@ unsigned char GSM_Start (void)
         break;
     }
     return 0;						//trabajando
+#endif    //USE_SIM800C
 }
 
 void GSM_Start_Stop_ResetSM (void)
@@ -205,6 +218,11 @@ void GSM_Start_Stop_ResetSM (void)
 //3 Timeout
 unsigned char GSM_Stop(void)
 {
+#ifdef USE_SIM800L
+    return 1;
+#endif    //USE_SIM800L
+
+#ifdef USE_SIM800C
     unsigned char resp = 0;
 
     switch(GSMStartState)
@@ -238,6 +256,7 @@ unsigned char GSM_Stop(void)
         resp = 3;				//timeout
 
     return resp;
+#endif    //USE_SIM800C
 }
 
 //TODO: OJO utiliza GSMStartState

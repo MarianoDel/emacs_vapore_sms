@@ -14,9 +14,13 @@
 
 // Includes for Configuration --------------------------------------------------
 #include "hard.h"
-// #include "stm32f0xx.h"
 #include "funcs_gsm.h"
 
+// Configurations Defines ------------------------------------------------------
+// #define USE_SIM800C    //start and stop sequence with SM (powerkey and status lines)
+// #define USE_SIM800L    //no start nor stop sequence - always on
+
+// End of Configurations Defines -----------------------------------------------
 
 //#define buffUARTGSMrx_dimension 512
 #define buffUARTGSMrx_dimension 256

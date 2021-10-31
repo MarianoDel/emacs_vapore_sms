@@ -19,6 +19,9 @@
 #include <string.h>
 #include <stdio.h>
 
+// Local Module Configs --------------------------------------------------------
+// #define GSM_SEND_SMS_ON_START
+#define DEBUG_ON
 
 // Externals -------------------------------------------------------------------
 extern parameters_typedef mem_conf;

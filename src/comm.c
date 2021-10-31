@@ -148,7 +148,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
     // if (!strncmp(payload, (const char *)"ENERGIA:", sizeof ("ENERGIA:") -1))
     //     send_energy_set;
 
-    if (!strncmp(payload, "REPORTAR_NUM:", sizeof ("REPORTAR_NUM") -1))
+    if (!strncmp(payload, "REPORTAR_NUM:", sizeof ("REPORTAR_NUM:") -1))
     {
         char * p_new_number = (payload + 13);
         unsigned char report_ok = 0;
@@ -184,7 +184,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         }
     }
 
-    if (!strncmp(payload, "REPORTAR_SITIO:", sizeof ("REPORTAR_SITIO") -1))
+    if (!strncmp(payload, "REPORTAR_SITIO:", sizeof ("REPORTAR_SITIO:") -1))
     {
         char * p_new_place = (payload + 15);
         unsigned char report_ok = 0;

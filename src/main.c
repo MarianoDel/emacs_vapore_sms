@@ -254,7 +254,7 @@ int main(void)
 
                 if (sms_ready)
                 {
-                    char buff [SITE_MAX_LEN + 20] = { 0 };
+                    static char buff [SITE_MAX_LEN + 20] = { 0 };
 
                     ACT_12V_ON;
                     if (alarm_input)
