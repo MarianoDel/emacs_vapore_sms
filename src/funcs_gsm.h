@@ -34,6 +34,7 @@ typedef enum {
 	gsm_state_dell_all,
 	gsm_state_get_imei,
 	gsm_state_shutdown,
+	gsm_state_shutdown_2,        
 	gsm_state_stop_wait,
 	gsm_state_shutdown_always,
 	gsm_state_stop_always,

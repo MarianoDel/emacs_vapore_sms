@@ -21,8 +21,8 @@
 #include <string.h>
 
 // Local Module Configs --------------------------------------------------------
-// #define USE_SIM800C    //start and stop sequence with SM (powerkey and status lines)
-#define USE_SIM800L    //no start nor stop sequence - always on
+#define USE_SIM800C    //start and stop sequence with SM (powerkey and status lines)
+// #define USE_SIM800L    //no start nor stop sequence - always on
 #define DEBUG_ON
 
 
@@ -168,27 +168,35 @@ unsigned char GSM_Start (void)
         {
             LED_NETLIGHT_OFF;
             GSM_PWRKEY_OFF;
-            GSMStartTime = 4000; //hasta 4 segundos.
+            GSMStartTime = 1500; // 1.5 segundo powerkey off
             GSMStartState++;
         }
         break;
 
     case 2:
-        //Levanto PWRKEY
+        if(GSMStartTime == 0) //Espera 1500 mseg
+        {
+            GSM_PWRKEY_ON;
+            GSMStartTime = 2500; // espero 2.5 segundos mas que levante status
+            GSMStartState++;
+        }
+        break;
+
+    case 3:
+        // espero STATUS con PWRKEY en ON
         if (GSM_STATUS)
         {
             GSMStartTime = 1000;
             GSMStartState++;
             LED_NETLIGHT_ON;
-            GSM_PWRKEY_ON;
         }
-        else if(GSMStartTime == 0) //Espera hasta 4 segs
+        else if(GSMStartTime == 0) //Espera hasta 4 segs en total
         {
             return 3;		//TimeOut
         }
         break;
 
-    case 3:
+    case 4:
         if(GSMStartTime == 0)	//Espero 1 segundo mas y reviso GSM_STATUS
         {
             if (GSM_STATUS)
@@ -202,7 +210,8 @@ unsigned char GSM_Start (void)
         GSMStartState = 0;
         break;
     }
-    return 0;						//trabajando
+    return 0; //trabajando
+
 #endif    //USE_SIM800C
 }
 
@@ -223,39 +232,41 @@ unsigned char GSM_Stop(void)
 #endif    //USE_SIM800L
 
 #ifdef USE_SIM800C
-    unsigned char resp = 0;
 
     switch(GSMStartState)
     {
     case 0:
-        //Levanto PWRKEY
         GSM_PWRKEY_OFF;
-        GSMStartTime = 250;	//espero 250ms
-        GSMGeneralTimeOut = 4000;	//timeout de 4 segs
+        GSMStartTime = 4000;	//espero hasta 4 segundos
         GSMStartState++;
         break;
 
     case 1:
-        if ((!GSMStartTime) && (!GSM_STATUS))
+        if (!GSM_STATUS)
         {
-            GSMStartTime = 1000;	//espero 1seg
+            GSMStartTime = 1000;
             GSMStartState++;
+            LED_NETLIGHT_OFF;
+        }
+        else if(GSMStartTime == 0) //Espera hasta 4 segs en total
+        {
+            return 3;		//TimeOut
         }
         break;
 
     case 2:
         if (!GSMStartTime)
         {
-            GSM_PWRKEY_ON;
-            resp = 1;
+            if (!GSM_STATUS)    //modulo apagado
+                return 1;
+            else
+                return 2;
         }
         break;
     }
 
-    if (!GSMGeneralTimeOut)
-        resp = 3;				//timeout
+    return 0;
 
-    return resp;
 #endif    //USE_SIM800C
 }
 

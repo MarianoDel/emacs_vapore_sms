@@ -438,6 +438,11 @@ void FuncsGSM (void)
         break;
 
     case gsm_state_shutdown:
+        GSM_Start_Stop_ResetSM ();
+        gsm_state = gsm_state_shutdown_2;
+        break;
+
+    case gsm_state_shutdown_2:
         resp = GSM_Stop();
 
         if (resp == resp_gsm_ok)
@@ -446,7 +451,7 @@ void FuncsGSM (void)
             gsm_state = gsm_state_stop_wait;
         }
         break;
-
+        
     case gsm_state_stop_wait:
         resp = GSM_Delay (10000);	//10 segundos de espera antes de prender
 
