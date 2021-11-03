@@ -136,6 +136,7 @@ unsigned char FuncsGSMGateway_SM (void)
             else if (cmd_type == 0)    //not a command, send it to gsm
             {
                 Usart1Send(buff);
+                Usart1Send("\r\n");
             }
         }
 

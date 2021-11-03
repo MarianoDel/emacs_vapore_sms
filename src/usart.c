@@ -301,17 +301,26 @@ void USART2_IRQHandler(void)
             }
             else if ((dummy == '\n') || (dummy == 26))    //CTRL+J ("\r\n"); CTRL-Z (26)
             {
-                *prx2 = '\0';
-                if ((prx2 - rx2buff) == 14)
+                if (dummy == 26)    //special case
                 {
-                    memcpy((char *) comm_from_panel_local_buffer, (char *) rx2buff, 14);
-                    prx2 = rx2buff;    // pointer adjust after copy or flush
-                    usart2_have_activation_buffer = 1;
-                    // Usart2SendUnsigned("new data\n", sizeof("new data\n") - 1);
+                    *prx2 = dummy;
+                    prx2++;
+                    *prx2 = '\0';
+                    usart2_have_data = 1;
                 }
                 else
-                    usart2_have_data = 1;
-
+                {
+                    *prx2 = '\0';
+                    if ((prx2 - rx2buff) == 14)
+                    {
+                        memcpy((char *) comm_from_panel_local_buffer, (char *) rx2buff, 14);
+                        prx2 = rx2buff;    // pointer adjust after copy or flush
+                        usart2_have_activation_buffer = 1;
+                        // Usart2SendUnsigned("new data\n", sizeof("new data\n") - 1);
+                    }
+                    else
+                        usart2_have_data = 1;
+                }
             }
             else
             {
