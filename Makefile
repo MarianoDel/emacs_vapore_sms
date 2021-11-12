@@ -26,12 +26,14 @@ BIN  = $(CP) -O binary -S
 MCU  = cortex-m0plus
 
 # List all default C defines here, like -D_DEBUG=1
-#para el micro STM32F051C8T6
+# for processor STM32F051C8T6
 # DDEFS = -DSTM32F051
-#para el micro STM32F030K6T6
+# for processor STM32F030K6T6
 # DDEFS = -DSTM32F030
-#para el micro STM32G030J6M6
-DDEFS = -DSTM32G030xx
+# for processor STM32G030K8T6, STM32G030J6M6
+# DDEFS = -DSTM32G030xx
+# for processor STM32G070KBT6
+DDEFS = -DSTM32G070xx
 
 
 # List all default directories to look for include files here
@@ -52,8 +54,8 @@ DLIBS =
 #
 
 #
-# Define project name
-PROJECT = Template_G030
+# Define project name, check on linker selection part
+# PROJECT = Template_G030
 
 # List all user C define here, like -D_DEBUG=1
 UDEFS =
@@ -101,8 +103,8 @@ SRC += ./src/comms_from_panel.c
 #SRC += $(DLIBDIR)/src/gsm_hal.c
 
 
-# List ASM source files here
-ASRC = ./cmsis_boot/startup/startup_stm32g030xx.s
+# List ASM source files here, check linker part selection
+# ASRC = ./cmsis_boot/startup/startup_stm32g030xx.s
 
 # List all user directories here
 UINCDIR = $(BOOTDIR) \
@@ -129,7 +131,18 @@ OPT = -O0
 #
 # Define linker script file here
 #
+ifeq ($(DDEFS), -DSTM32G070xx)
+$(info --------------- STM32G070 VERSION ---------------)
+PROJECT = Template_G070
+ASRC = ./cmsis_boot/startup/startup_stm32g070xx.s
+LDSCRIPT = $(LINKER)/stm32_flash_g070.ld
+else
+$(info --------------- STM32G030 VERSION ---------------)
+PROJECT = Template_G030
+ASRC = ./cmsis_boot/startup/startup_stm32g030xx.s
 LDSCRIPT = $(LINKER)/stm32_flash_g030.ld
+endif
+
 FULL_PRJ = $(PROJECT)_rom
 
 INCDIR  = $(patsubst %,-I%,$(DINCDIR) $(UINCDIR))
