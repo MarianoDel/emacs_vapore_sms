@@ -31,9 +31,9 @@ MCU  = cortex-m0plus
 # for processor STM32F030K6T6
 # DDEFS = -DSTM32F030
 # for processor STM32G030K8T6, STM32G030J6M6
-# DDEFS = -DSTM32G030xx
+DDEFS = -DSTM32G030xx
 # for processor STM32G070KBT6
-DDEFS = -DSTM32G070xx
+# DDEFS = -DSTM32G070xx
 
 
 # List all default directories to look for include files here

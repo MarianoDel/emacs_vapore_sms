@@ -253,3 +253,8 @@
     RSSI: 10
     +CREG: 0,1OK
     REG: 1
+* Firmware ver 1.3
+** DONE retraso la salida del sms si esta verificando la red
+   CLOSED: [2021-11-30 Tue 09:15]
+** DONE modifico todo para que en hard 1.0 hard 1.1 se pueda utilizar firm 1.3 o 1.2
+   CLOSED: [2021-11-30 Tue 09:15]

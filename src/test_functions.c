@@ -81,23 +81,6 @@ void TF_Led_Alarm_Input_Filtered (void)
 }
 
 
-#ifndef HARDWARE_VER_1_2
-void TF_Alarm_Input_As_Output (void)
-{
-    while (1)
-    {
-        LED_ON;
-        ALARM_ON;
-        Wait_ms(100);
-        LED_OFF;
-        ALARM_OFF;
-        Wait_ms(100);
-        
-    }
-}
-#endif
-
-
 void TF_Act_12V (void)
 {
     while (1)

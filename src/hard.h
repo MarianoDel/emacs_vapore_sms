@@ -14,31 +14,69 @@
 
 
 //----------- Defines For Configuration -------------
+// select the following only on HARDWARE_VER_1_1 or HARDWARE_VER_1_0
 // #define WITH_PA1_V4V_SENSE    //normal mode
-#define WITH_PA1_TEST1_INPUT    //change in hardware test1 is re-routed to PA1 for 12V inputs signals
+// #define WITH_PA1_TEST1_INPUT    //change in hardware test1 is re-routed to PA1 for 12V inputs signals
 
-#define ACTIVATION_BY_SMS
-// #define ACTIVATION_BY_12V_INPUT
 
 //----------- Hardware Board Version -------------
 #define HARDWARE_VER_1_2
 // #define HARDWARE_VER_1_1
 // #define HARDWARE_VER_1_0
 
+//----------- Firmware Version -------------------
+#define FIRMWARE_VER_1_3    // delay sms message
+// #define FIRMWARE_VER_1_2    // all programs in one
+
+
 #ifdef HARDWARE_VER_1_2
 #define HARD    "Hardware version 1.2\n"
-#define SOFT    "Firmware version 1.2\n"
-#endif    //#ifdef HARDWARE_VER_1_2
-
-#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
+#endif
+#ifdef HARDWARE_VER_1_1
 #define HARD    "Hardware version 1.1\n"
-#ifdef WITH_PA1_TEST1_INPUT
-#define SOFT    "Firmware version 1.1\n"
 #endif
-#ifdef WITH_PA1_V4V_SENSE
-#define SOFT    "Firmware version 1.0\n"
+#ifdef HARDWARE_VER_1_0
+#define HARD    "Hardware version 1.0\n"
 #endif
-#endif    //#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
+
+#ifdef FIRMWARE_VER_1_3
+#define SOFT    "Firmware version 1.3\n"
+#endif
+
+#ifdef FIRMWARE_VER_1_2
+#define SOFT    "Firmware version 1.2\n"
+#endif
+
+//--------- Sanity Checks ----------
+#if (!defined HARDWARE_VER_1_2) && (!defined HARDWARE_VER_1_1) && (!defined HARDWARE_VER_1_0)
+#error "define hardware version on hard.h"
+#endif
+
+#if (!defined FIRMWARE_VER_1_3) && (!defined FIRMWARE_VER_1_2)
+#error "define firmware version on hard.h"
+#endif
+
+
+#if (defined HARDWARE_VER_1_1) || (defined HARDWARE_VER_1_0)
+
+#if (defined WITH_PA1_TEST1_INPUT) && (defined WITH_PA1_V4V_SENSE)
+#error "conflicting inputs selection on hard.h"
+#endif
+
+#if (!defined WITH_PA1_TEST1_INPUT) && (!defined WITH_PA1_V4V_SENSE)
+#error "no inputs selection on hard.h"
+#endif
+
+#if (defined FIRMWARE_VER_1_3) || (defined FIRMWARE_VER_1_2)
+#if (!defined WITH_PA1_TEST1_INPUT)
+#error "no input for 12V activation on hard.h"
+#endif
+#endif
+
+#endif
+
+
+
 
 //-------- Type of Program ----------------
 //OJO --- los dos que siguen van juntos
@@ -113,7 +151,7 @@
 //GPIOB pin9    nc
 #endif     //#ifdef HARDWARE_VER_1_2
 
-#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
+#if (defined HARDWARE_VER_1_1) || (defined HARDWARE_VER_1_0)
 //GPIOB pin9    nc
 
 //GPIOA pin0    nc
@@ -124,8 +162,8 @@
 #ifdef WITH_PA1_TEST1_INPUT
 //GPIOA pin1	re-routed from test1
 #define ALARM_INPUT    ((GPIOA->IDR & 0x0002) != 0)
-#define ALARM_ON    (GPIOA->BSRR = 0x00000002)
-#define ALARM_OFF    (GPIOA->BSRR = 0x00020000)
+// #define ALARM_ON    (GPIOA->BSRR = 0x00000002)
+// #define ALARM_OFF    (GPIOA->BSRR = 0x00020000)
 
 #endif
 

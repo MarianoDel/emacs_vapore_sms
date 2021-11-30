@@ -61,6 +61,9 @@ char gsmMSG [180];
 volatile unsigned short timer_standby = 0;
 volatile unsigned short timer_prender_ringing = 0;
 
+// - Globals for delay msgs -------
+unsigned char message_delay = 0;
+
 
 // Module Private Functions ----------------------------------------------------
 void TimingDelay_Decrement(void);
@@ -158,6 +161,8 @@ int main(void)
     unsigned char panel_input = 0;
     unsigned short remote_number = 0;
 
+    static char buff [SITE_MAX_LEN + 20] = { 0 };
+
     while (1)
     {
         switch (main_state)
@@ -191,7 +196,6 @@ int main(void)
 
         case main_ready:
 
-#ifdef HARDWARE_VER_1_2
             // activate from SMS
             if (diag_prender)
             {
@@ -254,8 +258,6 @@ int main(void)
 
                 if (sms_ready)
                 {
-                    static char buff [SITE_MAX_LEN + 20] = { 0 };
-
                     ACT_12V_ON;
                     if (alarm_input)
                         strcpy(buff, "Activacion en: ");
@@ -264,6 +266,23 @@ int main(void)
                         sprintf(buff, "Activo %03d en: ", remote_number);
                         
                     strcat(buff, sitio_prop);
+#if (defined FIRMWARE_VER_1_3)
+                    if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
+                    {
+                        main_state = main_enable_act_12V_input;
+                        sms_ready = 1;
+                        Usart2Send("OK\n");
+                        if (panel_input)
+                            timer_standby = 1000;
+                    }
+                    else    // delay the message
+                    {                        
+                        message_delay = 1;
+                        main_state = main_enable_act_12V_input;                        
+                        sms_ready = 1;
+                        Usart2Send("delayed\n");
+                    }
+#elif (defined FIRMWARE_VER_1_2)
                     if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
                     {
                         main_state = main_enable_act_12V_input;
@@ -277,7 +296,10 @@ int main(void)
                         sms_ready = 0;
                         ChangeLedActivate(3);
                         Usart2Send("sin red\n");
-                    }
+                    }                    
+#else
+#error "set firmware version on hard.h"
+#endif
                 }
 
                 if (!sms_ready)
@@ -286,99 +308,6 @@ int main(void)
                     timer_standby = 6000;
                 }
             }
-            
-#endif    //HARDWARE_VER_1_2
-            
-#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
-#ifdef ACTIVATION_BY_SMS
-            // activate from SMS
-            if (diag_prender)
-            {
-                diag_prender_reset;
-                main_state = main_enable_output;
-                ACT_12V_ON;
-                timer_standby = timer_rep * 1000;
-                Usart2Send("ACT_12V ACTIVO\n");
-            }
-
-            // activate from phone ringing
-            else if ((diag_ringing) &&
-                     (prender_ring) &&
-                     (!timer_prender_ringing))
-            {
-                diag_ringing_reset;
-                timer_prender_ringing = 12000;
-                main_state = main_enable_output;
-                ACT_12V_ON;
-                timer_standby = timer_rep * 1000;
-                Usart2Send("ACT_12V ACTIVO\n");
-            }
-
-#endif    //ACTIVATION_BY_SMS
-
-#ifdef ACTIVATION_BY_12V_INPUT
-#ifdef WITH_PA1_TEST1_INPUT
-            // activate from 12V on test1 input
-            if (Check_Alarm_Input())
-            {
-                unsigned char sms_ready = 1;
-
-                Usart2Send("ACT_12V ACTIVO: ");
-                //check num_tel_rep before send sms
-                if (sms_ready)
-                {
-                    sms_ready = VerifyNumberString(num_tel_rep);
-
-                    if (!sms_ready)
-                    {
-                        ChangeLedActivate(1);
-                        Usart2Send("sin numero\n");
-                    }
-                }
-
-                //check sitio_prop before send sms
-                if (sms_ready)
-                {
-                    sms_ready = VerifySiteString(sitio_prop);
-
-                    if (!sms_ready)
-                    {
-                        ChangeLedActivate(2);
-                        Usart2Send("sin sitio\n");
-                    }
-                }
-
-
-                if (sms_ready)
-                {
-                    char buff [80] = { 0 };
-
-                    ACT_12V_ON;                
-                    strcpy(buff, "Activacion en: ");
-                    strcat(buff, sitio_prop);
-                    if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
-                    {
-                        main_state = main_enable_act_12V_input;
-                        sms_ready = 1;
-                        Usart2Send("OK\n");
-                    }
-                    else
-                    {
-                        sms_ready = 0;
-                        ChangeLedActivate(3);
-                        Usart2Send("sin red\n");
-                    }
-                }
-
-                if (!sms_ready)
-                {
-                    main_state = main_sms_not_sended;
-                    timer_standby = 6000;
-                }
-            }
-#endif    //WITH_PA1_TEST1_INPUT
-#endif    //ACTIVATION_BY_12V_INPUT
-#endif    //#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
 
             else if (FuncsGSMStateAsk() < gsm_state_ready)
             {
@@ -412,13 +341,33 @@ int main(void)
             break;
 
         case main_enable_act_12V_input:
-            if (!Check_Alarm_Input() && (!timer_standby))
+#if (defined FIRMWARE_VER_1_3)
+            if ((message_delay) && (timer_standby))
+            {
+                if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
+                    message_delay = 0;
+                else
+                    Wait_ms(100);
+                
+            }
+            else if (!Check_Alarm_Input() && (!timer_standby))
             {
                 main_state = main_ready;
                 ACT_12V_OFF;
             }
 
             ConfigurationCheck();
+#elif (defined FIRMWARE_VER_1_2)
+            if (!Check_Alarm_Input() && (!timer_standby))
+            {
+                main_state = main_ready;
+                ACT_12V_OFF;
+            }
+
+            ConfigurationCheck();            
+#else
+#error "set firmware version on hard.h"
+#endif
             break;
 
         case main_sms_not_sended:

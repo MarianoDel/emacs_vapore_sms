@@ -76,10 +76,8 @@ void FuncsGSM (void)
         }
 
         if ((resp == resp_gsm_error) || (resp == resp_gsm_timeout))
-        {
-            GSM_Start_Stop_ResetSM ();
             gsm_state = gsm_state_shutdown;
-        }
+
         break;
 
     case gsm_state_verify_at:

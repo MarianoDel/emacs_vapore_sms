@@ -24,7 +24,6 @@
 void TF_Led (void);
 void TF_Led_Alarm_Input (void);
 void TF_Led_Alarm_Input_Filtered (void);
-void TF_Alarm_Input_As_Output (void);
 void TF_Act_12V (void);
 void TF_Led_Blinking (void);
 void TF_Usart2_TxRx (void);
