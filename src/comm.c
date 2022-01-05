@@ -34,6 +34,7 @@ extern parameters_typedef mem_conf;
 
 
 // Module Private Functions ----------------------------------------------------
+void CommsCheckSendOK (char * orig_num);
 
 
 // Module Functions ------------------------------------------------------------
@@ -42,49 +43,42 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
     unsigned char index = 0;
 
     // Configurations
-    if (!strncmp(payload, "REPORTAR_OK:1", sizeof ("REPORTAR_OK:1") -1))
+    if (!strncmp(payload, "REPORTAR_OK:", sizeof ("REPORTAR_OK:") - 1))
     {
-        envios_ok = 1;
-        envios_ok_change_set;
-
-        enviar_sms = 1;
-        strcpy(enviar_sms_num, orig_num);
-        strcpy(enviar_sms_msg, "OK");
-    }
-
-    if (!strncmp(payload, "REPORTAR_OK:0", sizeof ("REPORTAR_OK:0") -1))
-    {
-        envios_ok = 0;
-        envios_ok_change_set;
-    }
-
-    if (!strncmp(payload, "PRENDER_RING:0", sizeof ("PRENDER_RING:0") -1))
-    {
-        prender_ring = 0;
-        prender_ring_change_set;
-
-        if (envios_ok)
+        char * p_new = (payload + sizeof ("REPORTAR_OK:") - 1);
+        if (*p_new == '1')
         {
+            envios_ok = 1;
+            envios_ok_change_set;
+
             enviar_sms = 1;
-            strcpy(enviar_sms_num, orig_num);
-            strcpy(enviar_sms_msg, "OK");
+            CommsCheckSendOK (orig_num);
+        }
+        else if (*p_new == '0')
+        {
+            envios_ok = 0;
+            envios_ok_change_set;
         }
     }
 
-    if (!strncmp(payload, "PRENDER_RING:1", sizeof ("PRENDER_RING:1") -1))
+    else if (!strncmp(payload, "PRENDER_RING:", sizeof ("PRENDER_RING:") - 1))
     {
-        prender_ring = 1;
-        prender_ring_change_set;
-
-        if (envios_ok)
+        char * p_new = (payload + sizeof ("PRENDER_RING:") - 1);
+        if (*p_new == '1')
         {
-            enviar_sms = 1;
-            strcpy(enviar_sms_num, orig_num);
-            strcpy(enviar_sms_msg, "OK");
-        }        
+            prender_ring = 1;
+            prender_ring_change_set;
+            CommsCheckSendOK (orig_num);
+        }
+        else if (*p_new == '0')
+        {
+            prender_ring = 0;
+            prender_ring_change_set;
+            CommsCheckSendOK (orig_num);
+        }
     }
-    
-    if (!strncmp(payload, (const char *)"TIMER:", sizeof ("TIMER:") -1))
+
+    else if (!strncmp(payload, (const char *)"TIMER:", sizeof ("TIMER:") -1))
     {
         index = 0;
         index += (*(payload + 6) - 48) * 10;
@@ -104,53 +98,13 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
             timer_rep = index;
             timer_rep_change_set;
         }
-
-        if (envios_ok)
-        {
-            enviar_sms = 1;
-            strcpy(enviar_sms_num, orig_num);
-            strcpy(enviar_sms_msg, "OK");
-        }
+        
+        CommsCheckSendOK (orig_num);
     }
 
-    // if (!strncmp(payload, (const char *)"TIMERD:", sizeof ("TIMERD:") -1))
-    // {
-    //     index = 0;
-    //     index += (*(payload + 7) - 48) * 10;
-    //     index += *(payload + 8) - 48;
-
-    //     if ((*(payload + 7) == 'F') && (*(payload + 8) == 'F'))
-    //     {
-    //         timer_debug = 0;
-    //         send_sms_ok_set;
-    //     }
-    //     else if ((index > 1) && (index <= 60))
-    //     {
-    //         timer_debug = index;
-    //         send_sms_ok_set;
-    //     }
-    // }
-
-    if (!strncmp(payload, (const char *)"PRENDER:", sizeof ("PRENDER:") -1))
+    else if (!strncmp(payload, "REPORTAR_NUM:", sizeof ("REPORTAR_NUM:") - 1))
     {
-        diag_prender_set;
-        if (envios_ok)
-        {
-            enviar_sms = 1;
-            strcpy(enviar_sms_num, orig_num);
-            strcpy(enviar_sms_msg, "OK");
-        }
-    }
-
-    // if (!strncmp(payload, (const char *)"APAGAR:", sizeof ("APAGAR:") -1))
-    //     diag_apagar_set;
-
-    // if (!strncmp(payload, (const char *)"ENERGIA:", sizeof ("ENERGIA:") -1))
-    //     send_energy_set;
-
-    if (!strncmp(payload, "REPORTAR_NUM:", sizeof ("REPORTAR_NUM:") -1))
-    {
-        char * p_new_number = (payload + 13);
+        char * p_new_number = (payload + sizeof ("REPORTAR_NUM:") - 1);
         unsigned char report_ok = 0;
 
         unsigned char len = strlen(p_new_number);
@@ -184,9 +138,9 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         }
     }
 
-    if (!strncmp(payload, "REPORTAR_SITIO:", sizeof ("REPORTAR_SITIO:") -1))
+    else if (!strncmp(payload, "REPORTAR_SITIO:", sizeof ("REPORTAR_SITIO:") -1))
     {
-        char * p_new_place = (payload + 15);
+        char * p_new_place = (payload + sizeof ("REPORTAR_SITIO:") - 1);
         unsigned char report_ok = 0;
 
         unsigned char len = strlen(p_new_place);
@@ -219,6 +173,36 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
                 strcpy(enviar_sms_msg, "NOK");
         }
     }
+
+    else if (!strncmp(payload, "REPORTAR_BAT:", sizeof ("REPORTAR_BAT:") - 1))
+    {
+        char * p_new_conf = (payload + sizeof ("REPORTAR_BAT:") - 1);
+        if (*p_new_conf == '0')
+        {
+            battery_check = 0;
+            battery_check_change_set;
+            CommsCheckSendOK (orig_num);
+        }
+        else if (*p_new_conf == '1')
+        {
+            battery_check = 1;
+            battery_check_change_set;
+            CommsCheckSendOK (orig_num);
+        }
+    }
+
+    // Diagnostics and Activations    
+    else if (!strncmp(payload, (const char *)"PRENDER:", sizeof ("PRENDER:") - 1))
+    {
+        diag_prender_set;
+        CommsCheckSendOK (orig_num);        
+    }
+
+    else if (!strncmp(payload, "BATERIA:", sizeof ("BATERIA:") - 1))
+    {
+        diag_battery_set;
+    }
+    
 }
 
 
@@ -284,4 +268,13 @@ unsigned char VerifySiteString (char * site)
 }
 
 
+void CommsCheckSendOK (char * orig_num)
+{
+    if (envios_ok)
+    {
+        enviar_sms = 1;
+        strcpy(enviar_sms_num, orig_num);
+        strcpy(enviar_sms_msg, "OK");
+    }
+}
 //--- end of file ---//

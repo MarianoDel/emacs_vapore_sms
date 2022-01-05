@@ -81,7 +81,6 @@ SRC += ./src/adc.c
 SRC += ./src/dma.c
 SRC += ./src/usart.c
 SRC += ./src/flash_program.c
-# SRC += ./src/dsp.c
 SRC += ./src/hard.c
 SRC += ./src/test_functions.c
 SRC += ./src/sim900_800.c
@@ -89,6 +88,8 @@ SRC += ./src/funcs_gsm.c
 SRC += ./src/funcs_gsm_gateway.c
 SRC += ./src/comm.c
 SRC += ./src/comms_from_panel.c
+SRC += ./src/dsp.c
+SRC += ./src/battery.c
 
 
 ## Core Support
@@ -239,6 +240,15 @@ tests_comm:
 	gcc -c src/tests_ok.c -I $(INCDIR)
 	gcc -c src/tests_mock_usart.c -I $(INCDIR)
 	gcc src/tests_comm.c comm.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
+	./a.out
+
+tests_battery:
+	# first module objects to test
+	gcc -c src/battery.c -I. $(INCDIR) $(DDEFS)
+	gcc -c src/dsp.c -I. $(INCDIR) $(DDEFS)
+	# second auxiliary helper modules
+	gcc -c src/tests_ok.c -I $(INCDIR)
+	gcc src/tests_battery.c battery.o dsp.o tests_ok.o -I $(INCDIR) $(DDEFS)
 	./a.out
 
 tests_comms_from_panel:

@@ -25,7 +25,8 @@
 // #define HARDWARE_VER_1_0
 
 //----------- Firmware Version -------------------
-#define FIRMWARE_VER_1_3    // delay sms message
+#define FIRMWARE_VER_1_4    // can send battery reports by sms
+// #define FIRMWARE_VER_1_3    // delay sms message
 // #define FIRMWARE_VER_1_2    // all programs in one
 
 
@@ -37,6 +38,10 @@
 #endif
 #ifdef HARDWARE_VER_1_0
 #define HARD    "Hardware version 1.0\n"
+#endif
+
+#ifdef FIRMWARE_VER_1_4
+#define SOFT    "Firmware version 1.4\n"
 #endif
 
 #ifdef FIRMWARE_VER_1_3
@@ -52,7 +57,7 @@
 #error "define hardware version on hard.h"
 #endif
 
-#if (!defined FIRMWARE_VER_1_3) && (!defined FIRMWARE_VER_1_2)
+#if (!defined FIRMWARE_VER_1_4) && (!defined FIRMWARE_VER_1_3)  && (!defined FIRMWARE_VER_1_2)
 #error "define firmware version on hard.h"
 #endif
 
@@ -67,7 +72,7 @@
 #error "no inputs selection on hard.h"
 #endif
 
-#if (defined FIRMWARE_VER_1_3) || (defined FIRMWARE_VER_1_2)
+#if (defined FIRMWARE_VER_1_4) || (defined FIRMWARE_VER_1_3) || (defined FIRMWARE_VER_1_2)
 #if (!defined WITH_PA1_TEST1_INPUT)
 #error "no input for 12V activation on hard.h"
 #endif

@@ -33,6 +33,7 @@
 #include "funcs_gsm_gateway.h"
 
 #include "test_functions.h"
+#include "battery.h"
 
 
 
@@ -63,7 +64,6 @@ volatile unsigned short timer_prender_ringing = 0;
 
 // - Globals for delay msgs -------
 unsigned char message_delay = 0;
-
 
 // Module Private Functions ----------------------------------------------------
 void TimingDelay_Decrement(void);
@@ -122,17 +122,27 @@ int main(void)
     // TIM_16_Init();    //o utilizo para synchro de relay
     // TIM16Enable();
 
+#if (defined FIRMWARE_VER_1_4)
+    //-- ADC Init
+    AdcConfig();
+
+    //-- DMA configuration and Init
+    DMAConfig();
+    DMA1_Channel1->CCR |= DMA_CCR_EN;
+
+    ADC1->CR |= ADC_CR_ADSTART;
+    Battery_Check_Init();
+#endif
+
     WelcomeCode ();
     FuncsGSMReset ();
 
     // Backuped Memory Parameters
     memcpy(&mem_conf, pmem, sizeof(parameters_typedef));
-    if (mem_conf.acumm_wh == 0xFFFFFFFF)
+    if (mem_conf.memory_saved_flag != 0)
     {
         //memoria vacia --> Configuracion a Default
-        mem_conf.acumm_wh = 0;
-        mem_conf.acumm_w2s = 0;
-        mem_conf.acumm_w2s_index = 0;
+        mem_conf.memory_saved_flag = 0;
         timer_rep = 2;
         envios_ok = 0;
         prender_ring = 0;
@@ -150,9 +160,7 @@ int main(void)
     else
         Usart2Send("Memory Have Saved Data\n");
 
-    // Wait_ms(500);
-    // TF_ReadMemory ();
-
+    
 //--- Programa de Activacion SMS - Produccion ---
     main_state_t main_state = main_init;
     unsigned char led_rssi_high = 0;
@@ -219,6 +227,36 @@ int main(void)
                 Usart2Send("ACT_12V ACTIVO\n");
             }
 
+#if (defined FIRMWARE_VER_1_4)
+            // reports from battery status
+            if ((diag_battery) &&
+                (battery_check) &&
+                (FuncsGSMStateAsk () == gsm_state_ready))
+            {
+                diag_battery_reset;
+                if (VerifyNumberString(num_tel_rep))
+                {
+                    unsigned char volts_int = 0;
+                    unsigned char volts_dec = 0;
+                    Battery_Voltage(&volts_int, &volts_dec);
+                    sprintf(buff, "BAT: %02d.%02dV", volts_int, volts_dec);
+                    if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
+                    {
+                        Usart2Send(buff);
+                        Usart2Send(" -> Sended OK!\n");
+                    }
+                    else    // cant send
+                        Usart2Send("Battery report not sended!\n");
+                }
+                else
+                    Usart2Send("sin numero grabado para reportes\n");
+                        
+            }
+
+            // battery measurement
+            Battery_Check();
+#endif
+
             // activate from 12V on test1 input or activation by panel
             alarm_input = Check_Alarm_Input();
             panel_input = Panel_Check_Alarm (&remote_number);
@@ -266,7 +304,7 @@ int main(void)
                         sprintf(buff, "Activo %03d en: ", remote_number);
                         
                     strcat(buff, sitio_prop);
-#if (defined FIRMWARE_VER_1_3)
+#if (defined FIRMWARE_VER_1_4) || (defined FIRMWARE_VER_1_3)
                     if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
                     {
                         main_state = main_enable_act_12V_input;
@@ -341,7 +379,7 @@ int main(void)
             break;
 
         case main_enable_act_12V_input:
-#if (defined FIRMWARE_VER_1_3)
+#if (defined FIRMWARE_VER_1_4) || (defined FIRMWARE_VER_1_3)
             if ((message_delay) && (timer_standby))
             {
                 if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
@@ -434,6 +472,12 @@ void ConfigurationCheck (void)
     if (sitio_prop_change)
     {
         sitio_prop_change_reset;
+        ConfigurationChange();
+    }
+    
+    if (battery_check_change)
+    {
+        battery_check_change_reset;
         ConfigurationChange();
     }
 }
