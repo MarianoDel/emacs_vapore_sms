@@ -247,8 +247,9 @@ tests_battery:
 	gcc -c src/battery.c -I. $(INCDIR) $(DDEFS)
 	gcc -c src/dsp.c -I. $(INCDIR) $(DDEFS)
 	# second auxiliary helper modules
-	gcc -c src/tests_ok.c -I $(INCDIR)
-	gcc src/tests_battery.c battery.o dsp.o tests_ok.o -I $(INCDIR) $(DDEFS)
+	gcc -c src/tests_ok.c
+	gcc -c src/tests_utils.c
+	gcc src/tests_battery.c battery.o dsp.o tests_ok.o tests_utils.o -I $(INCDIR) $(DDEFS)
 	./a.out
 
 tests_comms_from_panel:

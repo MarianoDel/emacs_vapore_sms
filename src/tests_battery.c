@@ -12,6 +12,7 @@
 
 //helper modules
 #include "tests_ok.h"
+#include "tests_utils.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -46,6 +47,9 @@ void Test_Battery (void)
 {
     unsigned char vint = 0;
     unsigned char vdec = 0;
+    float volts_conversion = 0.0;
+    float volts_expected = 0.0;
+    int distance = 0;
 
     battery_filter_out = 2618;
     printf("Test Battery Sense: %d\n", battery_filter_out);
@@ -53,11 +57,12 @@ void Test_Battery (void)
     printf("int: %d dec: %d voltage: %02d.%02dV\n", vint, vdec, vint, vdec);
 
     printf("Test result: ");
-    if ((vint == 13) &&
-        (vdec == 93))
-    {
+
+    volts_expected = 13.93;
+    volts_conversion = vint + vdec / 100.0;
+    distance = Utils_Distance_Floats(volts_expected, volts_conversion, 1);
+    if (distance == 1)
         PrintOK();
-    }
     else
         PrintERR();
 
@@ -67,11 +72,11 @@ void Test_Battery (void)
     printf("int: %d dec: %d voltage: %02d.%02dV\n", vint, vdec, vint, vdec);
 
     printf("Test result: ");
-    if ((vint == 0) &&
-        (vdec == 70))
-    {
+    volts_expected = 0.7;
+    volts_conversion = vint + vdec / 100.0;
+    distance = Utils_Distance_Floats(volts_expected, volts_conversion, 1);
+    if (distance == 1)
         PrintOK();
-    }
     else
         PrintERR();
 
@@ -81,14 +86,13 @@ void Test_Battery (void)
     printf("int: %d dec: %d voltage: %02d.%02dV\n", vint, vdec, vint, vdec);
 
     printf("Test result: ");
-    if ((vint == 21) &&
-        (vdec == 39))
-    {
+    volts_expected = 21.39;
+    volts_conversion = vint + vdec / 100.0;
+    distance = Utils_Distance_Floats(volts_expected, volts_conversion, 1);
+    if (distance == 1)
         PrintOK();
-    }
     else
         PrintERR();
-    
 }
 
 
