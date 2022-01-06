@@ -81,9 +81,21 @@ typedef struct parameters {
 #define num_tel_rep_change_reset	(mem_conf.internal_comms_flag &= 0xFE)
 
 // Extended Flags (third nibble)
-#define diag_battery		(mem_conf.internal_comms_flag & 0x0400)
-#define diag_battery_set	(mem_conf.internal_comms_flag |= 0x0400)
-#define diag_battery_reset	(mem_conf.internal_comms_flag &= 0xFBFF)
+#define diag_battery		(mem_conf.internal_comms_flag & 0x0800)
+#define diag_battery_set	(mem_conf.internal_comms_flag |= 0x0800)
+#define diag_battery_reset	(mem_conf.internal_comms_flag &= 0xF7FF)
+
+#define diag_battery_low_voltage	(mem_conf.internal_comms_flag & 0x0400)
+#define diag_battery_low_voltage_set	(mem_conf.internal_comms_flag |= 0x0400)
+#define diag_battery_low_voltage_reset	(mem_conf.internal_comms_flag &= 0xFBFF)
+
+#define diag_battery_disconnect_voltage		(mem_conf.internal_comms_flag & 0x0200)
+#define diag_battery_disconnect_voltage_set	(mem_conf.internal_comms_flag |= 0x0200)
+#define diag_battery_disconnect_voltage_reset	(mem_conf.internal_comms_flag &= 0xFDFF)
+
+#define diag_battery_good_voltage	(mem_conf.internal_comms_flag & 0x0100)
+#define diag_battery_good_voltage_set	(mem_conf.internal_comms_flag |= 0x0100)
+#define diag_battery_good_voltage_reset	(mem_conf.internal_comms_flag &= 0xFEFF)
 
 
 //- End of Data Struct to Backup -----------------------------------------------

@@ -111,6 +111,13 @@
 
    gsm_sms_mode
 
+** Enviar un SMS
+   AT+CMGS="num_tel"
+   > texto
+   0x1a    CTRL-Z
+   cancelar 0x1b    ESC
+
+   
 * Migrar programa y herramientas de STM32F051 -> STM32G030
 ** DONE Actualizar version OpenOCD
    CLOSED: [2020-09-04 Fri 17:18]
@@ -258,3 +265,17 @@
    CLOSED: [2021-11-30 Tue 09:15]
 ** DONE modifico todo para que en hard 1.0 hard 1.1 se pueda utilizar firm 1.3 o 1.2
    CLOSED: [2021-11-30 Tue 09:15]
+
+* Firmware ver 1.4
+** envia el estado de bateria
+   - si ve un mensaje BATERIA:
+     envia el valor en volts al numero que pide el reporte
+
+** se puede configurar reportes de bateria
+*** con mensajes
+    - REPORTAR_BAT:1 habilita reportes del estado de bateria
+    - REPORTAR_BAT:0 deshabilita
+
+*** para que pueda enviar reportes
+    - habiliar los reportes
+    - cargar el numero a reportar

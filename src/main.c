@@ -131,6 +131,7 @@ int main(void)
     DMA1_Channel1->CCR |= DMA_CCR_EN;
 
     ADC1->CR |= ADC_CR_ADSTART;
+    Wait_ms(5);    // wait a few voltage samples
     Battery_Check_Init();
 #endif
 
@@ -146,6 +147,7 @@ int main(void)
         timer_rep = 2;
         envios_ok = 0;
         prender_ring = 0;
+        battery_check = 0;
         memset(num_tel_rep, '\0', sizeof(num_tel_rep));
         memset(num_tel_imei, '\0', sizeof(num_tel_imei));
         memset(num_tel_prop, '\0', sizeof(num_tel_prop));
@@ -183,15 +185,19 @@ int main(void)
             //reset de flags del gsm
             diag_prender_reset;
             diag_ringing_reset;
+            diag_battery_reset;
+            diag_battery_low_voltage_reset;
+            diag_battery_disconnect_voltage_reset;
 
             //reset de configuraciones del gsm
-            envios_ok_change_reset;
+            // see ConfigurationCheck() for all the following
             timer_rep_change_reset;
+            envios_ok_change_reset;
             prender_ring_change_reset;
-
-            //reset de comunicaciones
-            sitio_prop_change_reset;
             num_tel_rep_change_reset;
+            sitio_prop_change_reset;
+            battery_check_change_reset;
+            
             break;
 
         case main_wait_for_gsm_network:
@@ -229,28 +235,40 @@ int main(void)
 
 #if (defined FIRMWARE_VER_1_4)
             // reports from battery status
-            if ((diag_battery) &&
-                (battery_check) &&
+            if ((battery_check) &&
                 (FuncsGSMStateAsk () == gsm_state_ready))
             {
-                diag_battery_reset;
-                if (VerifyNumberString(num_tel_rep))
+                if ((diag_battery_low_voltage) ||
+                    (diag_battery_disconnect_voltage))
                 {
-                    unsigned char volts_int = 0;
-                    unsigned char volts_dec = 0;
-                    Battery_Voltage(&volts_int, &volts_dec);
-                    sprintf(buff, "BAT: %02d.%02dV", volts_int, volts_dec);
-                    if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
+                    if (VerifyNumberString(num_tel_rep))
                     {
-                        Usart2Send(buff);
-                        Usart2Send(" -> Sended OK!\n");
-                    }
-                    else    // cant send
-                        Usart2Send("Battery report not sended!\n");
-                }
-                else
-                    Usart2Send("sin numero grabado para reportes\n");
+                        unsigned char volts_int = 0;
+                        unsigned char volts_dec = 0;
+                        Battery_Voltage(&volts_int, &volts_dec);
+                        if (diag_battery_low_voltage)
+                        {
+                            sprintf(buff, "BAT_LOW: %02d.%02dV", volts_int, volts_dec);
+                            diag_battery_low_voltage_reset;
+                        }
                         
+                        if (diag_battery_disconnect_voltage)
+                        {
+                            sprintf(buff, "BAT_DISC: %02d.%02dV", volts_int, volts_dec);
+                            diag_battery_disconnect_voltage_reset;
+                        }
+                        
+                        if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
+                        {
+                            Usart2Send(buff);
+                            Usart2Send(" -> Sended OK!\n");
+                        }
+                        else    // cant send
+                            Usart2Send("Battery report not sended!\n");
+                    }
+                    else
+                        Usart2Send("sin numero grabado para reportes\n");
+                }
             }
 
             // battery measurement

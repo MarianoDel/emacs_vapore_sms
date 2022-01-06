@@ -12,6 +12,7 @@
 #include "comm.h"
 // #include "flash_program.h"
 #include "parameters.h"
+#include "battery.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -200,9 +201,15 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
 
     else if (!strncmp(payload, "BATERIA:", sizeof ("BATERIA:") - 1))
     {
-        diag_battery_set;
+        // diag_battery_set;
+        unsigned char volts_int = 0;
+        unsigned char volts_dec = 0;
+        Battery_Voltage(&volts_int, &volts_dec);
+
+        enviar_sms = 1;
+        strcpy(enviar_sms_num, orig_num);
+        sprintf(enviar_sms_msg, "BAT: %02d.%02dV", volts_int, volts_dec);
     }
-    
 }
 
 
