@@ -161,6 +161,7 @@
   * @{
   */
 void SystemClock64MHz (void);
+void SystemClock48MHz (void);
 
 
 /**
@@ -170,15 +171,15 @@ void SystemClock64MHz (void);
   */
 void SystemInit(void)
 {
-  /* Configure the Vector Table location add offset address ------------------*/
+    /* Configure the Vector Table location add offset address ------------------*/
 #ifdef VECT_TAB_SRAM
-  SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
+    SCB->VTOR = SRAM_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal SRAM */
 #else
-  SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
+    SCB->VTOR = FLASH_BASE | VECT_TAB_OFFSET; /* Vector Table Relocation in Internal FLASH */
 #endif
-  SystemClock64MHz ();
+    SystemClock64MHz ();
+    // SystemClock48MHz ();    
 }
-
 
 
 void SystemClock64MHz (void)
@@ -198,11 +199,12 @@ void SystemClock64MHz (void)
     //Check PLL disable
     while (RCC->CR & RCC_CR_PLLRDY);
 
-    //Change PLL multiplier N x8
-    RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_3;
+    //Change PLL multiplier N x24 (x16 default after reset)
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_4 | RCC_PLLCFGR_PLLN_3;
 
-    //Change PLL divider M /1 (por un error en algun lado debo dividir por 2 aca)
+    //Change PLL divider M /3
     RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_1;
+    // -- 16MHz * 24 / 3 = 128MHz
 
     //Change PLLR divider for PLLRCLK output /2 = 64MHz
     RCC->PLLCFGR |= RCC_PLLCFGR_PLLR_0;
@@ -235,10 +237,76 @@ void SystemClock64MHz (void)
 
     // //Check system clock source selected
     while (!((RCC->CFGR & RCC_CFGR_SW_Msk) == RCC_CFGR_SW_1));
-    
-
-           
+               
 }
+
+
+void SystemClock48MHz (void)
+{
+    //FLASH FREQ CONFIG
+    //First modify flash latency
+    FLASH->ACR &= (~(FLASH_ACR_LATENCY_Msk));
+    FLASH->ACR |= FLASH_ACR_LATENCY_1;
+
+    //verify FLASH Latency
+    while (!((FLASH->ACR & FLASH_ACR_LATENCY_Msk) == FLASH_ACR_LATENCY_1));
+
+    //PLL FREQ CONFIG
+    //Disable the PLL
+    RCC->CR &= (~(RCC_CR_PLLON));
+
+    //Check PLL disable
+    while (RCC->CR & RCC_CR_PLLRDY);
+
+    //Change PLL multiplier N x30 (x16 default after reset)
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLN_4 | RCC_PLLCFGR_PLLN_3 | RCC_PLLCFGR_PLLN_2 | RCC_PLLCFGR_PLLN_1;
+
+    //Change PLL divider M /5
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLM_2;
+
+    // -- 16MHz * 30 / 5 = 96MHz
+
+    //Change PLLR divider for PLLRCLK output /2 = 48MHz
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLR_0;
+
+    //Change PLLP divider for PLLPCLK output /4 = 24MHz
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLP_1 | RCC_PLLCFGR_PLLP_0;
+
+    //PLL Clock source
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_1;
+
+    //Enable PLL
+    RCC->CR |= RCC_CR_PLLON;
+    
+    //Check PLL enable
+    while (!(RCC->CR & RCC_CR_PLLRDY));
+        
+    //Enable PLLRCLK
+    RCC->PLLCFGR |= RCC_PLLCFGR_PLLREN;
+
+    //Enable PLLPCLK
+    // // RCC->PLLCFGR |= RCC_PLLCFGR_PLLPEN;
+
+    //AHB FREQ CONFIG
+
+    //APB FREQ CONFIG
+    
+    //SYSTEM CLOCK SOURCE
+    RCC->CFGR |= RCC_CFGR_SW_1;
+        // pllrclk -> sysclk
+    
+    // RCC->CFGR |= RCC_CFGR_MCOPRE_1 | RCC_CFGR_MCOPRE_0 |
+    //     RCC_CFGR_MCOSEL_2 | RCC_CFGR_MCOSEL_0 |
+    //     RCC_CFGR_SW_1;
+    //     // mco / 8
+    //     // pllrckl -> mco    
+    //     // pllrclk -> sysclk
+
+    // //Check system clock source selected
+    while (!((RCC->CFGR & RCC_CFGR_SW_Msk) == RCC_CFGR_SW_1));
+               
+}
+
 
 /**
   * @brief  Update SystemCoreClock variable according to Clock Register Values.
