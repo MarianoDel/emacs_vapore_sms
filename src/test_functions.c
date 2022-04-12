@@ -37,9 +37,51 @@ extern volatile unsigned short adc_ch [];
 
 
 // Module Private Functions ----------------------------------------------------
+void TF_Led (void);
+void TF_Led_Alarm_Input (void);
+void TF_Led_Alarm_Input_Filtered (void);
+void TF_Act_12V (void);
+void TF_Led_Blinking (void);
+void TF_Usart2_TxRx (void);
+void TF_Usart2_NetLight_and_Status (void);
+void TF_Usart2_Adc_Dma (void);
+void TF_Usart2_Flash_Empty_Page (void);
+void TF_Usart2_Flash_Write_Data (void);
+
+void TF_Gpio_Input (void);
+void TF_Gpio_Share_Outputs (void);
+void TF_Usart1_Single (void);
+void TF_Usart1_Multiple (void);
+void TF_Usart1_TxRx (void);
+void TF_Usart1_Adc (void);
+void TF_Usart1_Adc_Int (void);
+void TF_Usart1_Adc_Dma (void);
+void TF_Usart2_Single (void);
+void TF_Usart2_Multiple (void);
+void TF_Tim3_Pwm (void);
+void TF_Usart1_Flash_Empty_Page (void);
+void TF_Usart1_Flash_Write_Data (void);
+void TF_ReadMemory (void);
 
 
 // Module Functions ------------------------------------------------------------
+void TF_Hardware_Tests (void)
+{
+    TF_Led ();
+    // TF_Led_Alarm_Input ();
+    // TF_Alarm_Input_As_Output ();
+    // TF_Led_Alarm_Input_Filtered ();
+    // TF_Act_12V ();
+    // TF_Led_Blinking();
+    // TF_Usart2_TxRx ();
+    // TF_Usart2_NetLight_and_Status ();
+    // TF_Usart2_Adc_Dma ();
+    // TF_Usart2_Flash_Empty_Page ();
+    // TF_Usart2_Flash_Write_Data ();
+    
+}
+
+
 void TF_Led (void)
 {
     while (1)
@@ -137,6 +179,9 @@ void TF_Usart2_TxRx (void)
 }
 
 
+#if (defined HARDWARE_VER_1_2) || \
+    (defined HARDWARE_VER_1_1) || \
+    (defined HARDWARE_VER_1_0)
 void TF_Usart2_NetLight_and_Status (void)
 {
     for (unsigned char i = 0; i < 5; i++)
@@ -189,6 +234,7 @@ void TF_Usart2_NetLight_and_Status (void)
         }
     }
 }
+#endif
 
 
 void TF_Usart2_Adc_Dma (void)

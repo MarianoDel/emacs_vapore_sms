@@ -275,12 +275,6 @@ unsigned char Led_Status (void)
 }
 
 
-unsigned char Status_Status (void)
-{
-    return STATUS;
-}
-
-
 void PwrKey_Off (void)
 {
     PWRKEY_OFF;
@@ -299,9 +293,23 @@ unsigned char PwrKey_Status (void)
 }
 
 
+unsigned char Status_Status (void)
+{
+#ifdef HARDWARE_VER_2_0
+    return 1;
+#else
+    return STATUS;
+#endif
+}
+
+
 unsigned char NetLight_Status (void)
 {
+#ifdef HARDWARE_VER_2_0
+    return 1;
+#else
     return NETLIGHT;
+#endif
 }
 
 

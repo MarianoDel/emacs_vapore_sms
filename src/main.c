@@ -93,17 +93,7 @@ int main(void)
 #endif
 
     //--- Funciones de Test Hardware ---
-    // TF_Led ();
-    // TF_Led_Alarm_Input ();
-    // TF_Alarm_Input_As_Output ();
-    // TF_Led_Alarm_Input_Filtered ();
-    // TF_Act_12V ();
-    // TF_Led_Blinking();
-    // TF_Usart2_TxRx ();
-    // TF_Usart2_NetLight_and_Status ();
-    // TF_Usart2_Adc_Dma ();
-    // TF_Usart2_Flash_Empty_Page ();
-    // TF_Usart2_Flash_Write_Data ();
+    // TF_Hardware_Tests ();
     
     //--- Fin Funciones de Test Hardware ---    
 

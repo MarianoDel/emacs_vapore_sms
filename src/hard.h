@@ -20,9 +20,11 @@
 
 
 //----------- Hardware Board Version -------------
-#define HARDWARE_VER_1_2
-// #define HARDWARE_VER_1_1
-// #define HARDWARE_VER_1_0
+#define HARDWARE_VER_2_0    // sim800l daughter board design
+// #define HARDWARE_VER_1_2    // all old hard changes included
+// #define HARDWARE_VER_1_1    // test1 input modified to report alarms 4V analog to digital input
+                               // pin5 on micro must be gnd (its disconnected)
+// #define HARDWARE_VER_1_0    // original version
 
 //----------- Firmware Version -------------------
 #define FIRMWARE_VER_1_4    // can send battery reports by sms
@@ -30,6 +32,9 @@
 // #define FIRMWARE_VER_1_2    // all programs in one
 
 
+#ifdef HARDWARE_VER_2_0
+#define HARD    "Hardware version 2.0\n"
+#endif
 #ifdef HARDWARE_VER_1_2
 #define HARD    "Hardware version 1.2\n"
 #endif
@@ -53,7 +58,10 @@
 #endif
 
 //--------- Sanity Checks ----------
-#if (!defined HARDWARE_VER_1_2) && (!defined HARDWARE_VER_1_1) && (!defined HARDWARE_VER_1_0)
+#if (!defined HARDWARE_VER_2_0) && \
+    (!defined HARDWARE_VER_1_2) && \
+    (!defined HARDWARE_VER_1_1) && \
+    (!defined HARDWARE_VER_1_0)
 #error "define hardware version on hard.h"
 #endif
 
@@ -96,6 +104,65 @@
 //-------- End Of Defines For Configuration ------
 
 // Gpios Configuration ------------------------------
+#ifdef HARDWARE_VER_2_0
+//GPIOA pin0    nc
+
+//GPIOA pin1	V_Sense_4V
+
+//GPIOA pin2    usart2 tx
+//GPIOA pin3	usart2 rx (para debug)
+
+//GPIOA pin4
+#define DIO0    ((GPIOA->IDR & 0x0010) != 0)
+
+//GPIOA pin5    Spi1 SCK
+//GPIOA pin6	Spi1 MISO 
+//GPIOA pin7    Spi1 MOSI
+
+//GPIOB pin0
+#define DIO1    ((GPIOB->IDR & 0x0001) != 0)
+
+//GPIOB pin1   
+#define PWRKEY    ((GPIOB->ODR & 0x0002) != 0)
+#define PWRKEY_ON    (GPIOB->BSRR = 0x00000002)
+#define PWRKEY_OFF    (GPIOB->BSRR = 0x00020000)
+
+//GPIOB pin2    V_Sense_12V
+
+//GPIOA pin8    nc
+
+//GPIOA pin9    usart1 tx (para el SIM)
+
+//GPIOC pin6    nc
+
+//GPIOA pin10	usart1 rx (para el SIM)
+
+//GPIOA pin11
+#define ACT_12V    ((GPIOA->ODR & 0x0800) != 0)
+#define ACT_12V_ON    (GPIOA->BSRR = 0x00000800)
+#define ACT_12V_OFF    (GPIOA->BSRR = 0x08000000)
+
+//GPIOA pin12
+#define LED    ((GPIOA->ODR & 0x1000) != 0)
+#define LED_ON    (GPIOA->BSRR = 0x00001000)
+#define LED_OFF    (GPIOA->BSRR = 0x10000000)
+
+//GPIOA pin13    swdio
+//GPIOA pin14    swclk
+//GPIOA pin15    nc
+
+//GPIOB pin3    
+//GPIOB pin4
+//GPIOB pin5    nc
+
+//GPIOB pin6
+#define ALARM_INPUT    ((GPIOB->IDR & 0x0040) != 0)
+
+//GPIOB pin7    test2
+//GPIOB pin8    test3
+//GPIOB pin9    nc
+#endif     //#ifdef HARDWARE_VER_2_0
+
 #ifdef HARDWARE_VER_1_2
 //GPIOA pin0    nc
 

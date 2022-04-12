@@ -279,3 +279,6 @@
 *** para que pueda enviar reportes
     - habiliar los reportes
     - cargar el numero a reportar
+
+* Hardware ver 2.0 12-04-2022
+** TODO Gpio pins change

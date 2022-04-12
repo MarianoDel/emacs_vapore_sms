@@ -21,10 +21,18 @@
 #include <string.h>
 
 // Local Module Configs --------------------------------------------------------
-#define USE_SIM800C    //start and stop sequence with SM (powerkey and status lines)
-// #define USE_SIM800L    //no start nor stop sequence - always on
+// #define USE_SIM800C    //start and stop sequence with SM (powerkey and status lines)
+#define USE_SIM800L    //no start nor stop sequence - always on
 #define DEBUG_ON
 
+// Check and inform gsm module selection
+#if defined USE_SIM800C
+#pragma message "------------ USING SIM800C GSM MODULE ------------"
+#elif defined USE_SIM800L
+#pragma message "------------ USING SIM800L GSM MODULE ------------"
+#else
+#error "Not gsm module selected in sim900_800.c"
+#endif
 
 
 // Externals -------------------------------------------------------------------
