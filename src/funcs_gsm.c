@@ -54,6 +54,7 @@ volatile unsigned short funcs_gsm_timeout_timer = 0;
 // Constants -------------------------------------------------------------------
 // #define MAX_STARTUP_ERRORS		5		//a veces tarda mas en registrar
 #define MAX_STARTUP_ERRORS		10		//lo paso a 10
+#define MAX_COMMS_ERRORS    20    // 20 errors on common use
 
 
 // Module Functions ------------------------------------------------------------
@@ -91,10 +92,7 @@ void FuncsGSM (void)
             if (gsm_error_counter < MAX_STARTUP_ERRORS)
                 gsm_error_counter++;
             else
-            {
-                GSM_Start_Stop_ResetSM ();
                 gsm_state = gsm_state_shutdown;
-            }
         }
         break;
 
@@ -123,10 +121,7 @@ void FuncsGSM (void)
             if (gsm_error_counter < MAX_STARTUP_ERRORS)
                 gsm_error_counter++;
             else
-            {
-                GSM_Start_Stop_ResetSM ();
                 gsm_state = gsm_state_shutdown;
-            }
         }
         break;
 
@@ -141,10 +136,7 @@ void FuncsGSM (void)
             if (gsm_error_counter < MAX_STARTUP_ERRORS)
                 gsm_error_counter++;
             else
-            {
-                GSM_Start_Stop_ResetSM ();
                 gsm_state = gsm_state_shutdown;
-            }
         }
         break;
 
@@ -159,10 +151,7 @@ void FuncsGSM (void)
             if (gsm_error_counter < MAX_STARTUP_ERRORS)
                 gsm_error_counter++;
             else
-            {
-                GSM_Start_Stop_ResetSM ();
                 gsm_state = gsm_state_shutdown;
-            }
         }
         break;
 
@@ -180,10 +169,7 @@ void FuncsGSM (void)
             if (gsm_error_counter < MAX_STARTUP_ERRORS)
                 gsm_error_counter++;
             else
-            {
-                GSM_Start_Stop_ResetSM ();
                 gsm_state = gsm_state_shutdown;
-            }
         }
         break;
 
@@ -230,10 +216,8 @@ void FuncsGSM (void)
                 gsm_state = gsm_state_wait_reg;
             }
             else
-            {
                 gsm_state = gsm_state_shutdown;
-            }
-            GSM_Start_Stop_ResetSM ();
+
         }
         break;
 
@@ -249,10 +233,8 @@ void FuncsGSM (void)
             if (gsm_error_counter < MAX_STARTUP_ERRORS)
                 gsm_error_counter++;
             else
-            {
-                GSM_Start_Stop_ResetSM ();
                 gsm_state = gsm_state_shutdown;
-            }
+
         }
         break;
 
@@ -288,10 +270,8 @@ void FuncsGSM (void)
             if (gsm_error_counter < MAX_STARTUP_ERRORS)
                 gsm_error_counter++;
             else
-            {
-                GSM_Start_Stop_ResetSM ();
                 gsm_state = gsm_state_shutdown;
-            }
+
         }
         break;
 
@@ -316,8 +296,7 @@ void FuncsGSM (void)
 
         if (resp == 2)
         {
-            // Usart2Send("csq\n");
-            // Usart2Send(s_msg);
+            resp = 3;    // error for default
             
             if (!strncmp(s_msg, "+CSQ: ", sizeof("+CSQ: ") - 1))
             {
@@ -337,13 +316,23 @@ void FuncsGSM (void)
                 char s_ser [20] = { 0 };
                 sprintf(s_ser, "RSSI: %d\n", rssi_level);
                 Usart2Send(s_ser);
+                gsm_state = gsm_state_check_network;
+                resp = 2;
             }
-            
-            gsm_state = gsm_state_check_network;
         }
-        else if (resp > 2)
-            gsm_state = gsm_state_check_network;
+        
+        if (resp > 2)
+        {
+            if (gsm_error_counter < MAX_COMMS_ERRORS)
+            {
+                gsm_error_counter++;
+                gsm_state = gsm_state_ready;
+                funcs_gsm_timeout_timer = 3000;
+            }
+            else
+                gsm_state = gsm_state_shutdown;
 
+        }
         break;
 
     case gsm_state_check_network:
@@ -351,6 +340,8 @@ void FuncsGSM (void)
 
         if (resp == 2)
         {
+            resp = 3;    // error for default
+            
             if (!strncmp(s_msg, "+CREG: ", sizeof("+CREG: ") - 1))
             {
                 char * p_colon;
@@ -368,25 +359,23 @@ void FuncsGSM (void)
                     gsm_error_counter = 0;
                     funcs_gsm_timeout_timer = 20000;
                     gsm_state = gsm_state_ready;
-                }
-                else if (gsm_error_counter > 1)
-                {
-                    GSM_Start_Stop_ResetSM ();
-                    gsm_state = gsm_state_shutdown;
-                }
-                else
-                {
-                    gsm_error_counter++;
-                    gsm_state = gsm_state_ready;
-                    funcs_gsm_timeout_timer = 10000;
+                    resp = 2;
                 }
             }
         }
-        else if (resp > 2)
+        
+        if (resp > 2)
         {
-            gsm_state = gsm_state_ready;
-            funcs_gsm_timeout_timer = 20000;
-        }        
+            if (gsm_error_counter < MAX_COMMS_ERRORS)
+            {
+                gsm_error_counter++;
+                gsm_state = gsm_state_ready;
+                funcs_gsm_timeout_timer = 3000;
+            }
+            else
+                gsm_state = gsm_state_shutdown;
+
+        }
         break;
         
     case gsm_state_reading_sms:

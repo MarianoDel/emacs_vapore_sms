@@ -112,7 +112,8 @@ int main(void)
     // TIM_16_Init();    //o utilizo para synchro de relay
     // TIM16Enable();
 
-#if (defined FIRMWARE_VER_1_4)
+#if (defined FIRMWARE_VER_1_5) || \
+    (defined FIRMWARE_VER_1_4)
     //-- ADC Init
     AdcConfig();
 
@@ -223,7 +224,8 @@ int main(void)
                 Usart2Send("ACT_12V ACTIVO\n");
             }
 
-#if (defined FIRMWARE_VER_1_4)
+#if (defined FIRMWARE_VER_1_5) || \
+    (defined FIRMWARE_VER_1_4)
             // reports from battery status
             if ((battery_check) &&
                 (FuncsGSMStateAsk () == gsm_state_ready))
@@ -312,7 +314,9 @@ int main(void)
                         sprintf(buff, "Activo %03d en: ", remote_number);
                         
                     strcat(buff, sitio_prop);
-#if (defined FIRMWARE_VER_1_4) || (defined FIRMWARE_VER_1_3)
+#if (defined FIRMWARE_VER_1_5) || \
+    (defined FIRMWARE_VER_1_4) || \
+    (defined FIRMWARE_VER_1_3)
                     if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
                     {
                         main_state = main_enable_act_12V_input;
@@ -387,7 +391,9 @@ int main(void)
             break;
 
         case main_enable_act_12V_input:
-#if (defined FIRMWARE_VER_1_4) || (defined FIRMWARE_VER_1_3)
+#if (defined FIRMWARE_VER_1_5) || \
+    (defined FIRMWARE_VER_1_4) || \
+    (defined FIRMWARE_VER_1_3)
             if ((message_delay) && (timer_standby))
             {
                 if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)

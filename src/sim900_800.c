@@ -21,8 +21,8 @@
 #include <string.h>
 
 // Local Module Configs --------------------------------------------------------
-// #define USE_SIM800C    //start and stop sequence with SM (powerkey and status lines)
-#define USE_SIM800L    //no start nor stop sequence - always on
+#define USE_SIM800C    //start and stop sequence with SM (powerkey and status lines)
+// #define USE_SIM800L    //no start nor stop sequence - always on
 #define DEBUG_ON
 
 // Check and inform gsm module selection
@@ -152,25 +152,54 @@ void GSMProcess (void)
 //1 terminado OK
 //2 ERROR
 //3 Timeout
+#define START_CHECK_STATUS    0
+#define START_FROM_STATUS_UP    1
+#define START_FROM_STATUS_DWN    10
+
 unsigned char GSM_Start (void)
 {
     
-#ifdef USE_SIM800L
+#ifdef USE_SIM800L    
+    GSM_PWRKEY_OFF;
+    Wait_ms(200);
+    GSM_PWRKEY_ON;
+    Wait_ms(3000);    
     return 1;
 #endif    //USE_SIM800L
     
 #ifdef USE_SIM800C
     switch(GSMStartState)
     {
-    case 0:
+    case START_CHECK_STATUS:
+        if (GSM_STATUS)
+        {
+            Wait_ms(600);
+            if (GSM_STATUS)
+                GSMStartState = START_FROM_STATUS_UP;
+            else
+                GSMStartState = START_FROM_STATUS_DWN;
+        }
+        else
+            GSMStartState = START_FROM_STATUS_DWN;
+        
+        break;
+        
+    case START_FROM_STATUS_UP:    
+        //Levanto PWRKEY
+        LED_NETLIGHT_ON;
+        GSM_PWRKEY_ON;
+        return 1;
+        break;
+
+    case START_FROM_STATUS_DWN:    
         //Levanto PWRKEY
         LED_NETLIGHT_ON;
         GSMStartTime = 100;
         GSM_PWRKEY_ON;
         GSMStartState++;
         break;
-
-    case 1:
+        
+    case 11:
         //Bajo PWRKEY
         if(GSMStartTime == 0) //Espera 100 mseg
         {
@@ -181,7 +210,7 @@ unsigned char GSM_Start (void)
         }
         break;
 
-    case 2:
+    case 12:
         if(GSMStartTime == 0) //Espera 1500 mseg
         {
             GSM_PWRKEY_ON;
@@ -190,7 +219,7 @@ unsigned char GSM_Start (void)
         }
         break;
 
-    case 3:
+    case 13:
         // espero STATUS con PWRKEY en ON
         if (GSM_STATUS)
         {
@@ -204,7 +233,7 @@ unsigned char GSM_Start (void)
         }
         break;
 
-    case 4:
+    case 14:
         if(GSMStartTime == 0)	//Espero 1 segundo mas y reviso GSM_STATUS
         {
             if (GSM_STATUS)
@@ -220,6 +249,67 @@ unsigned char GSM_Start (void)
     }
     return 0; //trabajando
 
+    // original function starts ok but never stops
+    // switch(GSMStartState)
+    // {
+    // case 0:
+    //     //Levanto PWRKEY
+    //     LED_NETLIGHT_ON;
+    //     GSMStartTime = 100;
+    //     GSM_PWRKEY_ON;
+    //     GSMStartState++;
+    //     break;
+
+    // case 1:
+    //     //Bajo PWRKEY
+    //     if(GSMStartTime == 0) //Espera 100 mseg
+    //     {
+    //         LED_NETLIGHT_OFF;
+    //         GSM_PWRKEY_OFF;
+    //         GSMStartTime = 1500; // 1.5 segundo powerkey off
+    //         GSMStartState++;
+    //     }
+    //     break;
+
+    // case 2:
+    //     if(GSMStartTime == 0) //Espera 1500 mseg
+    //     {
+    //         GSM_PWRKEY_ON;
+    //         GSMStartTime = 2500; // espero 2.5 segundos mas que levante status
+    //         GSMStartState++;
+    //     }
+    //     break;
+
+    // case 3:
+    //     // espero STATUS con PWRKEY en ON
+    //     if (GSM_STATUS)
+    //     {
+    //         GSMStartTime = 1000;
+    //         GSMStartState++;
+    //         LED_NETLIGHT_ON;
+    //     }
+    //     else if(GSMStartTime == 0) //Espera hasta 4 segs en total
+    //     {
+    //         return 3;		//TimeOut
+    //     }
+    //     break;
+
+    // case 4:
+    //     if(GSMStartTime == 0)	//Espero 1 segundo mas y reviso GSM_STATUS
+    //     {
+    //         if (GSM_STATUS)
+    //             return 1;		//OK
+    //         else
+    //             return 2;		//Error
+    //     }
+    //     break;
+
+    // default:
+    //     GSMStartState = 0;
+    //     break;
+    // }
+    // return 0; //trabajando
+    
 #endif    //USE_SIM800C
 }
 
@@ -236,6 +326,10 @@ void GSM_Start_Stop_ResetSM (void)
 unsigned char GSM_Stop(void)
 {
 #ifdef USE_SIM800L
+    GSM_PWRKEY_OFF;
+    Wait_ms(200);
+    GSM_PWRKEY_ON;
+    Wait_ms(3000);        
     return 1;
 #endif    //USE_SIM800L
 

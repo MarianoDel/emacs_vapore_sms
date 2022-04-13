@@ -52,8 +52,6 @@
 //------------------------------------------//
 void GPIO_Config (void)
 {
-    unsigned long temp;
-
     //--- MODER ---//
     //00: Input mode 
     //01: General purpose output mode
@@ -79,9 +77,70 @@ void GPIO_Config (void)
     //10: Pull-down
     //11: Reserved
 
-#ifdef HARDWARE_VER_1_2
+#ifdef HARDWARE_VER_2_0
+    unsigned long temp;
+
+#ifdef GPIOA_ENABLE    
     //--- GPIO A ---//
-#ifdef GPIOA_ENABLE
+    if (!GPIOA_CLK)
+        GPIOA_CLK_ON;
+
+    temp = GPIOA->MODER;    //2 bits por pin
+    temp &= 0xFC030003;    //PA1 analog; PA2 - PA3 alternate; PA4 input; PA5 - PA6 alternative; PA7 output
+    temp |= 0x016868AC;    //PA9 - PA10 alternative; PA11 - PA12 output
+    GPIOA->MODER = temp;
+
+    temp = GPIOA->OTYPER;	//1 bit por pin
+    temp &= 0xFFFFFFFF;
+    temp |= 0x00000000;       
+    GPIOA->OTYPER = temp;
+
+    temp = GPIOA->OSPEEDR;	//2 bits por pin
+    temp &= 0xFC3303CF;
+    temp |= 0x00000000;		// PA2, PA5 - PA7, PA9, PA11, PA12 low speed
+    GPIOA->OSPEEDR = temp;
+
+    temp = GPIOA->PUPDR;	//2 bits por pin
+    temp &= 0xFFFFFFFF;
+    temp |= 0x00000000;
+    GPIOA->PUPDR = temp;
+
+#endif    // GPIOA_ENABLE
+    
+#ifdef GPIOB_ENABLE    
+    //--- GPIO B ---//
+    if (!GPIOB_CLK)
+        GPIOB_CLK_ON;
+
+    temp = GPIOB->MODER;        //2 bits por pin
+    temp &= 0xFFFFCFC0;        // PB0 input; PB1 output; PB2 analog; PB6 input
+    temp |= 0x00000034;
+    GPIOB->MODER = temp;
+
+    temp = GPIOB->OTYPER;	//1 bit por pin
+    temp &= 0xFFFFFFFD;        // PB1 open drain
+    temp |= 0x00000002;
+    GPIOB->OTYPER = temp;
+
+    temp = GPIOB->OSPEEDR;	//2 bits por pin
+    temp &= 0xFFFFFFFF;
+    temp |= 0x00000000;		//low speed
+    GPIOB->OSPEEDR = temp;
+
+    temp = GPIOB->PUPDR;	//2 bits por pin
+    temp &= 0xFFFFCFFF;        //PB6 pulldwn
+    temp |= 0x00002000;
+    GPIOB->PUPDR = temp;
+
+#endif    // GPIOB_ENABLE
+#endif    //#ifdef HARDWARE_VER_2_0
+
+
+#ifdef HARDWARE_VER_1_2
+    unsigned long temp;
+
+#ifdef GPIOA_ENABLE    
+    //--- GPIO A ---//
     if (!GPIOA_CLK)
         GPIOA_CLK_ON;
 
@@ -108,8 +167,8 @@ void GPIO_Config (void)
 #endif    // GPIOA_ENABLE
     
 
+#ifdef GPIOB_ENABLE    
     //--- GPIO B ---//
-#ifdef GPIOB_ENABLE
     if (!GPIOB_CLK)
         GPIOB_CLK_ON;
 
@@ -135,7 +194,7 @@ void GPIO_Config (void)
 
 #endif    // GPIOB_ENABLE
 #endif    //#ifdef HARDWARE_VER_1_2
-
+    
 #if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)    
     //--- GPIO A ---//
 #ifdef GPIOA_ENABLE
