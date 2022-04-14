@@ -152,167 +152,124 @@ void GSMProcess (void)
 //1 terminado OK
 //2 ERROR
 //3 Timeout
-#define START_CHECK_STATUS    0
-#define START_FROM_STATUS_UP    1
-#define START_FROM_STATUS_DWN    10
+typedef enum {
+    START_CHECK_STATUS,
+    START_STATUS_UP_WAIT_CONFIRM,
+    START_STATUS_DWN,
+    START_STATUS_DWN_1,
+    START_STATUS_DWN_2,
+    START_STATUS_DWN_3,
+    START_STATUS_DWN_4
 
-unsigned char GSM_Start (void)
-{
+} gsm_start_state_e;
     
-#ifdef USE_SIM800L    
+
+#ifdef USE_SIM800L
+unsigned char GSM_Start (void)    // actually a reset
+{
     GSM_PWRKEY_OFF;
     Wait_ms(200);
     GSM_PWRKEY_ON;
     Wait_ms(3000);    
     return 1;
+}
 #endif    //USE_SIM800L
-    
-#ifdef USE_SIM800C
+
+#ifdef USE_SIM800C    
+unsigned char GSM_Start (void)
+{    
     switch(GSMStartState)
     {
     case START_CHECK_STATUS:
         if (GSM_STATUS)
         {
-            Wait_ms(600);
-            if (GSM_STATUS)
-                GSMStartState = START_FROM_STATUS_UP;
-            else
-                GSMStartState = START_FROM_STATUS_DWN;
+            GSMStartTime = 600;    // wait 600ms to confirm
+            GSMStartState = START_STATUS_UP_WAIT_CONFIRM;
         }
         else
-            GSMStartState = START_FROM_STATUS_DWN;
-        
-        break;
-        
-    case START_FROM_STATUS_UP:    
-        //Levanto PWRKEY
-        LED_NETLIGHT_ON;
-        GSM_PWRKEY_ON;
-        return 1;
+            GSMStartState = START_STATUS_DWN;
+
         break;
 
-    case START_FROM_STATUS_DWN:    
-        //Levanto PWRKEY
+    case START_STATUS_UP_WAIT_CONFIRM:
+        if(!GSMStartTime)
+        {
+            if (GSM_STATUS)
+            {
+                // powerkey to on, almost sure it was already in on
+                LED_NETLIGHT_ON;
+                GSM_PWRKEY_ON;
+                GSMStartState = START_CHECK_STATUS;
+                return 1;
+            }
+            else
+                GSMStartState = START_STATUS_DWN;
+        }
+        break;
+        
+    case START_STATUS_DWN:    
+        // powerkey to ON
         LED_NETLIGHT_ON;
-        GSMStartTime = 100;
+        GSMStartTime = 100;    // powerkey on 100ms
         GSM_PWRKEY_ON;
         GSMStartState++;
         break;
         
-    case 11:
-        //Bajo PWRKEY
-        if(GSMStartTime == 0) //Espera 100 mseg
+    case START_STATUS_DWN_1:
+        // powerkey off
+        if(!GSMStartTime)
         {
             LED_NETLIGHT_OFF;
             GSM_PWRKEY_OFF;
-            GSMStartTime = 1500; // 1.5 segundo powerkey off
+            GSMStartTime = 1500;    // 1.5 secs powerkey off
             GSMStartState++;
         }
         break;
 
-    case 12:
-        if(GSMStartTime == 0) //Espera 1500 mseg
+    case START_STATUS_DWN_2:
+        if(!GSMStartTime)
         {
             GSM_PWRKEY_ON;
-            GSMStartTime = 2500; // espero 2.5 segundos mas que levante status
+            GSMStartTime = 2500;    // 2.5 secs powerkey on to check status again
             GSMStartState++;
         }
         break;
 
-    case 13:
-        // espero STATUS con PWRKEY en ON
-        if (GSM_STATUS)
+    case START_STATUS_DWN_3:
+        if (GSM_STATUS)    // wait status up with powerkey on
         {
             GSMStartTime = 1000;
             GSMStartState++;
             LED_NETLIGHT_ON;
         }
-        else if(GSMStartTime == 0) //Espera hasta 4 segs en total
+        else if(!GSMStartTime)    // status never goes up, finish with timeout
         {
-            return 3;		//TimeOut
+            GSMStartState = START_CHECK_STATUS;
+            return 3;    //TimeOut
         }
         break;
 
-    case 14:
-        if(GSMStartTime == 0)	//Espero 1 segundo mas y reviso GSM_STATUS
+    case START_STATUS_DWN_4:
+        if(!GSMStartTime)    // last check if its up OK, otherwise NOK
         {
+            GSMStartState = START_CHECK_STATUS;
+            
             if (GSM_STATUS)
-                return 1;		//OK
+                return 1;    //OK
             else
-                return 2;		//Error
+                return 2;    //Error
         }
         break;
 
     default:
-        GSMStartState = 0;
+        GSMStartState = START_CHECK_STATUS;
         break;
     }
-    return 0; //trabajando
-
-    // original function starts ok but never stops
-    // switch(GSMStartState)
-    // {
-    // case 0:
-    //     //Levanto PWRKEY
-    //     LED_NETLIGHT_ON;
-    //     GSMStartTime = 100;
-    //     GSM_PWRKEY_ON;
-    //     GSMStartState++;
-    //     break;
-
-    // case 1:
-    //     //Bajo PWRKEY
-    //     if(GSMStartTime == 0) //Espera 100 mseg
-    //     {
-    //         LED_NETLIGHT_OFF;
-    //         GSM_PWRKEY_OFF;
-    //         GSMStartTime = 1500; // 1.5 segundo powerkey off
-    //         GSMStartState++;
-    //     }
-    //     break;
-
-    // case 2:
-    //     if(GSMStartTime == 0) //Espera 1500 mseg
-    //     {
-    //         GSM_PWRKEY_ON;
-    //         GSMStartTime = 2500; // espero 2.5 segundos mas que levante status
-    //         GSMStartState++;
-    //     }
-    //     break;
-
-    // case 3:
-    //     // espero STATUS con PWRKEY en ON
-    //     if (GSM_STATUS)
-    //     {
-    //         GSMStartTime = 1000;
-    //         GSMStartState++;
-    //         LED_NETLIGHT_ON;
-    //     }
-    //     else if(GSMStartTime == 0) //Espera hasta 4 segs en total
-    //     {
-    //         return 3;		//TimeOut
-    //     }
-    //     break;
-
-    // case 4:
-    //     if(GSMStartTime == 0)	//Espero 1 segundo mas y reviso GSM_STATUS
-    //     {
-    //         if (GSM_STATUS)
-    //             return 1;		//OK
-    //         else
-    //             return 2;		//Error
-    //     }
-    //     break;
-
-    // default:
-    //     GSMStartState = 0;
-    //     break;
-    // }
-    // return 0; //trabajando
     
-#endif    //USE_SIM800C
+    return 0;    //trabajando
 }
-
+#endif    //USE_SIM800C
+    
 void GSM_Start_Stop_ResetSM (void)
 {
     GSMStartState = 0;
@@ -323,43 +280,95 @@ void GSM_Start_Stop_ResetSM (void)
 //1 terminado OK
 //2 ERROR
 //3 Timeout
-unsigned char GSM_Stop(void)
-{
+typedef enum {
+    STOP_CHECK_STATUS,
+    STOP_STATUS_DWN_WAIT_CONFIRM,
+    STOP_STATUS_DWN_CHANGE,
+    STOP_STATUS_UP,
+    STOP_STATUS_UP_1,
+    STOP_STATUS_UP_2
+
+} gsm_stop_state_e;
+
 #ifdef USE_SIM800L
+unsigned char GSM_Stop(void)    // actually a reset
+{    
     GSM_PWRKEY_OFF;
     Wait_ms(200);
     GSM_PWRKEY_ON;
     Wait_ms(3000);        
     return 1;
+}
 #endif    //USE_SIM800L
-
-#ifdef USE_SIM800C
-
+    
+#ifdef USE_SIM800C    
+unsigned char GSM_Stop(void)
+{
     switch(GSMStartState)
     {
-    case 0:
-        GSM_PWRKEY_OFF;
-        GSMStartTime = 4000;	//espero hasta 4 segundos
+    case STOP_CHECK_STATUS:
+        GSM_PWRKEY_ON;    // powerkey must be always on (for standby)
+        
+        if (!GSM_STATUS)
+        {
+            GSMStartTime = 3000;    // wait 3 secs to confirm
+            GSMStartState = STOP_STATUS_DWN_WAIT_CONFIRM;
+        }
+        else
+            GSMStartState = STOP_STATUS_UP;
+
+        break;
+
+    case STOP_STATUS_DWN_WAIT_CONFIRM:
+        if (GSM_STATUS)    // anytime if status went up
+        {
+            GSMStartTime = 500;    // give module some reasonable time
+            GSMStartState = STOP_STATUS_DWN_CHANGE;
+        }
+        else if(!GSMStartTime)
+        {
+            // module its sure off
+            LED_NETLIGHT_OFF;
+            GSMStartState = STOP_CHECK_STATUS;
+            return 1;
+        }        
+        break;
+
+    case STOP_STATUS_DWN_CHANGE:
+        if(!GSMStartTime)
+            GSMStartState = STOP_STATUS_UP;
+
+        break;
+
+    case STOP_STATUS_UP:
+        GSMStartTime = 3000;
+        GSM_PWRKEY_OFF;    // powerkey do a power cycle
+        LED_NETLIGHT_OFF;
         GSMStartState++;
         break;
 
-    case 1:
-        if (!GSM_STATUS)
+    case STOP_STATUS_UP_1:
+        // status went down and powerkey was down at least 2secs
+        if ((!GSM_STATUS) && (GSMStartTime < 1000))    
         {
             GSMStartTime = 1000;
+            GSM_PWRKEY_ON;    // powerkey to on for standby
             GSMStartState++;
-            LED_NETLIGHT_OFF;
         }
-        else if(GSMStartTime == 0) //Espera hasta 4 segs en total
+        else if(!GSMStartTime) // wait up to 3secs in total
         {
+            GSM_PWRKEY_ON;    // powerkey to on for standby
+            GSMStartState = STOP_CHECK_STATUS;
             return 3;		//TimeOut
         }
         break;
 
-    case 2:
+    case STOP_STATUS_UP_2:
         if (!GSMStartTime)
-        {
-            if (!GSM_STATUS)    //modulo apagado
+        {            
+            GSMStartState = STOP_CHECK_STATUS;
+            
+            if (!GSM_STATUS)    // module its sure off
                 return 1;
             else
                 return 2;
@@ -368,9 +377,8 @@ unsigned char GSM_Stop(void)
     }
 
     return 0;
-
-#endif    //USE_SIM800C
 }
+#endif    //USE_SIM800C    
 
 //TODO: OJO utiliza GSMStartState
 //in: delay en ms

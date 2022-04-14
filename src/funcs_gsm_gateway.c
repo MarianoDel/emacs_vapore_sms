@@ -58,7 +58,8 @@ void FuncsGSMG_Entering (void)
         if (Usart2HaveData())
         {
             Usart2HaveDataReset();
-            Usart2ReadBuffer((unsigned char *)buff, sizeof(buff));
+            Usart2Send("new fucking data\n");
+            Usart2ReadBuffer((unsigned char *)buff, sizeof(buff) - 1);
             if (!strncmp(buff, "gsm_gw_mode", sizeof ("gsm_gw_mode") -1))
             {
                 gw_mode = 1;
@@ -221,12 +222,30 @@ unsigned char FuncsGSMG_ProcessCommands (char * buff)
     unsigned char result = 0;
 
     char answers [100] = { 0 };
+    sprintf(answers, "getted: %s\n", buff);
+    Usart2Send(answers);
+    Wait_ms(100);
+    
     if (!strncmp(buff, "gsm_status", sizeof ("gsm_status") -1))
     {
         FuncsGSMG_SendStatus(answers);
         result = 1;
     }
 
+    if (!strncmp(buff, "gsm_pwrkey_on", sizeof ("gsm_pwrkey_on") -1))
+    {
+        Usart2Send("done\n");
+        GSM_PWRKEY_ON;
+        result = 1;
+    }
+
+    if (!strncmp(buff, "gsm_pwrkey_off", sizeof ("gsm_pwrkey_off") -1))
+    {
+        Usart2Send("done\n");
+        GSM_PWRKEY_OFF;
+        result = 1;        
+    }
+    
     if (!strncmp(buff, "gsm_power_off", sizeof ("gsm_power_off") -1))
     {
         unsigned char resp = 0;
