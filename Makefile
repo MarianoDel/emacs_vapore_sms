@@ -202,7 +202,12 @@ $(assobjects): %.o: %.s
 	$(BIN)  $< $@
 
 flash:
-	sudo openocd -f stm32g0_flash.cfg
+ifeq ($(DDEFS), -DSTM32G070xx)
+	sudo openocd -f stm32g070_flash.cfg
+else
+	sudo openocd -f stm32g030_flash.cfg
+endif
+
 
 flash_lock:
 	sudo openocd -f stm32g0_flash_lock.cfg

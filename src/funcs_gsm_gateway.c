@@ -58,7 +58,6 @@ void FuncsGSMG_Entering (void)
         if (Usart2HaveData())
         {
             Usart2HaveDataReset();
-            Usart2Send("new fucking data\n");
             Usart2ReadBuffer((unsigned char *)buff, sizeof(buff) - 1);
             if (!strncmp(buff, "gsm_gw_mode", sizeof ("gsm_gw_mode") -1))
             {
@@ -70,8 +69,15 @@ void FuncsGSMG_Entering (void)
     
     if (gw_mode)
     {
+#if (defined USE_GSM_GATEWAY_IN_LOOP)
+        FuncsGSMGateway ();
+        gw_mode = 0;
+#elif (defined USE_GSM_GATEWAY_SM)
         if (FuncsGSMGateway_SM () != 0)    //gw mode continue
             gw_mode = 0;
+#else
+#error "not type of gsm gateway program selected on hard.h"
+#endif        
     }
 }
 
@@ -108,9 +114,9 @@ unsigned char FuncsGSMGateway_SM (void)
         }
 
         Wait_ms (100);
-        Usart2Send("GSM GATEWAY.. sin reboot al modulo\r\n");
+        Usart2Send("GSM GATEWAY... no module reboot\r\n");
         Wait_ms (100);
-        Usart2Send("GSM GATEWAY Listo para empezar\r\n");
+        Usart2Send("GSM GATEWAY State Machine - Ready\r\n");
         Wait_ms (100);
         gw_mode_state = LOOPING;
         break;
@@ -173,9 +179,9 @@ void FuncsGSMGateway (void)
     }
 
     Wait_ms (100);
-    Usart2Send("GSM GATEWAY.. sin reboot al modulo\r\n");
+    Usart2Send("GSM GATEWAY.. no module reboot\r\n");
     Wait_ms (100);
-    Usart2Send("GSM GATEWAY Listo para empezar\r\n");
+    Usart2Send("GSM GATEWAY working in loop - Ready\r\n");
     Wait_ms (100);
 
     char buff [256] = { 0 };
@@ -203,6 +209,7 @@ void FuncsGSMGateway (void)
             else if (cmd_type == 0)    //not a command, send it to gsm
             {
                 Usart1Send(buff);
+                Usart1Send("\r\n");                
             }
         }
 
@@ -222,9 +229,6 @@ unsigned char FuncsGSMG_ProcessCommands (char * buff)
     unsigned char result = 0;
 
     char answers [100] = { 0 };
-    sprintf(answers, "getted: %s\n", buff);
-    Usart2Send(answers);
-    Wait_ms(100);
     
     if (!strncmp(buff, "gsm_status", sizeof ("gsm_status") -1))
     {
@@ -232,14 +236,14 @@ unsigned char FuncsGSMG_ProcessCommands (char * buff)
         result = 1;
     }
 
-    if (!strncmp(buff, "gsm_pwrkey_on", sizeof ("gsm_pwrkey_on") -1))
+    if (!strncmp(buff, "pwrkey_on", sizeof ("pwrkey_on") -1))
     {
         Usart2Send("done\n");
         GSM_PWRKEY_ON;
         result = 1;
     }
 
-    if (!strncmp(buff, "gsm_pwrkey_off", sizeof ("gsm_pwrkey_off") -1))
+    if (!strncmp(buff, "pwrkey_off", sizeof ("pwrkey_off") -1))
     {
         Usart2Send("done\n");
         GSM_PWRKEY_OFF;

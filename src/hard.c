@@ -215,6 +215,18 @@ void WelcomeCode (void)
     Wait_ms(30);
 #endif
 
+#ifdef USE_GSM_GATEWAY_SM
+    sprintf(str,"[%s] %s\n", __FILE__, str_macro(USE_GSM_GATEWAY_SM));
+    Usart2Send(str);
+    Wait_ms(30);    
+#endif
+
+#ifdef USE_GSM_GATEWAY_IN_LOOP
+    sprintf(str,"[%s] %s\n", __FILE__, str_macro(USE_GSM_GATEWAY_IN_LOOP));
+    Usart2Send(str);
+    Wait_ms(30);    
+#endif
+
 #ifdef DEBUG_ON
     sprintf(str,"[%s] %s\n", __FILE__, str_macro(DEBUG_ON));
     Usart2Send(str);
