@@ -34,6 +34,16 @@
 // #define FIRMWARE_VER_1_3    // delay sms message
 // #define FIRMWARE_VER_1_2    // all programs in one
 
+// -- select the debug level
+#define DEBUG_ON
+
+
+//-------- Clock Frequency ------------------------------------
+#define CLOCK_FREQ_64_MHZ    //ojo modificar a mano system_stm32g0xx.c SystemInit
+// #define CLOCK_FREQ_16_MHZ    //ojo modificar a mano system_stm32g0xx.c SystemInit
+
+//-------- End Of Defines For Configuration ------
+
 
 #ifdef HARDWARE_VER_2_0
 #define HARD    "Hardware version 2.0\n"
@@ -99,22 +109,8 @@
 #endif
 #endif
 
-#endif
+#endif    // HARDWARE_VER_1_1 or HARDWARE_VER_1_0
 
-
-
-
-//-------- Type of Program ----------------
-//OJO --- los dos que siguen van juntos
-#define USE_GSM
-#define DEBUG_ON
-// #define USE_GSM_GATEWAY
-
-//-------- Clock Frequency ------------------------------------
-#define CLOCK_FREQ_64_MHZ    //ojo modificar a mano system_stm32g0xx.c SystemInit
-// #define CLOCK_FREQ_16_MHZ    //ojo modificar a mano system_stm32g0xx.c SystemInit
-
-//-------- End Of Defines For Configuration ------
 
 // Gpios Configuration ------------------------------
 #ifdef HARDWARE_VER_2_0

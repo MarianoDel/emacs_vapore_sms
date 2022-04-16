@@ -542,7 +542,7 @@ void TimingDelay_Decrement(void)
 
     FuncsGSMTimeoutCounters ();
 
-    FuncsGSMG_Timeouts ();
+    // FuncsGSMG_Timeouts ();
 }
 
 void SysTickError (void)

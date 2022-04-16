@@ -54,6 +54,7 @@ volatile unsigned short funcs_gsm_timeout_timer = 0;
 // #define MAX_STARTUP_ERRORS		5		//a veces tarda mas en registrar
 #define MAX_STARTUP_ERRORS		10		//lo paso a 10
 #define MAX_COMMS_ERRORS    20    // 20 errors on common use
+#define MAX_SMS_ERRORS    20    // 20 errors on common use
 
 #define TT_CHECK_RSSI    20000
 #define TT_CHECK_RSSI_ON_ERROR    3000
@@ -365,6 +366,7 @@ void FuncsGSM (void)
             {
                 gsm_error_counter++;
                 gsm_state = gsm_state_ready;
+                rssi_level = 0xff;    //tell to main the cmd problem via rssi_level variable
                 funcs_gsm_timeout_timer = TT_CHECK_RSSI_ON_ERROR;
             }
             else
@@ -398,11 +400,19 @@ void FuncsGSM (void)
             gsm_state = gsm_state_ready;
         }
 
-        if ((resp == resp_gsm_error) || (resp == resp_gsm_timeout))
+        if ((resp == resp_gsm_error) ||
+            (resp == resp_gsm_timeout))
         {
-            gsm_sms_error_counter++;
             Usart2Debug("end send sms with errors\n");
-            gsm_state = gsm_state_ready;
+            
+            if (gsm_sms_error_counter < MAX_SMS_ERRORS)
+            {
+                gsm_sms_error_counter++;
+                gsm_state = gsm_state_ready;
+            }
+            else
+                gsm_state = gsm_state_shutdown;
+
         }
         break;
 
@@ -417,7 +427,10 @@ void FuncsGSM (void)
         break;
 
     case gsm_state_shutdown:
-        sprintf(s_msg, "shutdown errors: %d\n", gsm_error_counter);
+        sprintf(s_msg, "shutting down... errors cmd: %d sms: %d\n",
+                gsm_error_counter,
+                gsm_sms_error_counter);
+        
         Usart2Debug(s_msg);
         GSM_Start_Stop_ResetSM ();
         gsm_state = gsm_state_shutdown_2;

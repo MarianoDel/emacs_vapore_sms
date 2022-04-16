@@ -27,7 +27,7 @@ parameters_typedef mem_conf;
 extern volatile unsigned short adc_ch [ADC_CHANNEL_QUANTITY];
 
 // Globals ---------------------------------------------------------------------
-volatile unsigned short timer_gsm_gw = 0;    //TODO: not in use
+// volatile unsigned short timer_gsm_gw = 0;
 unsigned char gw_mode = 0;
 
 
@@ -332,11 +332,11 @@ void FuncsGSMG_SendStatus (char * buff)
 }
 
 
-void FuncsGSMG_Timeouts (void)
-{
-    if (timer_gsm_gw)
-        timer_gsm_gw--;
-}
+// void FuncsGSMG_Timeouts (void)
+// {
+//     if (timer_gsm_gw)
+//         timer_gsm_gw--;
+// }
 
 
 void FuncsGSMG_ShowMemory (parameters_typedef * pmemory)
