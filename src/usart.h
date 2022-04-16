@@ -50,6 +50,8 @@ void Usart2Config(void);
 void Usart2SendSingle (unsigned char);
 void Usart2Send (char *);
 void Usart2SendUnsigned(unsigned char *, unsigned char);
+void Usart2Debug (char *);
+
 unsigned char Usart2ReadBuffer (unsigned char *, unsigned short);
 void USART2_IRQHandler(void);
 unsigned char Usart2HaveData (void);

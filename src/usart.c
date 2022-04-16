@@ -246,6 +246,14 @@ void Usart2SendSingle (unsigned char b)
 }
 
 
+void Usart2Debug (char * send)
+{
+#ifdef DEBUG_ON
+    Usart2Send (send);
+#endif
+}
+
+
 void Usart2Send (char * send)
 {
     unsigned char i;

@@ -21,7 +21,6 @@
 
 // Local Module Configs --------------------------------------------------------
 // #define GSM_SEND_SMS_ON_START
-#define DEBUG_ON
 
 // Externals -------------------------------------------------------------------
 extern parameters_typedef mem_conf;
@@ -56,6 +55,10 @@ volatile unsigned short funcs_gsm_timeout_timer = 0;
 #define MAX_STARTUP_ERRORS		10		//lo paso a 10
 #define MAX_COMMS_ERRORS    20    // 20 errors on common use
 
+#define TT_CHECK_RSSI    20000
+#define TT_CHECK_RSSI_ON_ERROR    3000
+
+
 
 // Module Functions ------------------------------------------------------------
 //Procesa toda la pila del GSM (por lo menos para los SMS)
@@ -77,8 +80,10 @@ void FuncsGSM (void)
         }
 
         if ((resp == resp_gsm_error) || (resp == resp_gsm_timeout))
+        {
+            Usart2Debug("module not started\n");
             gsm_state = gsm_state_shutdown;
-
+        }
         break;
 
     case gsm_state_verify_at:
@@ -198,14 +203,6 @@ void FuncsGSM (void)
                 gsm_state = gsm_state_dell_all;		//equipo registrado con roaming
                 resp = 2;
             }
-
-
-            //ya tengo la resp = 3 por default
-            // if (!strncmp(s_msg, "+CREG: 0,2", sizeof("+CREG: 0,2") - 1))
-            // 	resp = 3;		//equipo buscando nueva empresa
-            // if (!strncmp(s_msg, "+CREG: 0,3", sizeof("+CREG: 0,3") - 1))
-            // 	resp = 3;		//equipo mal o no registrado
-
         }
 
         if (resp > 2)
@@ -248,9 +245,9 @@ void FuncsGSM (void)
 
             i = strlen(s_msg);
             strncpy(mem_conf.imei, s_msg, (i - 2));
-            Usart2Send("IMEI: ");
-            Usart2Send(mem_conf.imei);
-            Usart2Send("\r\n");
+            Usart2Debug("IMEI: ");
+            Usart2Debug(mem_conf.imei);
+            Usart2Debug("\r\n");
 
             //mando SMS con mi info
             strcpy(s_msg, "IMEI: ");
@@ -271,13 +268,10 @@ void FuncsGSM (void)
                 gsm_error_counter++;
             else
                 gsm_state = gsm_state_shutdown;
-
         }
         break;
 
     case gsm_state_ready:
-        //TODO: reviar aca contador de errores
-
         if (enviar_sms)
         {
             enviar_sms = 0;
@@ -315,7 +309,7 @@ void FuncsGSM (void)
 
                 char s_ser [20] = { 0 };
                 sprintf(s_ser, "RSSI: %d\n", rssi_level);
-                Usart2Send(s_ser);
+                Usart2Debug(s_ser);
                 gsm_state = gsm_state_check_network;
                 resp = 2;
             }
@@ -327,7 +321,8 @@ void FuncsGSM (void)
             {
                 gsm_error_counter++;
                 gsm_state = gsm_state_ready;
-                funcs_gsm_timeout_timer = 3000;
+                rssi_level = 0xff;    //tell to main the cmd problem via rssi_level variable
+                funcs_gsm_timeout_timer = TT_CHECK_RSSI_ON_ERROR;
             }
             else
                 gsm_state = gsm_state_shutdown;
@@ -353,11 +348,11 @@ void FuncsGSM (void)
 
                 char s_ser [20] = { 0 };
                 sprintf(s_ser, "REG: %d\n", register_status);
-                Usart2Send(s_ser);
+                Usart2Debug(s_ser);
                 if ((register_status == 1) || (register_status == 5))
                 {
                     gsm_error_counter = 0;
-                    funcs_gsm_timeout_timer = 20000;
+                    funcs_gsm_timeout_timer = TT_CHECK_RSSI;
                     gsm_state = gsm_state_ready;
                     resp = 2;
                 }
@@ -370,7 +365,7 @@ void FuncsGSM (void)
             {
                 gsm_error_counter++;
                 gsm_state = gsm_state_ready;
-                funcs_gsm_timeout_timer = 3000;
+                funcs_gsm_timeout_timer = TT_CHECK_RSSI_ON_ERROR;
             }
             else
                 gsm_state = gsm_state_shutdown;
@@ -385,9 +380,9 @@ void FuncsGSM (void)
         if (resp == resp_gsm_ok)
             gsm_state = gsm_state_ready;
 
-        // if (resp == resp_gsm_timeout)    //TODO: agregado 23-06-2021 problemas con buffers grandes
-        //     gsm_state = resp_gsm_ok;    //tengo que borrar los sms?
-            
+        if ((resp == resp_gsm_timeout) ||
+            (resp == resp_gsm_error))
+            gsm_state = resp_gsm_ok;    // TODO: must erase all the sms?
 
         break;
 
@@ -399,24 +394,21 @@ void FuncsGSM (void)
             if (gsm_sms_error_counter)
                 gsm_sms_error_counter--;
 
-#ifdef DEBUG_ON
-            Usart2Send("end send sms ok\n");
-#endif
+            Usart2Debug("end send sms ok\n");
             gsm_state = gsm_state_ready;
         }
 
         if ((resp == resp_gsm_error) || (resp == resp_gsm_timeout))
         {
             gsm_sms_error_counter++;
-#ifdef DEBUG_ON
-            Usart2Send("end send sms with errors\n");
-#endif            
+            Usart2Debug("end send sms with errors\n");
             gsm_state = gsm_state_ready;
         }
         break;
 
     case gsm_state_command_answer:
-        resp = GSMSendCommand (p_CMD, 10000, 1, p_RESP);	//la mayoria de los comandos no tarda mas de 10 secs
+        // almost all commands take less than 10 secs to complete tasks
+        resp = GSMSendCommand (p_CMD, 10000, 1, p_RESP);
 
         if (resp != 1)
         {
@@ -425,6 +417,8 @@ void FuncsGSM (void)
         break;
 
     case gsm_state_shutdown:
+        sprintf(s_msg, "shutdown errors: %d\n", gsm_error_counter);
+        Usart2Debug(s_msg);
         GSM_Start_Stop_ResetSM ();
         gsm_state = gsm_state_shutdown_2;
         break;
@@ -432,8 +426,14 @@ void FuncsGSM (void)
     case gsm_state_shutdown_2:
         resp = GSM_Stop();
 
-        if (resp == resp_gsm_ok)
+        if (resp != resp_gsm_continue)
         {
+            if ((resp == resp_gsm_error) ||
+                (resp == resp_gsm_timeout))
+            {
+                Usart2Debug("module not stopped\n");
+            }        
+            
             GSM_Start_Stop_ResetSM ();
             gsm_state = gsm_state_stop_wait;
         }
@@ -452,8 +452,14 @@ void FuncsGSM (void)
     case gsm_state_shutdown_always:
         resp = GSM_Stop();
 
-        if (resp == resp_gsm_ok)
+        if (resp != resp_gsm_continue)
         {
+            if ((resp == resp_gsm_error) ||
+                (resp == resp_gsm_timeout))
+            {
+                Usart2Debug("module not stopped\n");
+            }        
+            
             GSM_Start_Stop_ResetSM ();
             gsm_state = gsm_state_stop_always;
         }

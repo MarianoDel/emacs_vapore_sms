@@ -48,6 +48,9 @@ parameters_typedef mem_conf;
 // - Externals Funcs GSM
 unsigned char register_status = 0;
 unsigned char rssi_level = 0;
+#define LED_RSSI_LOW    0
+#define LED_RSSI_HIGH    1
+#define LED_RSSI_CMD_ERRORS    2            
 
 
 // Globals ---------------------------------------------------------------------
@@ -156,7 +159,7 @@ int main(void)
     
 //--- Programa de Activacion SMS - Produccion ---
     main_state_t main_state = main_init;
-    unsigned char led_rssi_high = 0;
+    unsigned char led_rssi_status = 0;
 
     unsigned char alarm_input = 0;
     unsigned char panel_input = 0;
@@ -252,14 +255,14 @@ int main(void)
                         
                         if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
                         {
-                            Usart2Send(buff);
-                            Usart2Send(" -> Sended OK!\n");
+                            Usart2Debug(buff);
+                            Usart2Debug(" -> Sended OK!\n");
                         }
                         else    // cant send
-                            Usart2Send("Battery report not sended!\n");
+                            Usart2Debug("Battery report not sended!\n");
                     }
                     else
-                        Usart2Send("sin numero grabado para reportes\n");
+                        Usart2Debug("sin numero grabado para reportes\n");
                 }
             }
 
@@ -365,16 +368,24 @@ int main(void)
                 ChangeLed(LED_STANDBY);
             }
 
-            if ((rssi_level > 10) && (!led_rssi_high))
+            if (rssi_level != 0xff)    //cmd problems!
             {
-                ChangeLed(LED_GSM_NETWORK_HIGH_RSSI);
-                led_rssi_high = 1;
-            }
+                if ((rssi_level > 10) && (led_rssi_status != LED_RSSI_HIGH))
+                {
+                    ChangeLed(LED_GSM_NETWORK_HIGH_RSSI);
+                    led_rssi_status = LED_RSSI_HIGH;
+                }
 
-            if ((rssi_level <= 10) && (led_rssi_high))
+                if ((rssi_level <= 10) && (led_rssi_status != LED_RSSI_LOW))
+                {
+                    ChangeLed(LED_GSM_NETWORK_LOW_RSSI);
+                    led_rssi_status = LED_RSSI_LOW;
+                }
+            }
+            else if (led_rssi_status != LED_RSSI_CMD_ERRORS)
             {
-                ChangeLed(LED_GSM_NETWORK_LOW_RSSI);
-                led_rssi_high = 0;
+                ChangeLed(LED_GSM_CMD_ERRORS);
+                led_rssi_status = LED_RSSI_CMD_ERRORS;
             }
 
             ConfigurationCheck();

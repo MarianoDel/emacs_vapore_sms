@@ -312,6 +312,7 @@
 #define LED_GSM_NETWORK_LOW_RSSI      2
 #define LED_GSM_NETWORK_HIGH_RSSI     3
 #define LED_LOW_VOLTAGE               4
+#define LED_GSM_CMD_ERRORS            20
 
 typedef enum
 {
