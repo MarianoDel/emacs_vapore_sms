@@ -90,9 +90,16 @@ void FuncsGSM (void)
     case gsm_state_verify_at:
         resp = GSMSendCommand ("AT\r\n", 1000, 0, &s_msg[0]);
 
-        if (resp == 2)
-            gsm_state = gsm_state_wait_cpin;
+        // if (resp == 2)
+        //     gsm_state = gsm_state_wait_cpin;
 
+        if (resp == 2)
+        {
+            // reset the expected flags
+            FuncsGSMMessageFlags(GSM_RESET_FLAG | GSM_SET_CPIN | GSM_SET_CALL);
+            gsm_state = gsm_state_wait_cpin;
+        }
+        
         if (resp > 2)
         {
             if (gsm_error_counter < MAX_STARTUP_ERRORS)
@@ -106,9 +113,16 @@ void FuncsGSM (void)
     case gsm_state_wait_cpin:
         flags = FuncsGSMMessageFlagsAsk();
 
-        if ((flags == GSM_SET_CPIN) || (flags == GSM_SET_CALL))
-            gsm_state = gsm_state_echo_disable;
+        // if ((flags & GSM_SET_CPIN) || (flags & GSM_SET_CALL))
+        // {
+        //     // reset flags 
+        //     FuncsGSMMessageFlags(GSM_RESET_FLAG | GSM_SET_CPIN | GSM_SET_CALL);
+        //     gsm_state = gsm_state_echo_disable;
+        // }
 
+        if ((flags & GSM_SET_CPIN) || (flags & GSM_SET_CALL))
+            gsm_state = gsm_state_echo_disable;
+        
         resp = GSM_Delay (8000);	//8 segundos de espera
 
         if (resp == resp_gsm_ok)
@@ -554,7 +568,7 @@ void FuncsGSMMessageFlags (unsigned short flag)
 {
     //veo si es un reset flag
     if (flag & GSM_RESET_FLAG)
-        GSMFlags &= flag;
+        GSMFlags &= ~(flag);
     else			//set flags
         GSMFlags |= flag;
 
