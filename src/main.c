@@ -387,8 +387,6 @@ int main(void)
                 ChangeLed(LED_GSM_CMD_ERRORS);
                 led_rssi_status = LED_RSSI_CMD_ERRORS;
             }
-
-            ConfigurationCheck();
             break;
 
         case main_enable_output:
@@ -397,8 +395,6 @@ int main(void)
                 main_state = main_ready;
                 ACT_12V_OFF;
             }
-
-            ConfigurationCheck();
             break;
 
         case main_enable_act_12V_input:
@@ -419,15 +415,12 @@ int main(void)
                 ACT_12V_OFF;
             }
 
-            ConfigurationCheck();
 #elif (defined FIRMWARE_VER_1_2)
             if (!Check_Alarm_Input() && (!timer_standby))
             {
                 main_state = main_ready;
                 ACT_12V_OFF;
             }
-
-            ConfigurationCheck();            
 #else
 #error "set firmware version on hard.h"
 #endif
@@ -436,14 +429,11 @@ int main(void)
         case main_sms_not_sended:
             UpdateLedActivate();
 
-            ConfigurationCheck();
-
             if (!timer_standby)
             {
                 ACT_12V_OFF;
                 main_state = main_ready;
             }
-            
             break;
             
         default:
@@ -451,6 +441,10 @@ int main(void)
             break;
         }
 
+        // check configuration changes and the need for a memory save
+        if (main_state >= main_ready)
+            ConfigurationCheck();
+        
         // The things that do not depend on the program state
         UpdateLed ();
         FuncsGSM ();

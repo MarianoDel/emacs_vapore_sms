@@ -501,8 +501,8 @@ void FuncsGSM (void)
         break;
     }
 
-    GSMProcess ();		//lee bytes del puerto serie y avisa con flag la terminacion del msj
-    GSMReceive ();		//usa el flag para analizar las respuestas
+    GSMProcess ();    //lee bytes del puerto serie y avisa con flag la terminacion del msj
+    GSMReceive ();    //usa el flag para analizar las respuestas
 
 }
 
