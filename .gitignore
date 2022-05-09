@@ -10,4 +10,10 @@ GRTAGS
 GTAGS
 *.zip
 *.out
+*.pdf
+*.txt
+*.gcov
+*.gcda
+*.gcno
+*.pyc
 

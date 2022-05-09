@@ -33,6 +33,7 @@ typedef struct parameters {
 
 } parameters_typedef;
 
+#define PHONE_NUMBER_MAX_LEN    19
 #define SITE_MAX_LEN    145
 // #define SITE_MAX_LEN    20
 

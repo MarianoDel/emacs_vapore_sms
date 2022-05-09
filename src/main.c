@@ -275,100 +275,23 @@ int main(void)
             panel_input = Panel_Check_Alarm (&remote_number);
             if ((alarm_input) || (panel_input))
             {
-                unsigned char sms_ready = 1;
-
-                if (alarm_input)
-                    Usart2Send("External 12V: ");    // 12V input alarm activate
-
-                if (panel_input)
-                    Usart2Send("Keypad ACT: ");
-                    
-                //check num_tel_rep before send sms
-                if (sms_ready)
-                {
-                    sms_ready = VerifyNumberString(num_tel_rep);
-
-                    if (!sms_ready)
-                    {
-                        ChangeLedActivate(1);
-                        Usart2Send("sin numero\n");
-                    }
-                }
-
-                //check sitio_prop before send sms
-                if (sms_ready)
-                {
-                    sms_ready = VerifySiteString(sitio_prop);
-
-                    if (!sms_ready)
-                    {
-                        ChangeLedActivate(2);
-                        Usart2Send("sin sitio\n");
-                    }
-                }
-
-                if (sms_ready)
-                {
-                    ACT_12V_ON;
-                    if (alarm_input)
-                        strcpy(buff, "Activacion en: ");
-
-                    if (panel_input)
-                        sprintf(buff, "Activo %03d en: ", remote_number);
-                        
-                    strcat(buff, sitio_prop);
-#if (defined FIRMWARE_VER_1_5) || \
-    (defined FIRMWARE_VER_1_4) || \
-    (defined FIRMWARE_VER_1_3)
-                    if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
-                    {
-                        main_state = main_enable_act_12V_input;
-                        sms_ready = 1;
-                        Usart2Send("OK\n");
-                        if (panel_input)
-                            timer_standby = 1000;
-                    }
-                    else    // delay the message
-                    {                        
-                        message_delay = 1;
-                        main_state = main_enable_act_12V_input;                        
-                        sms_ready = 1;
-                        Usart2Send("delayed\n");
-                    }
-#elif (defined FIRMWARE_VER_1_2)
-                    if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
-                    {
-                        main_state = main_enable_act_12V_input;
-                        sms_ready = 1;
-                        Usart2Send("OK\n");
-                        if (panel_input)
-                            timer_standby = 1000;
-                    }
-                    else
-                    {
-                        sms_ready = 0;
-                        ChangeLedActivate(3);
-                        Usart2Send("sin red\n");
-                    }                    
-#else
-#error "set firmware version on hard.h"
-#endif
-                }
-
-                if (!sms_ready)
-                {
-                    main_state = main_sms_not_sended;
-                    timer_standby = 6000;
-                }
+                main_state = main_report_alarm_input_or_panel;
             }
-
             else if (FuncsGSMStateAsk() < gsm_state_ready)
             {
                 main_state = main_wait_for_gsm_network;
                 ChangeLed(LED_STANDBY);
             }
-
-            if (rssi_level != 0xff)    //cmd problems!
+            else if (rssi_level == 0xff)    // some cmd problems!
+            {
+                // show commands errors on led
+                if (led_rssi_status != LED_RSSI_CMD_ERRORS)
+                {
+                    ChangeLed(LED_GSM_CMD_ERRORS);
+                    led_rssi_status = LED_RSSI_CMD_ERRORS;
+                }
+            }
+            else
             {
                 if ((rssi_level > 10) && (led_rssi_status != LED_RSSI_HIGH))
                 {
@@ -382,11 +305,6 @@ int main(void)
                     led_rssi_status = LED_RSSI_LOW;
                 }
             }
-            else if (led_rssi_status != LED_RSSI_CMD_ERRORS)
-            {
-                ChangeLed(LED_GSM_CMD_ERRORS);
-                led_rssi_status = LED_RSSI_CMD_ERRORS;
-            }
             break;
 
         case main_enable_output:
@@ -397,33 +315,69 @@ int main(void)
             }
             break;
 
-        case main_enable_act_12V_input:
-#if (defined FIRMWARE_VER_1_5) || \
-    (defined FIRMWARE_VER_1_4) || \
-    (defined FIRMWARE_VER_1_3)
-            if ((message_delay) && (timer_standby))
-            {
-                if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
-                    message_delay = 0;
-                else
-                    Wait_ms(100);
-                
-            }
-            else if (!Check_Alarm_Input() && (!timer_standby))
-            {
-                main_state = main_ready;
-                ACT_12V_OFF;
-            }
+        case main_report_alarm_input_or_panel:
+            // check if gprs is needed
 
-#elif (defined FIRMWARE_VER_1_2)
+            // or go directly to sms
+            main_state = main_report_alarm_by_sms;
+            sms_not_sent_cnt = 5;
+
+            break;
+
+        case main_report_alarm_by_gprs:            
+            // check data to send a GPRS packet
+            // answer = VerifyAndSendGPRS();
+
+            // if (answer == GPRS_NOT_SENDED)
+            // {
+            //     //TODO: another attempt here?
+            //     main_state = main_report_alarm_by_sms;
+            // }
+            break;
+
+        case main_report_alarm_by_sms:
+            // check data and send a GSM packet
+            answer = VerifyAndSendSMS();
+
+            if (answer == SMS_NOT_SEND)
+            {
+                if (sms_not_sent_cnt)
+                {
+                    sms_not_sent_cnt--;
+                    main_state = main_report_alarm_by_sms_delayed;
+                    timer_standby = 1000;
+                }
+                else
+                {
+                    main_state = main_sms_not_sended;
+                    timer_standby = 6000;
+                }
+            }
+            else if (SMS_NOT_PROPER_DATA)
+            {
+                main_state = main_sms_not_sended;
+                timer_standby = 6000;
+            }
+            else    //SMS_SENT
+            {
+                main_state = main_enable_act_12V_input;
+                Usart2Send("OK\n");
+                if (panel_input)
+                    timer_standby = 1000;
+            }
+            
+            
+            break;
+
+        case main_report_alarm_by_sms_delayed:
+            break;
+            
+        case main_enable_act_12V_input:
             if (!Check_Alarm_Input() && (!timer_standby))
             {
-                main_state = main_ready;
                 ACT_12V_OFF;
+                main_state = main_ready;
             }
-#else
-#error "set firmware version on hard.h"
-#endif
             break;
 
         case main_sms_not_sended:
@@ -462,6 +416,7 @@ int main(void)
 //--- End of Main ---//
 
 
+// Module Functions ------------------------------------------------------------
 void ConfigurationCheck (void)
 {
     if (timer_rep_change)

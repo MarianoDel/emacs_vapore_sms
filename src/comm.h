@@ -18,8 +18,7 @@
 
 // Module Exported Functions ---------------------------------------------------
 void CommsProcessSMSPayload (char * orig_num, char * payload);
-unsigned char VerifyNumberString (char * number);
-unsigned char VerifySiteString (char * site);
+
 
 #endif    /* _COMM_H_ */
 

@@ -231,6 +231,9 @@ clean:
 	rm -f $(ASRC:.s=.lst)
 	rm -f *.o
 	rm -f *.out
+	rm -f *.gcda
+	rm -f *.gcno
+	rm -f *.gcov
 
 
 tests:
@@ -265,6 +268,18 @@ tests_comms_from_panel:
 	gcc -c src/tests_mock_usart.c -I $(INCDIR)
 	gcc src/tests_comms_from_panel.c comms_from_panel.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
 	./a.out
+
+tests_sms_data:
+	# first compile common modules (modules to test and dependencies)
+	gcc -c --coverage src/sms_data.c -I. $(INCDIR) $(DDEFS)
+	# second auxiliary helper modules
+	gcc -c src/tests_ok.c -I $(INCDIR)
+	gcc -c src/tests_mock_usart.c -I $(INCDIR)
+	gcc --coverage src/tests_sms_data.c sms_data.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
+	./a.out
+	# process coverage
+	gcov sms_data.c -m
+
 
 
 # *** EOF ***
