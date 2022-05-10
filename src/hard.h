@@ -354,6 +354,9 @@ void UpdateLed (void);
 void ChangeLedActivate (unsigned char how_many);
 void UpdateLedActivate (void);
 
+void Activation_12V_On (void);
+void Activation_12V_Off (void);
+
 void WelcomeCode (void);
 void HARD_Timeouts (void);
 unsigned char Check_Alarm_Input (void);

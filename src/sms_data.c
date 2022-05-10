@@ -11,6 +11,9 @@
 // Includes --------------------------------------------------------------------
 #include "sms_data.h"
 #include "parameters.h"
+#include "usart.h"
+#include "hard.h"
+#include "funcs_gsm.h"
 
 
 #include <string.h>
@@ -34,48 +37,48 @@ unsigned char VerifySiteString (char * site);
 
 
 // Module Functions ------------------------------------------------------------
-// unsigned char VerifyAndSendSMS (sms_pckt_t * p_sms)
-// {
-//     if (p_sms->alarm_input)
-//         Usart2Send("External 12V: ");    // 12V input alarm activate
+unsigned char VerifyAndSendSMS (sms_pckt_t * p_sms)
+{
+    if (p_sms->alarm_input)
+        Usart2Send("External 12V: ");    // 12V input alarm activate
 
-//     if (p_sms->panel_input)
-//         Usart2Send("Keypad ACT: ");
+    if (p_sms->panel_input)
+        Usart2Send("Keypad ACT: ");
                     
-//     //check num_tel_rep before send sms
-//     if (!VerifyNumberString(num_tel_rep))
-//     {
-//         ChangeLedActivate(1);
-//         Usart2Send("no phone number\n");
-//         return SMS_NOT_PROPER_DATA;
-//     }
+    //check num_tel_rep before send sms
+    if (!VerifyNumberString(num_tel_rep))
+    {
+        ChangeLedActivate(1);
+        Usart2Send("no phone number\n");
+        return SMS_NOT_PROPER_DATA;
+    }
 
-//     //check sitio_prop before send sms
-//     if (!VerifySiteString(sitio_prop))
-//     {
-//         ChangeLedActivate(2);
-//         Usart2Send("no site saved\n");
-//         return SMS_NOT_PROPER_DATA;        
-//     }
+    //check sitio_prop before send sms
+    if (!VerifySiteString(sitio_prop))
+    {
+        ChangeLedActivate(2);
+        Usart2Send("no site saved\n");
+        return SMS_NOT_PROPER_DATA;        
+    }
 
-//     // data its good, try to send an sms
-//     ACT_12V_ON;
-//     if (p_sms->alarm_input)
-//         strcpy(p_sms->buff, "Activacion en: ");
+    // data its good, try to send an sms
+    Activation_12V_On();    // ACT_12V_ON;
+    if (p_sms->alarm_input)
+        strcpy(p_sms->buff, "Activacion en: ");
 
-//     if (p_sms->panel_input)
-//         sprintf(p_sms->buff, "Activo %03d en: ", p_sms->remote_number);
+    if (p_sms->panel_input)
+        sprintf(p_sms->buff, "Activo %03d en: ", p_sms->remote_number);
                         
-//     strcat(buff, sitio_prop);
-//     if (FuncsGSMSendSMS (p_sms->buff, num_tel_rep) == resp_gsm_ok)
-//     {
-//         Usart2Send("OK\n");
-//         return SMS_SENT;
-//     }
+    strcat(p_sms->buff, sitio_prop);
+    if (FuncsGSMSendSMS (p_sms->buff, num_tel_rep) == resp_gsm_ok)
+    {
+        Usart2Send("OK\n");
+        return SMS_SENT;
+    }
 
-//     Usart2Send("delayed\n");    
-//     return SMS_NOT_SEND;
-// }
+    Usart2Send("delayed\n");    
+    return SMS_NOT_SEND;
+}
 
 
 //answer 1 -> ok; 0 -> some error

@@ -30,6 +30,7 @@ unsigned char usart2_have_activation_buffer = 0;
 char usart2_msg_received [200] = { 0 };
 char usart2_msg_sended [200] = { 0 };
 
+void (*pU2Cb) (char *);
 
 // Module Functions ------------------------------------------------------------
 void Usart1Send (char * msg)
@@ -66,7 +67,15 @@ void Usart2Send (char * msg)
 {
     strcpy(usart2_msg_sended, msg);
     PrintBoldWhite("usart2 tx -> ");
-    printf("%s\n", msg);    
+    printf("%s\n", msg);
+    if (pU2Cb != NULL)
+        pU2Cb(msg);
+}
+
+
+void Usart2Callback (void (* pCb) (char *))
+{
+    pU2Cb = pCb;
 }
 
 
