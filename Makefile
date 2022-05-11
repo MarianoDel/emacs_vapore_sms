@@ -90,6 +90,7 @@ SRC += ./src/comm.c
 SRC += ./src/comms_from_panel.c
 SRC += ./src/dsp.c
 SRC += ./src/battery.c
+SRC += ./src/sms_data.c
 
 
 ## Core Support
@@ -279,6 +280,17 @@ tests_sms_data:
 	./a.out
 	# process coverage
 	gcov sms_data.c -m
+
+tests_gprs_data:
+	# first compile common modules (modules to test and dependencies)
+	gcc -c --coverage src/gprs_data.c -I. $(INCDIR) $(DDEFS)
+	# second auxiliary helper modules
+	gcc -c src/tests_ok.c -I $(INCDIR)
+	gcc -c src/tests_mock_usart.c -I $(INCDIR)
+	gcc --coverage src/tests_gprs_data.c gprs_data.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
+	./a.out
+	# process coverage
+	gcov gprs_data.c -m
 
 
 

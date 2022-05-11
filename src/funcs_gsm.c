@@ -22,6 +22,26 @@
 // Local Module Configs --------------------------------------------------------
 // #define GSM_SEND_SMS_ON_START
 
+
+// Module Private Types Constants and Macros -----------------------------------
+typedef enum {
+    cmd_continue = 1,
+    cmd_ok,
+    cmd_error,
+    cmd_timeout
+
+} resp_cmd_e;
+
+
+// #define MAX_STARTUP_ERRORS		5		//a veces tarda mas en registrar
+#define MAX_STARTUP_ERRORS		10		//lo paso a 10
+#define MAX_COMMS_ERRORS    20    // 20 errors on common use
+#define MAX_SMS_ERRORS    20    // 20 errors on common use
+
+#define TT_CHECK_RSSI    20000
+#define TT_CHECK_RSSI_ON_ERROR    3000
+
+
 // Externals -------------------------------------------------------------------
 extern parameters_typedef mem_conf;
 extern unsigned char register_status;
@@ -49,15 +69,6 @@ char enviar_sms_msg [160] = { '\0' };
 
 // Timeout Timer
 volatile unsigned short funcs_gsm_timeout_timer = 0;
-
-// Constants -------------------------------------------------------------------
-// #define MAX_STARTUP_ERRORS		5		//a veces tarda mas en registrar
-#define MAX_STARTUP_ERRORS		10		//lo paso a 10
-#define MAX_COMMS_ERRORS    20    // 20 errors on common use
-#define MAX_SMS_ERRORS    20    // 20 errors on common use
-
-#define TT_CHECK_RSSI    20000
-#define TT_CHECK_RSSI_ON_ERROR    3000
 
 
 
@@ -430,6 +441,9 @@ void FuncsGSM (void)
         }
         break;
 
+    case gsm_state_sending_gprs:
+        break;
+
     case gsm_state_command_answer:
         // almost all commands take less than 10 secs to complete tasks
         resp = GSMSendCommand (p_CMD, 10000, 1, p_RESP);
@@ -532,6 +546,172 @@ unsigned char FuncsGSMSendSMS (char *ptrMSG, char *ptrNUM)
     p_NUM = ptrNUM;
 
     return resp_gsm_ok;
+}
+
+
+typedef enum {
+    gprs_init = 0,
+    gprs_close_last,
+    gprs_single_conn,
+    gprs_attach_gprs_service,
+    gprs_set_apn,
+    gprs_bring_up_wireless,
+    gprs_get_ip,
+    gprs_start_tcp_udp,
+    gprs_close_tcp_udp,
+    gprs_close_end
+    
+} send_gprs_e;
+
+send_gprs_e send_gprs_state;
+// unsigned char FuncsGSMSendGPRS (char *ptrMSG, char *ptrNUM)
+unsigned char FuncsGSMSendGPRS (void)
+{
+    unsigned char resp = resp_gsm_continue;
+    resp_cmd_e resp_cmd = cmd_continue;
+
+    switch (send_gprs_state)
+    {
+    case gprs_init:
+        if (gsm_state != gsm_state_ready)
+            resp = resp_gsm_error;
+        else
+        {
+            // blocks FuncsGSM SM
+            gsm_state = gsm_state_sending_gprs;
+            send_gprs_state++;
+        }
+        break;
+
+    case gprs_close_last:
+        resp_cmd = GSMSendCommand ("AT+CIPSHUT\r\n", 65000, 1, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+        {
+            if (!strncmp(s_msg, "SHUT OK", sizeof("SHUT OK") - 1))
+                send_gprs_state++;
+            else
+                resp = resp_gsm_error;
+        }
+
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_single_conn:
+        resp_cmd = GSMSendCommand ("AT+CIPMUX=0\r\n", 1000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            send_gprs_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_attach_gprs_service:
+        resp_cmd = GSMSendCommand ("AT+CGATT=1\r\n", 10000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            send_gprs_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_set_apn:
+        resp_cmd = GSMSendCommand ("AT+CSTT=\"gprs.personal.com\",\"\",\"\"\r\n", 1000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            send_gprs_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_bring_up_wireless:
+        resp_cmd = GSMSendCommand ("AT+CIICR\r\n", 65000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            send_gprs_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_get_ip:
+        resp_cmd = GSMSendCommand ("AT+CIFSR\r\n", 1000, 1, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            send_gprs_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_start_tcp_udp:
+        resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"echo.u-blox.com\",\"13\"\r\n", 65000, 1, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            send_gprs_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_close_tcp_udp:
+        resp_cmd = GSMSendCommand ("AT+CIPCLOSE\r\n", 1000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            send_gprs_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_close_end:
+        resp_cmd = GSMSendCommand ("AT+CIPSHUT\r\n", 65000, 1, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+        {
+            if (!strncmp(s_msg, "SHUT OK", sizeof("SHUT OK") - 1))
+            {
+                resp = resp_gsm_ok;
+                send_gprs_state = gprs_init;
+                // unblock FuncsGSM SM
+                gsm_state = gsm_state_ready;
+            }
+            else
+                resp = resp_gsm_error;
+        }
+
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+        
+    default:
+        send_gprs_state = gprs_init;
+        break;
+    }
+
+    // if any error, reset the SM and free the funcsGSM
+    if ((resp == resp_gsm_error) ||
+        (resp == resp_gsm_timeout))
+    {
+        send_gprs_state = gprs_init;
+        // unblock FuncsGSM SM
+        gsm_state = gsm_state_ready;
+    }
+    
+    return resp;
 }
 
 

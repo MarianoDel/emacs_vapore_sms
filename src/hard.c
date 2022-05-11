@@ -299,6 +299,18 @@ void PwrKey_On (void)
 }
 
 
+void Activation_12V_On (void)
+{
+    ACT_12V_ON;
+}
+
+
+void Activation_12V_Off (void)
+{
+    ACT_12V_OFF;
+}
+
+
 unsigned char PwrKey_Status (void)
 {
     return PWRKEY;

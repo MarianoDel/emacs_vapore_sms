@@ -5,33 +5,34 @@
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
 // ##
-// #### SMS_DATA.H #################################
+// #### GPRS_DATA.H ################################
 //--------------------------------------------------
 
 // Define to prevent recursive inclusion ---------------------------------------
-#ifndef _SMS_DATA_H_
-#define _SMS_DATA_H_
+#ifndef _GPRS_DATA_H_
+#define _GPRS_DATA_H_
 
-
+#include "sms_data.h"
 // Exported Types Constants and Macros -----------------------------------------
-typedef struct {
-    unsigned char alarm_input;
-    unsigned char panel_input;
-    unsigned short remote_number;
-    char * buff;
+#define gprs_pckt_t    sms_pckt_t
+
+// typedef struct {
+//     unsigned char alarm_input;
+//     unsigned char panel_input;
+//     unsigned short remote_number;
+//     char * buff;
     
-} sms_pckt_t;
+// } sms_pckt_t;
 
-#define SMS_NOT_SEND    0
-#define SMS_SENT    1
-#define SMS_NOT_PROPER_DATA    2
+#define GPRS_NOT_SEND    0
+#define GPRS_SENT    1
+#define GPRS_NOT_PROPER_DATA    2
 
+#define APN_MAX_LEN    30
 
 // Module Exported Functions ---------------------------------------------------
-unsigned char VerifyNumberString (char * number);
-unsigned char VerifySiteString (char * site);
-unsigned char VerifyAndSendSMS (sms_pckt_t * p_sms);
+unsigned char VerifyAndSendGPRS (gprs_pckt_t * p_gprs);
 
-#endif    /* _SMS_DATA_H_ */
+#endif    /* _GPRS_DATA_H_ */
 
 //--- end of file ---//

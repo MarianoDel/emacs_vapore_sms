@@ -34,6 +34,7 @@
 
 #include "test_functions.h"
 #include "battery.h"
+#include "sms_data.h"
 
 
 
@@ -166,6 +167,9 @@ int main(void)
     unsigned short remote_number = 0;
 
     static char buff [SITE_MAX_LEN + 20] = { 0 };
+    unsigned char sms_not_sent_cnt = 0;
+    sms_pckt_t sms_info;
+    unsigned char answer = 0;    //multi pourpose answer
 
     while (1)
     {
@@ -316,11 +320,35 @@ int main(void)
             break;
 
         case main_report_alarm_input_or_panel:
-            // check if gprs is needed
+            answer = FuncsGSMSendGPRS();
 
-            // or go directly to sms
-            main_state = main_report_alarm_by_sms;
-            sms_not_sent_cnt = 5;
+            if (answer == resp_gsm_ok)
+            {
+                Usart2Send("connection ok\n");
+                main_state = main_enable_act_12V_input;                
+            }
+            else if (answer > resp_gsm_ok)
+            {
+                Usart2Send("connection fail!!!\n");
+                main_state = main_sms_not_sended;
+                timer_standby = 6000;
+            }
+                
+                
+
+            // // check if gprs is needed
+
+            // // or go directly to sms
+            // main_state = main_report_alarm_by_sms;
+            // sms_not_sent_cnt = 5;
+
+            // // sms assemble packet
+            // sms_info.alarm_input = alarm_input;
+            // sms_info.panel_input = panel_input;
+            // sms_info.remote_number = remote_number;
+            // sms_info.buff = buff;
+
+            // timer_standby = 0;
 
             break;
 
@@ -336,15 +364,17 @@ int main(void)
             break;
 
         case main_report_alarm_by_sms:
+            if (timer_standby)
+                break;
+            
             // check data and send a GSM packet
-            answer = VerifyAndSendSMS();
+            answer = VerifyAndSendSMS (&sms_info);
 
             if (answer == SMS_NOT_SEND)
             {
                 if (sms_not_sent_cnt)
                 {
                     sms_not_sent_cnt--;
-                    main_state = main_report_alarm_by_sms_delayed;
                     timer_standby = 1000;
                 }
                 else
@@ -365,13 +395,8 @@ int main(void)
                 if (panel_input)
                     timer_standby = 1000;
             }
-            
-            
             break;
 
-        case main_report_alarm_by_sms_delayed:
-            break;
-            
         case main_enable_act_12V_input:
             if (!Check_Alarm_Input() && (!timer_standby))
             {

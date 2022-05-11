@@ -8,7 +8,6 @@
 //---------------------------------------------
 
 // Includes Modules for tests --------------------------------------------------
-#include "comm.h"
 #include "parameters.h"
 #include "sms_data.h"
 #include "funcs_gsm.h"
@@ -57,9 +56,9 @@ void Test_Verify_And_Send_SMS (void);
 int main(int argc, char *argv[])
 {
 
-    // Test_Verify_Number ();
+    Test_Verify_Number ();
 
-    // Test_Verify_Site ();
+    Test_Verify_Site ();
 
     Test_Verify_And_Send_SMS ();
     

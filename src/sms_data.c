@@ -32,8 +32,6 @@ extern parameters_typedef mem_conf;
 
 
 // Module Private Functions ----------------------------------------------------
-unsigned char VerifyNumberString (char * number);
-unsigned char VerifySiteString (char * site);
 
 
 // Module Functions ------------------------------------------------------------
@@ -61,7 +59,7 @@ unsigned char VerifyAndSendSMS (sms_pckt_t * p_sms)
         return SMS_NOT_PROPER_DATA;        
     }
 
-    // data its good, try to send an sms
+    // data is good, try to send an sms
     Activation_12V_On();    // ACT_12V_ON;
     if (p_sms->alarm_input)
         strcpy(p_sms->buff, "Activacion en: ");

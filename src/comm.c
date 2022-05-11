@@ -13,6 +13,7 @@
 // #include "flash_program.h"
 #include "parameters.h"
 #include "battery.h"
+#include "sms_data.h"
 
 #include <string.h>
 #include <stdio.h>
