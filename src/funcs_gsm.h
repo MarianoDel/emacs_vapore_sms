@@ -68,11 +68,18 @@ typedef struct {
 
 // Exported Constants ----------------------------------------------------------
 //FLAGS de string del gsm
-#define GSM_RESET_FLAG		0x8000
-#define GSM_SET_CALL			0x0001
-#define GSM_SET_SMS			0x0002
-#define GSM_SET_CPIN			0x0004
-#define GSM_SET_POWER_DOWN	0x4000
+#define GSM_RESET_FLAG    0x8000
+#define GSM_SET_CALL    0x0001
+#define GSM_SET_SMS    0x0002
+#define GSM_SET_CPIN    0x0004
+#define GSM_SET_POWER_DOWN    0x4000
+#define GSM_RESET_ALL    (GSM_RESET_FLAG|GSM_SET_CALL|GSM_SET_SMS|GSM_SET_CPIN|GSM_SET_POWER_DOWN)
+
+
+// FLAGS strings flags from gprs
+#define GPRS_RESET_FLAG    0x80
+#define GPRS_ENABLE_FLAGS    0x40
+#define GPRS_CONN_OK    0x01
 
 
 
@@ -92,6 +99,9 @@ unsigned char FuncsGSMCommandAnswer (char * , char * );
 void FuncsGSMParser (unsigned char *, unsigned char *);
 void FuncsGSMGetSMSPayloadCallback (char *, char *);
 void FuncsGSMTimeoutCounters (void);
+
+void FuncsGSMGPRSFlags (unsigned char flag);
+unsigned short FuncsGSMGPRSFlagsAsk (void);
 
 #endif    /* _FUNCS_GSM_H_ */
 

@@ -284,10 +284,11 @@ tests_sms_data:
 tests_gprs_data:
 	# first compile common modules (modules to test and dependencies)
 	gcc -c --coverage src/gprs_data.c -I. $(INCDIR) $(DDEFS)
+	gcc -c src/sms_data.c -I. $(INCDIR) $(DDEFS)
 	# second auxiliary helper modules
 	gcc -c src/tests_ok.c -I $(INCDIR)
 	gcc -c src/tests_mock_usart.c -I $(INCDIR)
-	gcc --coverage src/tests_gprs_data.c gprs_data.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
+	gcc --coverage src/tests_gprs_data.c gprs_data.o sms_data.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
 	./a.out
 	# process coverage
 	gcov gprs_data.c -m

@@ -10,7 +10,7 @@
 // Includes Modules for tests --------------------------------------------------
 #include "parameters.h"
 #include "gprs_data.h"
-// #include "funcs_gsm.h"
+#include "funcs_gsm.h"
 
 //helper modules
 #include "tests_ok.h"
@@ -33,6 +33,7 @@ int cb_cnt = 0;
 
 // For Test Module Private Functions -------------------------------------------
 extern unsigned char VerifyAPNString (char * apn);
+extern unsigned char VerifyIPProtocol (char * ip_proto);
 
 
 // Module Mocked Functions -----------------------------------------------------
@@ -44,9 +45,8 @@ void MyCbClean (void);
 
 // Module Functions for testing ------------------------------------------------
 void Test_Verify_APN (void);
-// void Test_Verify_Number (void);
-// void Test_Verify_And_Send_SMS (void);
-    
+void Test_Verify_IP_Protocol (void);
+
 
 // Module Functions ------------------------------------------------------------
 int main(int argc, char *argv[])
@@ -54,9 +54,7 @@ int main(int argc, char *argv[])
 
     Test_Verify_APN ();
 
-    // Test_Verify_Site ();
-
-    // Test_Verify_And_Send_SMS ();
+    Test_Verify_IP_Protocol ();
     
 }
 
@@ -231,6 +229,40 @@ int main(int argc, char *argv[])
 //         PrintERR();
     
 // }
+void Test_Verify_IP_Protocol (void)
+{
+    char proto_test [80] = { 0 };
+
+    strcpy(proto_test, "TCP");
+    printf("Test verify ip protocol %s: ", proto_test);
+    if (VerifyIPProtocol(proto_test))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(proto_test, "UDP");
+    printf("Test verify ip protocol %s: ", proto_test);
+    if (VerifyIPProtocol(proto_test))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(proto_test, "X25");
+    printf("Test verify error on ip protocol %s: ", proto_test);
+    if (!VerifyIPProtocol(proto_test))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(proto_test, "TCP ");
+    printf("Test verify error on ip protocol %s: ", proto_test);
+    if (!VerifyIPProtocol(proto_test))
+        PrintOK();
+    else
+        PrintERR();
+    
+    printf("\n");
+}
 
 
 void Test_Verify_APN (void)
@@ -274,6 +306,15 @@ void Test_Verify_APN (void)
     else
         PrintERR();
     
+    strcpy(apn_test, "gprs.personal. com");
+    strcpy(modif_apn_test, apn_test);    
+    printf("Test verify error on apn: %s: ", apn_test);
+    if ((!VerifyAPNString(modif_apn_test)) &&
+        (!strcmp(modif_apn_test, apn_test)))
+        PrintOK();
+    else
+        PrintERR();
+    
     
     printf("\n");
     
@@ -281,14 +322,14 @@ void Test_Verify_APN (void)
 
 
 // Module Mocked Functions -----------------------------------------------------
-// void ChangeLedActivate (unsigned char number)
-// {
-//     if (number > 1)
-//         printf("led change to %d pulses\n", number);
-//     else
-//         printf("led change to %d pulse\n", number);
+void ChangeLedActivate (unsigned char number)
+{
+    if (number > 1)
+        printf("led change to %d pulses\n", number);
+    else
+        printf("led change to %d pulse\n", number);
     
-// }
+}
 
 
 void Activation_12V_On (void)
@@ -303,18 +344,18 @@ void Activation_12V_Off (void)
 }
 
 
-// unsigned char funcs_gsm_answer = resp_gsm_continue;
-// unsigned char FuncsGSMSendSMS (char * msg, char * number)
-// {
-//     printf("  SMS  send to number: %s\n       this message: %s\n", number, msg);
-//     return funcs_gsm_answer;
-// }
+unsigned char funcs_gsm_answer = resp_gsm_continue;
+unsigned char FuncsGSMSendSMS (char * msg, char * number)
+{
+    printf("  SMS  send to number: %s\n       this message: %s\n", number, msg);
+    return funcs_gsm_answer;
+}
 
 
-// void FuncsGSMSendSMS_Answer (unsigned char answer)
-// {
-//     funcs_gsm_answer = answer;
-// }
+void FuncsGSMSendSMS_Answer (unsigned char answer)
+{
+    funcs_gsm_answer = answer;
+}
 
 
 void MyCb (char * buff)

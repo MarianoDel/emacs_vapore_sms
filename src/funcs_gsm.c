@@ -558,17 +558,27 @@ typedef enum {
     gprs_bring_up_wireless,
     gprs_get_ip,
     gprs_start_tcp_udp,
+    gprs_tcp_udp_wait_conn,
+    gprs_send_msg,
+    gprs_send_msg_wait_sign,
+    gprs_wait_close,
     gprs_close_tcp_udp,
     gprs_close_end
     
 } send_gprs_e;
 
+
+// needs apn, tcp/udp, server ip or domain, server port
+// needs message
+char mymsg [] = {"Test message Hello!"};
 send_gprs_e send_gprs_state;
-// unsigned char FuncsGSMSendGPRS (char *ptrMSG, char *ptrNUM)
+// unsigned char FuncsGSMSendGPRS (char *ptrMSG)
 unsigned char FuncsGSMSendGPRS (void)
 {
     unsigned char resp = resp_gsm_continue;
     resp_cmd_e resp_cmd = cmd_continue;
+    char sbuff [30];
+
 
     switch (send_gprs_state)
     {
@@ -655,9 +665,38 @@ unsigned char FuncsGSMSendGPRS (void)
         break;
 
     case gprs_start_tcp_udp:
-        resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"echo.u-blox.com\",\"13\"\r\n", 65000, 1, &s_msg[0]);
+        // resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"echo.u-blox.com\",\"13\"\r\n", 65000, 1, &s_msg[0]);
+        resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"186.18.4.68\",\"10000\"\r\n", 65000, 1, &s_msg[0]);
 
         if (resp_cmd == cmd_ok)
+        {
+            FuncsGSMGPRSFlags(GPRS_RESET_FLAG | GPRS_CONN_OK);
+            FuncsGSMGPRSFlags(GPRS_ENABLE_FLAGS);
+            funcs_gsm_timeout_timer = 65000;
+            send_gprs_state++;
+        }
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_tcp_udp_wait_conn:
+        
+        if (FuncsGSMGPRSFlagsAsk() & GPRS_CONN_OK)
+            send_gprs_state++;
+        
+        if (!funcs_gsm_timeout_timer)
+        {
+            Usart2Send("gprs conn timeout\n");
+            resp = resp_gsm_error;
+        }
+        break;
+        
+    case gprs_send_msg:
+        resp_cmd = GSMSendCommand ("AT+CIPSEND\r\n", 65000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)    // send message here
             send_gprs_state++;
         
         if (resp_cmd > cmd_ok)
@@ -665,6 +704,31 @@ unsigned char FuncsGSMSendGPRS (void)
         
         break;
 
+    case gprs_send_msg_wait_sign:
+        strcpy(sbuff, mymsg);
+        strcat(sbuff, "\032");
+        resp_cmd = GSMSendCommand (sbuff, 65000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)    // wait for SEND OK
+        {
+            funcs_gsm_timeout_timer = 20000;
+            Usart2Send("wait conn delay 20s\n");
+            send_gprs_state++;
+        }
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case gprs_wait_close:
+        if (!funcs_gsm_timeout_timer)
+        {
+            FuncsGSMGPRSFlags(GPRS_RESET_FLAG | GPRS_ENABLE_FLAGS);
+            send_gprs_state++;
+        }
+        break;
+        
     case gprs_close_tcp_udp:
         resp_cmd = GSMSendCommand ("AT+CIPCLOSE\r\n", 1000, 0, &s_msg[0]);
 
@@ -746,7 +810,7 @@ unsigned char FuncsGSMStateAsk (void)
 
 void FuncsGSMMessageFlags (unsigned short flag)
 {
-    //veo si es un reset flag
+    // check if its a reset flag
     if (flag & GSM_RESET_FLAG)
         GSMFlags &= ~(flag);
     else			//set flags
@@ -758,6 +822,24 @@ void FuncsGSMMessageFlags (unsigned short flag)
 unsigned short FuncsGSMMessageFlagsAsk (void)
 {
     return GSMFlags;
+}
+
+
+unsigned char GPRSFlags = 0;
+void FuncsGSMGPRSFlags (unsigned char flag)
+{
+    // check if its a reset flag
+    if (flag & GPRS_RESET_FLAG)
+        GPRSFlags &= ~(flag);
+    else			//set flags
+        GPRSFlags |= flag;
+
+}
+
+
+unsigned short FuncsGSMGPRSFlagsAsk (void)
+{
+    return GPRSFlags;
 }
 
 
