@@ -573,7 +573,7 @@ typedef enum {
 char mymsg [] = {"Test message Hello!"};
 send_gprs_e send_gprs_state;
 // unsigned char FuncsGSMSendGPRS (char *ptrMSG)
-unsigned char FuncsGSMSendGPRS (void)
+unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet)
 {
     unsigned char resp = resp_gsm_continue;
     resp_cmd_e resp_cmd = cmd_continue;

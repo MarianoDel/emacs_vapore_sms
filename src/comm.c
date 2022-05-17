@@ -13,6 +13,7 @@
 #include "parameters.h"
 #include "battery.h"
 #include "sms_data.h"
+#include "gprs_data.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -192,11 +193,24 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         }
     }
 
-    // else if (!strncmp(payload, "IP:", sizeof ("IP:") - 1))
-    // {
-    //     // GPRS config, call the correspondig module function
-    //     GPRS_Config(payload);
-    // }
+    else if (!strncmp(payload, "IP:", sizeof ("IP:") - 1))
+    {
+        // GPRS config, call the correspondig module function
+        if (GPRS_Config(payload, 0))
+            Usart2Debug("socket config ok\n");
+        else
+            Usart2Debug("bad socket data!\n");
+        
+    }
+    else if (!strncmp(payload, "IPDN:", sizeof ("IPDN:") - 1))
+    {
+        // GPRS config, call the correspondig module function
+        if (GPRS_Config(payload, 1))
+            Usart2Debug("socket config ok\n");
+        else
+            Usart2Debug("bad socket data!\n");
+            
+    }
 
     // Diagnostics and Activations    
     else if (!strncmp(payload, (const char *)"PRENDER:", sizeof ("PRENDER:") - 1))

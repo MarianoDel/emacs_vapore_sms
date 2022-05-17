@@ -91,6 +91,7 @@ SRC += ./src/comms_from_panel.c
 SRC += ./src/dsp.c
 SRC += ./src/battery.c
 SRC += ./src/sms_data.c
+SRC += ./src/gprs_data.c
 
 
 ## Core Support

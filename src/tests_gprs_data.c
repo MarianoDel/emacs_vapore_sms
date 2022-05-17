@@ -54,39 +54,86 @@ void Test_Verify_IP_String (void);
 void Test_Verify_IP_Port (void);
 
 void Test_GPRS_Config (void);
+void Test_GPRS_Send (void);
+
 
 // Module Functions ------------------------------------------------------------
 int main(int argc, char *argv[])
 {
 
-    Test_Verify_APN ();
+    // Test_Verify_APN ();
 
-    Test_Verify_IP_String ();
+    // Test_Verify_IP_String ();
 
-    Test_Verify_IP_Protocol ();
+    // Test_Verify_IP_Protocol ();
 
-    Test_Verify_IP_Port ();
+    // Test_Verify_IP_Port ();
     
-    Test_GPRS_Config ();
-    
+    // Test_GPRS_Config ();
+
+    Test_GPRS_Send ();
 }
 
+
+void Test_GPRS_Send (void)
+{
+    gprs_pckt_t packet;
+    char conf_test [165] = { 0 };
+    char buff_to_send [] = {"activacion"};
+
+    packet.alarm_input = 1;
+    packet.panel_input = 0;
+    packet.remote_number = 505;
+    packet.buff = buff_to_send;
+
+    printf("test start send gprs\n");
+
+    strcpy(mem_conf.sitio_propio, "Mi sitio");
+
+    // conf okeys
+    strcpy(conf_test,"IP:192.168.1.1,PROTO:UDP,PORT:10000,APN:gprs.movistar.com");
+    printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);
+    if (GPRS_Config(conf_test, 0))
+        PrintOK();
+    else
+        PrintERR();
+    
+
+    FuncsGSMSendGPRS_Answer (2);
+    unsigned char answer = 0;
+    do {
+        answer = VerifyAndSendGPRS(&packet);
+        
+        printf("answer getted: %d\n", answer);
+        
+    } while ((answer != GPRS_NOT_PROPER_DATA) &&
+             (answer != GPRS_SENT) &&
+             (answer != GPRS_NOT_SEND));
+
+    printf("test ended\n");
+        
+}
 
 void Test_GPRS_Config (void)
 {
     char conf_test [165] = { 0 };
+    char ip [20] = { 0 };
+    char proto [20] = { 0 };
+    char port [20] = { 0 };
+    char apn [67] = { 0 };
+    char domain [67] = { 0 };    
     
     // conf okeys
     strcpy(conf_test,"IP:192.168.1.1,PROTO:UDP,PORT:10000,APN:gprs.movistar.com");
     printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);
-    if (GPRS_Config(conf_test))
+    if (GPRS_Config(conf_test, 0))
         PrintOK();
     else
         PrintERR();
 
     strcpy(conf_test,"IP:2.168.1.1,PROTO:TCP,PORT:2,APN:gprs.movistar.com");
     printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);    
-    if (GPRS_Config(conf_test))
+    if (GPRS_Config(conf_test, 0))
         PrintOK();
     else
         PrintERR();
@@ -94,10 +141,71 @@ void Test_GPRS_Config (void)
     // conf errors
     strcpy(conf_test,"IP:2.168.1.1,PROTO:TCP,PORT:1,APN:gprs.movistar.com");
     printf("Test gprs error conf len %d %s :", strlen(conf_test), conf_test);
-    if (!GPRS_Config(conf_test))
+    if (!GPRS_Config(conf_test, 0))
         PrintOK();
     else
         PrintERR();
+
+    // verify config flash
+    strcpy(ip, "8.8.8.8");
+    strcpy(proto, "UDP");
+    strcpy(port, "8888");
+    strcpy(apn, "gprs.movistar.com");
+    sprintf(conf_test, "IP:%s,PROTO:%s,PORT:%s,APN:%s",
+            ip,
+            proto,
+            port,
+            apn);
+    
+    printf("Test gprs memory save len %d %s :", strlen(conf_test), conf_test);
+    printf("\nmem ip %s", mem_conf.ip);
+    printf("\nmem ip_proto %s", mem_conf.ip_proto);
+    printf("\nmem ip_port %s", mem_conf.ip_port);
+    printf("\nmem apn %s", mem_conf.apn);    
+    if (GPRS_Config(conf_test, 0) &&
+        (strncmp(mem_conf.ip, ip, strlen(ip)) == 0) &&
+        (strncmp(mem_conf.ip_proto, proto, strlen(proto)) == 0) &&
+        (strncmp(mem_conf.ip_port, port, strlen(port)) == 0) &&
+        (strncmp(mem_conf.apn, apn, strlen(apn)) == 0))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("\nmem ip %s", mem_conf.ip);
+    printf("\nmem ip_proto %s", mem_conf.ip_proto);
+    printf("\nmem ip_port %s", mem_conf.ip_port);
+    printf("\nmem apn %s", mem_conf.apn);    
+
+
+    
+    strcpy(domain, "vhfpilotage.duckdns.com");
+    strcpy(proto, "TCP");
+    strcpy(port, "8080");
+    strcpy(apn, "gprs.movistar.com");
+    sprintf(conf_test, "IPDN:%s,PROTO:%s,PORT:%s,APN:%s",
+            domain,
+            proto,
+            port,
+            apn);
+
+    printf("Test gprs domain memory save len %d %s :", strlen(conf_test), conf_test);
+    printf("\nmem domain %s", mem_conf.domain);
+    printf("\nmem ip_proto %s", mem_conf.ip_proto);
+    printf("\nmem ip_port %s", mem_conf.ip_port);
+    printf("\nmem apn %s", mem_conf.apn);    
+    if (GPRS_Config(conf_test, 1) &&
+        (strncmp(mem_conf.domain, domain, strlen(domain)) == 0) &&
+        (strncmp(mem_conf.ip_proto, proto, strlen(proto)) == 0) &&
+        (strncmp(mem_conf.ip_port, port, strlen(port)) == 0) &&
+        (strncmp(mem_conf.apn, apn, strlen(apn)) == 0))
+        PrintOK();
+    else
+        PrintERR();
+    
+    printf("\nmem domain %s", mem_conf.domain);
+    printf("\nmem ip_proto %s", mem_conf.ip_proto);
+    printf("\nmem ip_port %s", mem_conf.ip_port);
+    printf("\nmem apn %s", mem_conf.apn);    
     
     printf("\n");
 }
@@ -346,6 +454,25 @@ void Activation_12V_Off (void)
 
 
 unsigned char funcs_gsm_answer = resp_gsm_continue;
+unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet)
+{
+    printf("  GPRS sent alarm: %d panel: %d remote: %d\n       this message: %s\n",
+           packet->alarm_input,
+           packet->panel_input,
+           packet->remote_number,
+           packet->buff);
+    
+    return funcs_gsm_answer;
+}
+
+
+void FuncsGSMSendGPRS_Answer (unsigned char answer)
+{
+    funcs_gsm_answer = answer;
+}
+
+
+// unsigned char funcs_gsm_answer = resp_gsm_continue;
 unsigned char FuncsGSMSendSMS (char * msg, char * number)
 {
     printf("  SMS  send to number: %s\n       this message: %s\n", number, msg);
@@ -353,10 +480,10 @@ unsigned char FuncsGSMSendSMS (char * msg, char * number)
 }
 
 
-void FuncsGSMSendSMS_Answer (unsigned char answer)
-{
-    funcs_gsm_answer = answer;
-}
+// void FuncsGSMSendSMS_Answer (unsigned char answer)
+// {
+//     funcs_gsm_answer = answer;
+// }
 
 
 void MyCb (char * buff)

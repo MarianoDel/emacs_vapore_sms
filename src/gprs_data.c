@@ -19,10 +19,11 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
 // Module Private Types Constants and Macros -----------------------------------
-
+// #define VerifyDomainString((X),(Y))    VerifyAPNString((X),(Y))
 
 
 // Externals -------------------------------------------------------------------
@@ -34,62 +35,96 @@ extern parameters_typedef mem_conf;
 
 // Module Private Functions ----------------------------------------------------
 unsigned char VerifyAPNString (char * apn, unsigned char len);
-unsigned char VerifyDNSString (char * dns, unsigned char len);
 unsigned char VerifyIPString (char * ip, unsigned char len);
 unsigned char VerifyIPProtocol (char * ip_proto, unsigned char len);
 unsigned char VerifyPort (char * ip, unsigned char len);
 unsigned char VerifyIsANumber (char * pn, unsigned int * number);
+unsigned char VerifySocketData (void);
+unsigned char VerifyDomainString (char * domain, unsigned char len);
 
-// Module Functions ------------------------------------------------------------
+
+
+// Module Functions -----------------------------------------------------------
+#define gprs_verify_data    0
+#define gprs_sending    1
+unsigned char gprs_send_state = gprs_verify_data;
 unsigned char VerifyAndSendGPRS (gprs_pckt_t * p_gprs)
 {
-    if (p_gprs->alarm_input)
-        Usart2Send("External 12V: ");    // 12V input alarm activate
-
-    if (p_gprs->panel_input)
-        Usart2Send("Keypad ACT: ");
-                    
-    //check sitio_prop before send gprs
-    if (!VerifySiteString(sitio_prop))
-    {
-        Usart2Send("no site saved\n");
-        return GPRS_NOT_PROPER_DATA;
-    }
-
-    //check apn before send gprs
-    if (!VerifyAPNString("gprs.personal.com", 12))
-    {
-        Usart2Send("no apn data\n");
-        return GPRS_NOT_PROPER_DATA;
-    }
-
-    //check ip, port, protocol of server before send gprs
-    // if (!VerifySocketData())
-    // {
-    //     Usart2Send("no socket data\n");
-    //     return GPRS_NOT_PROPER_DATA;
-    // }
-
+    unsigned char answer = GPRS_WORKING;
     
-    // data is good, try to send an sms
-    // Activation_12V_On();    // ACT_12V_ON;
-    // if (p_gprs->alarm_input)
-    //     strcpy(p_gprs->buff, "Activacion en: ");
+    switch (gprs_send_state)
+    {
+    case gprs_verify_data:
+        if (p_gprs->alarm_input)
+            Usart2Send("External 12V: ");    // 12V input alarm activate
 
-    // if (p_gprs->panel_input)
-    //     sprintf(p_gprs->buff, "Activo %03d en: ", p_gprs->remote_number);
-                        
-    // strcat(p_gprs->buff, sitio_prop);
-    // if (FuncsGSMSendSMS (p_gprs->buff, num_tel_rep) == resp_gsm_ok)
-    // {
-    //     Usart2Send("OK\n");
-    //     return SMS_SENT;
-    // }
+        if (p_gprs->panel_input)
+            Usart2Send("Keypad ACT: ");
+                    
+        //check sitio_prop before send gprs
+        if (!VerifySiteString(sitio_prop))
+        {
+            Usart2Send("no site saved\n");
+            return GPRS_NOT_PROPER_DATA;
+        }
 
-    // Usart2Send("delayed\n");    
-    return SMS_NOT_SEND;
+        //check apn and all socket data before send gprs
+        if (!VerifySocketData())
+        {
+            Usart2Send("no socket data\n");
+            return GPRS_NOT_PROPER_DATA;
+        }
+
+        gprs_send_state++;
+        break;
+
+    case gprs_sending:
+        answer = FuncsGSMSendGPRS(p_gprs);
+
+        if (answer == resp_gsm_ok)
+        {
+            Usart2Send("connection ok\n");
+            gprs_send_state = gprs_verify_data;
+            
+            return GPRS_SENT;
+        }
+        
+        if (answer > resp_gsm_ok)
+        {
+            Usart2Send("connection fail!!!\n");
+            gprs_send_state = gprs_verify_data;
+
+            return GPRS_NOT_SEND;
+        }
+        break;
+
+    default:
+        gprs_send_state = gprs_verify_data;        
+        break;
+    }
+
+    return GPRS_WORKING;
 }
 
+
+//answer 1 -> ok; 0 -> some error
+unsigned char VerifySocketData (void)
+{
+    if ((!VerifyIPString (mem_conf.ip, strlen(mem_conf.ip))) &&
+        (!VerifyDomainString (mem_conf.domain, strlen(mem_conf.domain))))
+        return 0;
+
+    if (!VerifyIPProtocol (mem_conf.ip_proto, strlen(mem_conf.ip_proto)))
+        return 0;
+
+    if (!VerifyPort (mem_conf.ip_port, strlen(mem_conf.ip_port)))
+        return 0;
+
+    if (!VerifyAPNString (mem_conf.apn, strlen(mem_conf.apn)))
+        return 0;
+
+    return 1;
+}
 
 
 //answer 1 -> ok; 0 -> some error
@@ -123,9 +158,9 @@ unsigned char VerifyAPNString (char * apn, unsigned char len)
 
 
 //answer 1 -> ok; 0 -> some error
-unsigned char VerifyDNSString (char * dns, unsigned char len)
+unsigned char VerifyDomainString (char * domain, unsigned char len)
 {
-    return VerifyAPNString(dns, len);
+    return VerifyAPNString (domain, len);
 }
 
 
@@ -211,6 +246,30 @@ unsigned char VerifyPort (char * port, unsigned char len)
 }
 
 
+// get string with a number in pn
+// answers the number in number
+// return the digits quantity readed
+unsigned char VerifyIsANumber (char * pn, unsigned int * number)
+{
+    unsigned char i;
+    char new_number [6] = {0};
+
+    // no more than six chars
+    for (i = 0; i < 6; i++)
+    {
+        if ((*(pn + i) < 48) || (*(pn + i) > 57))
+            break;
+
+        new_number[i] = *(pn + i);
+    }
+
+    if (i > 0)
+        *number = atoi(new_number);
+
+    return i;
+}
+
+
 // callback with sms payloads
 #define CONFIG_FIELDS    4
 #define FIELD_IP    0
@@ -218,7 +277,7 @@ unsigned char VerifyPort (char * port, unsigned char len)
 #define FIELD_PORT    2
 #define FIELD_APN    3
 //answer 1 -> ok; 0 -> some error
-unsigned char GPRS_Config (char * payload)
+unsigned char GPRS_Config (char * payload, unsigned char ipdomain)
 {
     unsigned char len = strlen (payload);
     unsigned char commas[CONFIG_FIELDS] = { 0 };
@@ -248,12 +307,23 @@ unsigned char GPRS_Config (char * payload)
 
     if (comma_cnt != (CONFIG_FIELDS - 1))
         return 0;
-    
-    // check for valid ip
-    field_start = sizeof("IP:") - 1;
-    field_len = commas[FIELD_IP] - field_start;
-    if (!VerifyIPString(payload + field_start, field_len))
-        return 0;
+
+    if (ipdomain)
+    {
+        // check for valid ip_domain
+        field_start = sizeof("IPDN:") - 1;
+        field_len = commas[FIELD_IP] - field_start;
+        if (!VerifyAPNString (payload + field_start, field_len))
+            return 0;
+    }
+    else
+    {
+        // check for valid ip
+        field_start = sizeof("IP:") - 1;
+        field_len = commas[FIELD_IP] - field_start;
+        if (!VerifyIPString(payload + field_start, field_len))
+            return 0;
+    }
 
     // check for valid ip protocol
     field_start = commas[FIELD_IP] + sizeof("PROTO:");    // take the comma in account
@@ -275,46 +345,44 @@ unsigned char GPRS_Config (char * payload)
         return 0;
 
     // all data is valid, save it
-    field_start = sizeof("IP:") - 1;
-    field_len = commas[FIELD_IP] - field_start;    
-    strncpy(mem_conf.ip, (payload + field_start), field_len);
+    char * pcut;
+
+    if (ipdomain)
+    {
+        field_start = sizeof("IPDN:") - 1;
+        field_len = commas[FIELD_IP] - field_start;    
+        strncpy(mem_conf.domain, (payload + field_start), field_len);
+        pcut = mem_conf.domain;
+        *(pcut + field_len) = '\0';
+    }
+    else
+    {
+        field_start = sizeof("IP:") - 1;
+        field_len = commas[FIELD_IP] - field_start;    
+        strncpy(mem_conf.ip, (payload + field_start), field_len);
+        pcut = mem_conf.ip;
+        *(pcut + field_len) = '\0';
+    }
     
     field_start = commas[FIELD_IP] + sizeof("PROTO:");    // take the comma in account
     field_len = commas[FIELD_PROTO] - field_start;
     strncpy(mem_conf.ip_proto, (payload + field_start), field_len);
+    pcut = mem_conf.ip_proto;
+    *(pcut + field_len) = '\0';
 
     field_start = commas[FIELD_PROTO] + sizeof("PORT:");    // take the comma in account
     field_len = commas[FIELD_PORT] - field_start;    
     strncpy(mem_conf.ip_port, (payload + field_start), field_len);
+    pcut = mem_conf.ip_port;
+    *(pcut + field_len) = '\0';
 
     field_start = commas[FIELD_PORT] + sizeof("APN:");    // take the comma in account
     field_len = len - field_start;    //no trailing comma    
     strncpy(mem_conf.apn, (payload + field_start), field_len);
+    pcut = mem_conf.apn;
+    *(pcut + field_len) = '\0';
 
     return 1;
-}
-
-
-//devuelve los numeros en un string, en la posicion number
-//devuele la cantidad de cifras leidas
-unsigned char VerifyIsANumber (char * pn, unsigned int * number)
-{
-    unsigned char i;
-    char new_number [6] = {0};
-
-    //no mas de 6 caracteres
-    for (i = 0; i < 6; i++)
-    {
-        if ((*(pn + i) < 48) || (*(pn + i) > 57))
-            break;
-
-        new_number[i] = *(pn + i);
-    }
-
-    if (i > 0)
-        *number = atoi(new_number);
-
-    return i;
 }
 
 

@@ -321,29 +321,12 @@ int main(void)
             break;
 
         case main_report_alarm_input_or_panel:
-            // answer = FuncsGSMSendGPRS();
-
-            // if (answer == resp_gsm_ok)
-            // {
-            //     Usart2Send("connection ok\n");
-            //     main_state = main_enable_act_12V_input;                
-            // }
-            // else if (answer > resp_gsm_ok)
-            // {
-            //     Usart2Send("connection fail!!!\n");
-            //     main_state = main_sms_not_sended;
-            //     timer_standby = 6000;
-            // }
-                
-                
-
             // check if gprs is needed
-
             // or go directly to sms
-            main_state = main_report_alarm_by_sms;
+            main_state = main_report_alarm_by_gprs;
             sms_not_sent_cnt = 5;
 
-            // sms assemble packet
+            // gprs or sms assemble packet
             sms_info.alarm_input = alarm_input;
             sms_info.panel_input = panel_input;
             sms_info.remote_number = remote_number;
@@ -353,15 +336,41 @@ int main(void)
 
             break;
 
-        case main_report_alarm_by_gprs:            
-            // check data to send a GPRS packet
-            // answer = VerifyAndSendGPRS();
+        case main_report_alarm_by_gprs:
+            if (timer_standby)
+                break;
 
-            // if (answer == GPRS_NOT_SENDED)
-            // {
-            //     //TODO: another attempt here?
-            //     main_state = main_report_alarm_by_sms;
-            // }
+            // check data to send a GPRS packet            
+            answer = VerifyAndSendGPRS(&sms_info);
+            
+            if (answer == GPRS_NOT_SEND)
+            {
+                if (sms_not_sent_cnt)
+                {
+                    sms_not_sent_cnt--;
+                    timer_standby = 1000;
+                }
+                else
+                {
+                    main_state = main_report_alarm_by_sms;
+                    timer_standby = 0;
+                    sms_not_sent_cnt = 5;
+                }
+            }
+            else if (GPRS_NOT_PROPER_DATA)
+            {
+                main_state = main_report_alarm_by_sms;
+                timer_standby = 0;
+                sms_not_sent_cnt = 5;
+            }
+            else if (GPRS_SENT)
+            {
+                Activation_12V_On();    // ACT_12V_ON;
+                main_state = main_enable_act_12V_input;
+                Usart2Send("OK\n");
+                if (panel_input)
+                    timer_standby = 1000;
+            }
             break;
 
         case main_report_alarm_by_sms:

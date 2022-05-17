@@ -14,6 +14,7 @@
 
 // Includes for Configurations -------------------------------------------------
 #include "hard.h"
+#include "gprs_data.h"    //TODO: for the packet data
 
 
 // Module Configurations -------------------------------------------------------
@@ -91,7 +92,7 @@ unsigned char FuncsGSMStateAsk (void);
 void FuncsGSMShutdown (void);
 void FuncsGSMShutdownAlways (void);
 unsigned char FuncsGSMSendSMS (char *, char *);
-unsigned char FuncsGSMSendGPRS (void);
+unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet);
 
 void FuncsGSMMessageFlags (unsigned short);
 unsigned short FuncsGSMMessageFlagsAsk (void);
