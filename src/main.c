@@ -147,7 +147,8 @@ int main(void)
         memset(num_tel_imei, '\0', sizeof(num_tel_imei));
         memset(num_tel_prop, '\0', sizeof(num_tel_prop));
         memset(sitio_prop, '\0', sizeof(sitio_prop));
-        strcpy(num_tel_rep, "1141747063");
+        // strcpy(num_tel_rep, "1141747063");
+        strcpy(num_tel_rep, "");        
         strcpy(sitio_prop, "Prueba Kirno");
         //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
         // strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
@@ -320,35 +321,35 @@ int main(void)
             break;
 
         case main_report_alarm_input_or_panel:
-            answer = FuncsGSMSendGPRS();
+            // answer = FuncsGSMSendGPRS();
 
-            if (answer == resp_gsm_ok)
-            {
-                Usart2Send("connection ok\n");
-                main_state = main_enable_act_12V_input;                
-            }
-            else if (answer > resp_gsm_ok)
-            {
-                Usart2Send("connection fail!!!\n");
-                main_state = main_sms_not_sended;
-                timer_standby = 6000;
-            }
+            // if (answer == resp_gsm_ok)
+            // {
+            //     Usart2Send("connection ok\n");
+            //     main_state = main_enable_act_12V_input;                
+            // }
+            // else if (answer > resp_gsm_ok)
+            // {
+            //     Usart2Send("connection fail!!!\n");
+            //     main_state = main_sms_not_sended;
+            //     timer_standby = 6000;
+            // }
                 
                 
 
-            // // check if gprs is needed
+            // check if gprs is needed
 
-            // // or go directly to sms
-            // main_state = main_report_alarm_by_sms;
-            // sms_not_sent_cnt = 5;
+            // or go directly to sms
+            main_state = main_report_alarm_by_sms;
+            sms_not_sent_cnt = 5;
 
-            // // sms assemble packet
-            // sms_info.alarm_input = alarm_input;
-            // sms_info.panel_input = panel_input;
-            // sms_info.remote_number = remote_number;
-            // sms_info.buff = buff;
+            // sms assemble packet
+            sms_info.alarm_input = alarm_input;
+            sms_info.panel_input = panel_input;
+            sms_info.remote_number = remote_number;
+            sms_info.buff = buff;
 
-            // timer_standby = 0;
+            timer_standby = 0;
 
             break;
 

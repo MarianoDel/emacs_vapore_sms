@@ -22,14 +22,14 @@
 // #define USE_GSM_GATEWAY_SM
 
 //----------- Hardware Board Version -------------
-#define HARDWARE_VER_2_0    // sim800l daughter board design
-// #define HARDWARE_VER_1_2    // all old hard changes included
+// #define HARDWARE_VER_2_0    // sim800l daughter board design
+#define HARDWARE_VER_1_2    // all old hard changes included
 // #define HARDWARE_VER_1_1    // test1 input modified to report alarms 4V analog to digital input
                                // pin5 on micro must be gnd (its disconnected)
 // #define HARDWARE_VER_1_0    // original version
 
 //----------- Firmware Version -------------------
-#define FIRMWARE_VER_1_5    // fix gsm module bad answers
+#define FIRMWARE_VER_1_5    // fix gsm module bad answers and reboot
 // #define FIRMWARE_VER_1_4    // can send battery reports by sms
 // #define FIRMWARE_VER_1_3    // delay sms message
 // #define FIRMWARE_VER_1_2    // all programs in one

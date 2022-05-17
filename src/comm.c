@@ -10,7 +10,6 @@
 
 // Includes --------------------------------------------------------------------
 #include "comm.h"
-// #include "flash_program.h"
 #include "parameters.h"
 #include "battery.h"
 #include "sms_data.h"
@@ -192,6 +191,12 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
             CommsCheckSendOK (orig_num);
         }
     }
+
+    // else if (!strncmp(payload, "IP:", sizeof ("IP:") - 1))
+    // {
+    //     // GPRS config, call the correspondig module function
+    //     GPRS_Config(payload);
+    // }
 
     // Diagnostics and Activations    
     else if (!strncmp(payload, (const char *)"PRENDER:", sizeof ("PRENDER:") - 1))

@@ -12,30 +12,37 @@
 
 //- Data Struct to Backup ------------------------------------------------------
 // Beware this struct must be 4 bytes align and be multiple of 8
+#define PHONE_NUMBER_MAX_LEN    19
+#define SITE_MAX_LEN    150    // sms msg len - 15 from rep sitio
 typedef struct parameters {
 
-    char num_reportar [20];    //20
+    char num_reportar [PHONE_NUMBER_MAX_LEN + 1];    //20
     char imei [24];    //44
-    char num_propio [20];    //64
-    char sitio_propio [172];    //236
+    char num_propio [PHONE_NUMBER_MAX_LEN + 1];    //64
+    char sitio_propio [SITE_MAX_LEN + 1];    //215
 
-    unsigned char memory_saved_flag;    //237
+    // conf backup flags
+    unsigned char bkp_envios_ok;    //216
+    unsigned char bkp_timer_reportar;    //217
+    unsigned char bkp_prender_ring;    //218
+    unsigned char bkp_sense_bat;    //219
+    unsigned char memory_saved_flag;    //220
 
-    unsigned char bkp_timer_reportar;    //238
-    unsigned char bkp_envios_ok;    //239
-    unsigned char bkp_prender_ring;    //240
-    unsigned char bkp_sense_bat;    //241 
-    
-    unsigned int internal_comms_flag;    //245 or 8 bytes long!!!!
+    // conf running flags
+    unsigned int internal_comms_flag;    //224 4 bytes if its aligned
 
-    // complete alignment with dummys
-    unsigned char dummy1 [7];    //256
+    // gprs settings
+    char ip [16];    //240
+    char ip_proto [4];    //244
+    char ip_port [6];    //250
+    char apn [68];    //318
+    char domain [68];    //386
+
+    // // // complete alignment with dummys
+    unsigned char dummy1 [62];    //448    (multiply of eight)
 
 } parameters_typedef;
 
-#define PHONE_NUMBER_MAX_LEN    19
-#define SITE_MAX_LEN    145
-// #define SITE_MAX_LEN    20
 
 
 // Configuration Changes (second nibble)

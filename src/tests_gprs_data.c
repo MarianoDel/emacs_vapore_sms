@@ -32,8 +32,12 @@ int cb_cnt = 0;
 
 
 // For Test Module Private Functions -------------------------------------------
-extern unsigned char VerifyAPNString (char * apn);
-extern unsigned char VerifyIPProtocol (char * ip_proto);
+extern unsigned char VerifyAPNString (char * apn, unsigned char len);
+extern unsigned char VerifyDNSString (char * dns, unsigned char len);
+extern unsigned char VerifyIPString (char * ip, unsigned char len);
+extern unsigned char VerifyIPProtocol (char * ip_proto, unsigned char len);
+extern unsigned char VerifyPort (char * ip, unsigned char len);
+extern unsigned char StringIsANumber (char * pn, unsigned short * number);    
 
 
 // Module Mocked Functions -----------------------------------------------------
@@ -46,7 +50,10 @@ void MyCbClean (void);
 // Module Functions for testing ------------------------------------------------
 void Test_Verify_APN (void);
 void Test_Verify_IP_Protocol (void);
+void Test_Verify_IP_String (void);
+void Test_Verify_IP_Port (void);
 
+void Test_GPRS_Config (void);
 
 // Module Functions ------------------------------------------------------------
 int main(int argc, char *argv[])
@@ -54,209 +61,76 @@ int main(int argc, char *argv[])
 
     Test_Verify_APN ();
 
+    Test_Verify_IP_String ();
+
     Test_Verify_IP_Protocol ();
+
+    Test_Verify_IP_Port ();
+    
+    Test_GPRS_Config ();
     
 }
 
 
-// void Test_Verify_And_Send_SMS (void)
-// {
-//     char serial_buff [200];
-//     char buff [200];
-//     sms_pckt_t sms_info;
-//     unsigned char answer = 0;
-
-//     // sms packet default
-//     sms_info.alarm_input = 0;
-//     sms_info.panel_input = 0;
-//     sms_info.remote_number = 0;
-//     sms_info.buff = buff;
-
-//     strcpy(mem_conf.num_reportar, " ");
+void Test_GPRS_Config (void)
+{
+    char conf_test [165] = { 0 };
     
-//     // test for alarm input
-//     sms_info.alarm_input = 1;
-//     Usart2Callback(&MyCb);
-//     MyCbClean();
-//     answer = VerifyAndSendSMS (&sms_info);
+    // conf okeys
+    strcpy(conf_test,"IP:192.168.1.1,PROTO:UDP,PORT:10000,APN:gprs.movistar.com");
+    printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);
+    if (GPRS_Config(conf_test))
+        PrintOK();
+    else
+        PrintERR();
 
-//     Usart2ReadBuffer(serial_buff, sizeof(serial_buff));
+    strcpy(conf_test,"IP:2.168.1.1,PROTO:TCP,PORT:2,APN:gprs.movistar.com");
+    printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);    
+    if (GPRS_Config(conf_test))
+        PrintOK();
+    else
+        PrintERR();
 
-//     printf("Test send sms alarm input: ");
-//     if (!(strncmp(&cb_buff[0][0], "External 12V: ", sizeof("External 12V: ") - 1)) &&
-//         (!(strncmp(&cb_buff[1][0], "no phone number", sizeof("no phone number") - 1)) &&        
-//          (answer == SMS_NOT_PROPER_DATA)))
-//         PrintOK();
-//     else
-//         PrintERR();
-
-
-//     // test for panel input
-//     sms_info.alarm_input = 0;
-//     sms_info.panel_input = 1;
-//     MyCbClean();
-//     answer = VerifyAndSendSMS (&sms_info);
-
-//     Usart2ReadBuffer(serial_buff, sizeof(serial_buff));
-
-//     printf("Test send sms panel input: ");
-//     if (!(strncmp(&cb_buff[0][0], "Keypad ACT: ", sizeof("Keypad ACT: ") - 1)) &&
-//         (!(strncmp(&cb_buff[1][0], "no phone number", sizeof("no phone number") - 1)) &&        
-//          (answer == SMS_NOT_PROPER_DATA)))
-//         PrintOK();
-//     else
-//         PrintERR();
-
-
-//     // test for alarm input with phone
-//     sms_info.alarm_input = 1;
-//     sms_info.panel_input = 0;
-//     strcpy(mem_conf.num_reportar, "+541122");
-//     MyCbClean();
-//     answer = VerifyAndSendSMS (&sms_info);
-
-//     Usart2ReadBuffer(serial_buff, sizeof(serial_buff));
-
-//     printf("Test send sms panel input phone %s: ", mem_conf.num_reportar);
-//     if (!(strncmp(&cb_buff[0][0], "External 12V: ", sizeof("External 12V: ") - 1)) &&
-//         (!(strncmp(&cb_buff[1][0], "no site saved", sizeof("no site saved") - 1)) &&
-//          (answer == SMS_NOT_PROPER_DATA)))
-//         PrintOK();
-//     else
-//         PrintERR();
-
-//     // test for alarm input with phone and site
-//     sms_info.alarm_input = 1;
-//     sms_info.panel_input = 0;
-//     strcpy(mem_conf.num_reportar, "+541122");
-//     strcpy(mem_conf.sitio_propio, "quirno 457");
-//     MyCbClean();
-//     FuncsGSMSendSMS_Answer(resp_gsm_ok);
-//     answer = VerifyAndSendSMS (&sms_info);
-
-//     Usart2ReadBuffer(serial_buff, sizeof(serial_buff));
-
-//     printf("Test send sms alarm input phone %s site %s: ",
-//            mem_conf.num_reportar,
-//            mem_conf.sitio_propio);
-//     if (!(strncmp(&cb_buff[0][0], "External 12V: ", sizeof("External 12V: ") - 1)) &&
-//         (answer == SMS_SENT))
-//         PrintOK();
-//     else
-//         PrintERR();
-
-//     // test for panel input with phone and site
-//     sms_info.alarm_input = 0;
-//     sms_info.panel_input = 1;
-//     strcpy(mem_conf.num_reportar, "+541122");
-//     strcpy(mem_conf.sitio_propio, "quirno 457");
-//     MyCbClean();
-//     FuncsGSMSendSMS_Answer(resp_gsm_ok);
-//     answer = VerifyAndSendSMS (&sms_info);
-
-//     Usart2ReadBuffer(serial_buff, sizeof(serial_buff));
-
-//     printf("Test send sms panel input phone %s site %s: ",
-//            mem_conf.num_reportar,
-//            mem_conf.sitio_propio);
-//     if (!(strncmp(&cb_buff[0][0], "Keypad ACT: ", sizeof("Keypad ACT: ") - 1)) &&    
-//         (answer == SMS_SENT))
-//         PrintOK();
-//     else
-//         PrintERR();
-
-
-//     // test for panel input with phone and site not send
-//     sms_info.alarm_input = 0;
-//     sms_info.panel_input = 1;
-//     strcpy(mem_conf.num_reportar, "+541122");
-//     strcpy(mem_conf.sitio_propio, "quirno 457");
-//     MyCbClean();
-//     FuncsGSMSendSMS_Answer(resp_gsm_error);
-//     answer = VerifyAndSendSMS (&sms_info);
-
-//     Usart2ReadBuffer(serial_buff, sizeof(serial_buff));
-
-//     printf("Test send sms panel input phone %s site %s: ",
-//            mem_conf.num_reportar,
-//            mem_conf.sitio_propio);
-//     if (!(strncmp(&cb_buff[0][0], "Keypad ACT: ", sizeof("Keypad ACT: ") - 1)) &&    
-//         (answer == SMS_NOT_SEND))
-//         PrintOK();
-//     else
-//         PrintERR();
+    // conf errors
+    strcpy(conf_test,"IP:2.168.1.1,PROTO:TCP,PORT:1,APN:gprs.movistar.com");
+    printf("Test gprs error conf len %d %s :", strlen(conf_test), conf_test);
+    if (!GPRS_Config(conf_test))
+        PrintOK();
+    else
+        PrintERR();
     
-    
-// }
+    printf("\n");
+}
 
 
-// void Test_Verify_Number (void)
-// {
-//     char number_test [40] = { 0 };
-//     strcpy(number_test, "11567");
-//     printf("Test verify number %d: %s: ", strlen(number_test), number_test);
-//     if (VerifyNumberString(number_test))
-//         PrintOK();
-//     else
-//         PrintERR();
-    
-//     strcpy(number_test, "012345678901234567890");
-//     printf("Test verify long number %d: %s: ", strlen(number_test), number_test);
-//     if (!VerifyNumberString(number_test))
-//         PrintOK();
-//     else
-//         PrintERR();
-
-//     strcpy(number_test, "+110123456789");
-//     printf("Test verify number plus signed %d: %s: ", strlen(number_test), number_test);
-//     if (VerifyNumberString(number_test))
-//         PrintOK();
-//     else
-//         PrintERR();
-
-//     strcpy(number_test, "+11012 3456789");
-//     printf("Test verify broken number: %s: ", number_test);
-//     if (!VerifyNumberString(number_test))
-//         PrintOK();
-//     else
-//         PrintERR();
-
-//     strcpy(number_test, "+11012a");
-//     printf("Test verify mixed number: %s: ", number_test);
-//     if (!VerifyNumberString(number_test))
-//         PrintOK();
-//     else
-//         PrintERR();
-    
-// }
 void Test_Verify_IP_Protocol (void)
 {
     char proto_test [80] = { 0 };
 
     strcpy(proto_test, "TCP");
     printf("Test verify ip protocol %s: ", proto_test);
-    if (VerifyIPProtocol(proto_test))
+    if (VerifyIPProtocol(proto_test, strlen(proto_test)))
         PrintOK();
     else
         PrintERR();
 
     strcpy(proto_test, "UDP");
     printf("Test verify ip protocol %s: ", proto_test);
-    if (VerifyIPProtocol(proto_test))
+    if (VerifyIPProtocol(proto_test, strlen(proto_test)))
         PrintOK();
     else
         PrintERR();
 
     strcpy(proto_test, "X25");
     printf("Test verify error on ip protocol %s: ", proto_test);
-    if (!VerifyIPProtocol(proto_test))
+    if (!VerifyIPProtocol(proto_test, strlen(proto_test)))
         PrintOK();
     else
         PrintERR();
 
     strcpy(proto_test, "TCP ");
     printf("Test verify error on ip protocol %s: ", proto_test);
-    if (!VerifyIPProtocol(proto_test))
+    if (!VerifyIPProtocol(proto_test, strlen(proto_test)))
         PrintOK();
     else
         PrintERR();
@@ -268,49 +142,176 @@ void Test_Verify_IP_Protocol (void)
 void Test_Verify_APN (void)
 {
     char apn_test [80] = { 0 };
-    char modif_apn_test [80] = { 0 };    
     
     strcpy(apn_test, "gprs.personal.com");
-    strcpy(modif_apn_test, apn_test);    
     printf("Test verify apn: %s: ", apn_test);
-    if ((VerifyAPNString(modif_apn_test)) &&
-        (!strcmp(modif_apn_test, apn_test)))
+    if (VerifyAPNString(apn_test, strlen(apn_test)))
         PrintOK();
     else
         PrintERR();
 
     strcpy(apn_test, "igprs.claro.com.ar");
-    strcpy(modif_apn_test, apn_test);    
     printf("Test verify apn: %s: ", apn_test);
-    if ((VerifyAPNString(modif_apn_test)) &&
-        (!strcmp(modif_apn_test, apn_test)))
+    if (VerifyAPNString(apn_test, strlen(apn_test)))
         PrintOK();
     else
         PrintERR();
 
     strcpy(apn_test, "wap.gprs.unifon.com.ar");
-    strcpy(modif_apn_test, apn_test);    
     printf("Test verify apn: %s: ", apn_test);
-    if ((VerifyAPNString(modif_apn_test)) &&
-        (!strcmp(modif_apn_test, apn_test)))
+    if (VerifyAPNString(apn_test, strlen(apn_test)))
         PrintOK();
     else
         PrintERR();
 
     strcpy(apn_test, "datos.personal.com");
-    strcpy(modif_apn_test, apn_test);    
     printf("Test verify apn: %s: ", apn_test);
-    if ((VerifyAPNString(modif_apn_test)) &&
-        (!strcmp(modif_apn_test, apn_test)))
+    if (VerifyAPNString(apn_test, strlen(apn_test)))
+        PrintOK();
+    else
+        PrintERR();
+    
+    strcpy(apn_test, "gprs.personal.88com");
+    printf("Test verify apn: %s: ", apn_test);
+    if (VerifyAPNString(apn_test, strlen(apn_test)))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(apn_test, "gprs-personal.88com");
+    printf("Test verify apn: %s: ", apn_test);
+    if (VerifyAPNString(apn_test, strlen(apn_test)))
         PrintOK();
     else
         PrintERR();
     
     strcpy(apn_test, "gprs.personal. com");
-    strcpy(modif_apn_test, apn_test);    
     printf("Test verify error on apn: %s: ", apn_test);
-    if ((!VerifyAPNString(modif_apn_test)) &&
-        (!strcmp(modif_apn_test, apn_test)))
+    if (!VerifyAPNString(apn_test, strlen(apn_test)))
+        PrintOK();
+    else
+        PrintERR();    
+    
+    printf("\n");
+    
+}
+
+
+void Test_Verify_IP_String (void)
+{
+    char ip1 [] = {"192.168.1.1"};
+    char ip2 [] = {"2.168.1.1"};
+    char ip3 [] = {"255.255.255.255"};
+    char ip4 [] = {"2.168.1.300"};
+    char ip5 [] = {"...1"};
+    char ip6 [] = {"0.0.0.."};
+    
+    printf("Test verify ip %s: ", ip1);
+    if (VerifyIPString(ip1, sizeof(ip1) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify ip %s: ", ip2);
+    if (VerifyIPString(ip2, sizeof(ip2) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify ip %s: ", ip3);
+    if (VerifyIPString(ip3, sizeof(ip3) - 1))
+        PrintOK();
+    else
+        PrintERR();
+    
+    printf("Test verify error on ip %s: ", ip4);
+    if (!VerifyIPString(ip4, sizeof(ip4) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify error on ip %s: ", ip5);
+    if (!VerifyIPString(ip5, sizeof(ip5) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify error on ip %s: ", ip6);
+    if (!VerifyIPString(ip6, sizeof(ip6) - 1))
+        PrintOK();
+    else
+        PrintERR();
+    
+    
+    printf("\n");
+    
+}
+
+
+void Test_Verify_IP_Port (void)
+{
+    // ok ports
+    char ip1 [] = {"11"};
+    char ip2 [] = {"111"};
+    char ip3 [] = {"1111"};
+    char ip4 [] = {"11111"};
+    char ip5 [] = {"65000"};
+    char ip55 [] = {"2"};
+    // ports with errors
+    char ip6 [] = {"75000"};
+    char ip7 [] = {"1"};    
+    char ip8 [] = {"0"};
+    
+    printf("Test verify ip port %s: ", ip1);
+    if (VerifyPort(ip1, sizeof(ip1) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify ip port %s: ", ip2);
+    if (VerifyPort(ip2, sizeof(ip2) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify ip port %s: ", ip3);
+    if (VerifyPort(ip3, sizeof(ip3) - 1))
+        PrintOK();
+    else
+        PrintERR();
+    
+    printf("Test verify ip port %s: ", ip4);
+    if (VerifyPort(ip4, sizeof(ip4) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify ip port %s: ", ip5);
+    if (VerifyPort(ip5, sizeof(ip5) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify ip port %s: ", ip55);
+    if (VerifyPort(ip55, sizeof(ip55) - 1))
+        PrintOK();
+    else
+        PrintERR();
+    
+    printf("Test verify error on ip port %s: ", ip6);
+    if (!VerifyPort(ip6, sizeof(ip6) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify error on ip port %s: ", ip7);
+    if (!VerifyPort(ip7, sizeof(ip7) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("Test verify error on ip port %s: ", ip8);
+    if (!VerifyPort(ip8, sizeof(ip8) - 1))
         PrintOK();
     else
         PrintERR();
