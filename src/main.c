@@ -355,19 +355,21 @@ int main(void)
                     main_state = main_report_alarm_by_sms;
                     timer_standby = 0;
                     sms_not_sent_cnt = 5;
+                    Usart2Send("gprs bad network go to sms\n");
                 }
             }
-            else if (GPRS_NOT_PROPER_DATA)
+            else if (answer == GPRS_NOT_PROPER_DATA)
             {
                 main_state = main_report_alarm_by_sms;
                 timer_standby = 0;
                 sms_not_sent_cnt = 5;
+                Usart2Send("gprs bad data go to sms\n");
             }
-            else if (GPRS_SENT)
+            else if (answer == GPRS_SENT)
             {
                 Activation_12V_On();    // ACT_12V_ON;
                 main_state = main_enable_act_12V_input;
-                Usart2Send("OK\n");
+                Usart2Send("gprs packet sent OK\n");
                 if (panel_input)
                     timer_standby = 1000;
             }
@@ -393,7 +395,7 @@ int main(void)
                     timer_standby = 6000;
                 }
             }
-            else if (SMS_NOT_PROPER_DATA)
+            else if (answer == SMS_NOT_PROPER_DATA)
             {
                 main_state = main_sms_not_sended;
                 timer_standby = 6000;

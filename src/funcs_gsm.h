@@ -81,7 +81,7 @@ typedef struct {
 #define GPRS_RESET_FLAG    0x80
 #define GPRS_ENABLE_FLAGS    0x40
 #define GPRS_CONN_OK    0x01
-
+#define GPRS_CONN_FAIL    0x02
 
 
 // Exported Functions ----------------------------------------------------------

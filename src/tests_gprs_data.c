@@ -44,7 +44,7 @@ extern unsigned char StringIsANumber (char * pn, unsigned short * number);
 // void ChangeLedActivate (unsigned char number);
 void MyCb (char * buff);
 void MyCbClean (void);
-// void FuncsGSMSendSMS_Answer (unsigned char answer);
+void FuncsGSMSendGPRS_Answer (unsigned char answer);
 
 
 // Module Functions for testing ------------------------------------------------
@@ -69,9 +69,9 @@ int main(int argc, char *argv[])
 
     // Test_Verify_IP_Port ();
     
-    // Test_GPRS_Config ();
+    Test_GPRS_Config ();
 
-    Test_GPRS_Send ();
+    // Test_GPRS_Send ();
 }
 
 
@@ -124,8 +124,11 @@ void Test_GPRS_Config (void)
     char domain [67] = { 0 };    
     
     // conf okeys
-    strcpy(conf_test,"IP:192.168.1.1,PROTO:UDP,PORT:10000,APN:gprs.movistar.com");
+    strcpy(conf_test,"IP:192.168.1.1,PROTO:UDP,PORT:10000,APN:gprs.movistar.comOK");
     printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);
+    unsigned char len = strlen(conf_test);
+    *(conf_test + len - 2) = '\0';
+    printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);    
     if (GPRS_Config(conf_test, 0))
         PrintOK();
     else

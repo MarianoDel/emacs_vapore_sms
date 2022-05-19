@@ -196,6 +196,9 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
     else if (!strncmp(payload, "IP:", sizeof ("IP:") - 1))
     {
         // GPRS config, call the correspondig module function
+        // cut the trailing OK
+        unsigned char len = strlen(payload);
+        *(payload + len - 2) = '\0';
         if (GPRS_Config(payload, 0))
             Usart2Debug("socket config ok\n");
         else
@@ -205,6 +208,9 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
     else if (!strncmp(payload, "IPDN:", sizeof ("IPDN:") - 1))
     {
         // GPRS config, call the correspondig module function
+        // cut the trailing OK
+        unsigned char len = strlen(payload);
+        *(payload + len - 2) = '\0';
         if (GPRS_Config(payload, 1))
             Usart2Debug("socket config ok\n");
         else

@@ -570,14 +570,13 @@ typedef enum {
 
 // needs apn, tcp/udp, server ip or domain, server port
 // needs message
-char mymsg [] = {"Test message Hello!"};
 send_gprs_e send_gprs_state;
 // unsigned char FuncsGSMSendGPRS (char *ptrMSG)
 unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet)
 {
     unsigned char resp = resp_gsm_continue;
     resp_cmd_e resp_cmd = cmd_continue;
-    char sbuff [30];
+    char sbuff [100];
 
 
     switch (send_gprs_state)
@@ -632,7 +631,9 @@ unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet)
         break;
 
     case gprs_set_apn:
-        resp_cmd = GSMSendCommand ("AT+CSTT=\"gprs.personal.com\",\"\",\"\"\r\n", 1000, 0, &s_msg[0]);
+        // resp_cmd = GSMSendCommand ("AT+CSTT=\"gprs.personal.com\",\"\",\"\"\r\n", 1000, 0, &s_msg[0]);
+        sprintf(sbuff, "AT+CSTT=\"%s\",\"\",\"\"\r\n", mem_conf.apn);
+        resp_cmd = GSMSendCommand (sbuff, 1000, 0, &s_msg[0]);
 
         if (resp_cmd == cmd_ok)
             send_gprs_state++;
@@ -666,11 +667,16 @@ unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet)
 
     case gprs_start_tcp_udp:
         // resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"echo.u-blox.com\",\"13\"\r\n", 65000, 1, &s_msg[0]);
-        resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"186.18.4.68\",\"10000\"\r\n", 65000, 1, &s_msg[0]);
+        // resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"186.18.4.68\",\"10000\"\r\n", 65000, 1, &s_msg[0]);
+        sprintf(sbuff, "AT+CIPSTART=\"%s\",\"%s\",\"%s\"\r\n",
+                mem_conf.ip_proto,
+                mem_conf.ip,
+                mem_conf.ip_port);
+        resp_cmd = GSMSendCommand (sbuff, 65000, 1, &s_msg[0]);
 
         if (resp_cmd == cmd_ok)
         {
-            FuncsGSMGPRSFlags(GPRS_RESET_FLAG | GPRS_CONN_OK);
+            FuncsGSMGPRSFlags(GPRS_RESET_FLAG | GPRS_CONN_OK | GPRS_CONN_FAIL);
             FuncsGSMGPRSFlags(GPRS_ENABLE_FLAGS);
             funcs_gsm_timeout_timer = 65000;
             send_gprs_state++;
@@ -685,6 +691,9 @@ unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet)
         
         if (FuncsGSMGPRSFlagsAsk() & GPRS_CONN_OK)
             send_gprs_state++;
+
+        if (FuncsGSMGPRSFlagsAsk() & GPRS_CONN_FAIL)
+            resp = resp_gsm_error;
         
         if (!funcs_gsm_timeout_timer)
         {
@@ -705,7 +714,7 @@ unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet)
         break;
 
     case gprs_send_msg_wait_sign:
-        strcpy(sbuff, mymsg);
+        strcpy(sbuff, packet->buff);
         strcat(sbuff, "\032");
         resp_cmd = GSMSendCommand (sbuff, 65000, 0, &s_msg[0]);
 

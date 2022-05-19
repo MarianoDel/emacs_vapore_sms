@@ -183,7 +183,7 @@ unsigned char VerifyIPString (char * ip, unsigned char len)
 {
     unsigned char cnt = 0;
     unsigned char points = 0;
-    char points_pos [4] = { 0 };
+    short points_pos [4] = { 0 };
     unsigned char digits = 0;
     unsigned int num = 0;
 
@@ -252,7 +252,7 @@ unsigned char VerifyPort (char * port, unsigned char len)
 unsigned char VerifyIsANumber (char * pn, unsigned int * number)
 {
     unsigned char i;
-    char new_number [6] = {0};
+    char new_number [8] = {0};
 
     // no more than six chars
     for (i = 0; i < 6; i++)
@@ -325,18 +325,24 @@ unsigned char GPRS_Config (char * payload, unsigned char ipdomain)
             return 0;
     }
 
+    Usart2Debug("ip ok\n");
+
     // check for valid ip protocol
     field_start = commas[FIELD_IP] + sizeof("PROTO:");    // take the comma in account
     field_len = commas[FIELD_PROTO] - field_start;
     if (!VerifyIPProtocol(payload + field_start, field_len))
         return 0;
 
+    Usart2Debug("proto ok\n");
+    
     // check for valid port
     field_start = commas[FIELD_PROTO] + sizeof("PORT:");    // take the comma in account
     field_len = commas[FIELD_PORT] - field_start;
     if (!VerifyPort(payload + field_start, field_len))
         return 0;
 
+    Usart2Debug("port ok\n");
+    
     // check for valid apn
     field_start = commas[FIELD_PORT] + sizeof("APN:");    // take the comma in account
     // field_len = commas[FIELD_APN] - field_start;
@@ -344,6 +350,8 @@ unsigned char GPRS_Config (char * payload, unsigned char ipdomain)
     if (!VerifyAPNString((payload + field_start), field_len))
         return 0;
 
+    Usart2Debug("apn ok\n");
+    
     // all data is valid, save it
     char * pcut;
 

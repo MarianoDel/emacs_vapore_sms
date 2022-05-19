@@ -704,12 +704,6 @@ void GSMReceive (void)
                     if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"> ", (sizeof("> ") - 1)))
                         GSMSendCommandFlag = 4;                    
                 }
-                // if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"ATOK", (sizeof("ATOK") - 1)))
-                //     GSMSendCommandFlag = 4;
-                // if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"ATE0OK", (sizeof("ATE0OK") - 1)))
-                //     GSMSendCommandFlag = 4;
-                // if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"OK", (sizeof("OK") - 1)))
-                //     GSMSendCommandFlag = 4;
             }
 
             if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *) "ERROR", (sizeof("ERROR") - 1)))
@@ -725,35 +719,19 @@ void GSMReceive (void)
         {
             if(!strncmp((const char *)buffUARTGSMrx2, "CONNECT OK", sizeof("CONNECT OK") - 1))
                 FuncsGSMGPRSFlags(GPRS_CONN_OK);
-            
-        }
-        // if(GSMConfigGPRSflag == 1)
+
+            if(!strncmp((const char *)buffUARTGSMrx2,
+                        "STATE: TCP CLOSEDCONNECT FAIL",
+                        sizeof("STATE: TCP CLOSEDCONNECT FAIL") - 1))
+                FuncsGSMGPRSFlags(GPRS_CONN_FAIL);
+
+        // if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"CLOSED", strlen((const char *)"CLOSED")))
         // {
-        //     if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)&GSM_IPSTATE[0], strlen((const char *)&GSM_IPSTATE[0])))
-        //     {
-        //         strcpy((char *)&GSMbuffStatus[0],(const char *)&buffUARTGSMrx2[sizeof(GSM_IPSTATE)]);
-        //         GSMConfigGPRSflag = 2;
-        //     }
+        //     flagCloseIP = 1;
         // }
 
-        // if(GSMConfigGPRSflag == 3)
-        // {
-        //     if ((buffUARTGSMrx2[0] > 47) && (buffUARTGSMrx2[0] < 59) && (buffUARTGSMrx2[1] > 47) && (buffUARTGSMrx2[1] < 59) && (buffUARTGSMrx2[2] > 47) && (buffUARTGSMrx2[2] < 59) && buffUARTGSMrx2[3] == '.')
-        //     {
-        //         strncpy((char *)&GSMIPadd[0],(const char *)&buffUARTGSMrx2[0], 16);
-        //         GSMSendCommandFlag = 4;
-        //     }
-        //     if ((buffUARTGSMrx2[0] > 47) && (buffUARTGSMrx2[0] < 59) && (buffUARTGSMrx2[1] > 47) && (buffUARTGSMrx2[1] < 59) && buffUARTGSMrx2[2] == '.')
-        //     {
-        //         strncpy((char *)&GSMIPadd[0],(const char *)&buffUARTGSMrx2[0], 16);
-        //         GSMSendCommandFlag = 4;
-        //     }
-        //     if ((buffUARTGSMrx2[0] > 47) && (buffUARTGSMrx2[0] < 59) && buffUARTGSMrx2[1] == '.')
-        //     {
-        //         strncpy((char *)&GSMIPadd[0],(const char *)&buffUARTGSMrx2[0], 16);
-        //         GSMSendCommandFlag = 4;
-        //     }
-        // }
+            
+        }
 
         // no waited flags or answers
         // first check flags
@@ -775,10 +753,6 @@ void GSMReceive (void)
             FuncsGSMMessageFlags (GSM_SET_POWER_DOWN);
         }
 
-        // if (!strncmp((char *)&buffUARTGSMrx2[0], (const char *)"+CMTIDS: \"SM\",", sizeof ("+CMTIDS: \"SM\",") -1))
-        // {
-        // 	GSMCantSMS2 = buffUARTGSMrx2[14] - 48;
-        // }
         if (!strncmp((char *)&buffUARTGSMrx2[0], (const char *)"+CMTI: \"SM\",", sizeof ("+CMTI: \"SM\",") -1))
         {
             //TODO: modificar a dos bytes
@@ -790,11 +764,6 @@ void GSMReceive (void)
             diag_ringing_set;
         }
         
-        // if(!strncmp((const char *)&buffUARTGSMrx2[0], (const char *)"CLOSED", strlen((const char *)"CLOSED")))
-        // {
-        //     flagCloseIP = 1;
-        // }
-
         GSM_PacketReady = 0;
     }
 }
