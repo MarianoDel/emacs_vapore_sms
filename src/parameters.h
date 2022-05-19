@@ -105,6 +105,11 @@ typedef struct parameters {
 #define diag_battery_good_voltage_set	(mem_conf.internal_comms_flag |= 0x0100)
 #define diag_battery_good_voltage_reset	(mem_conf.internal_comms_flag &= 0xFEFF)
 
+// Extended Flags (forth nibble)
+#define socket_conf_change	(mem_conf.internal_comms_flag & 0x1000)
+#define socket_conf_change_set	(mem_conf.internal_comms_flag |= 0x1000)
+#define socket_conf_change_reset	(mem_conf.internal_comms_flag &= 0xEFFF)
+
 
 //- End of Data Struct to Backup -----------------------------------------------
 

@@ -45,62 +45,22 @@ unsigned char VerifyDomainString (char * domain, unsigned char len);
 
 
 // Module Functions -----------------------------------------------------------
-#define gprs_verify_data    0
-#define gprs_sending    1
-unsigned char gprs_send_state = gprs_verify_data;
-unsigned char VerifyAndSendGPRS (gprs_pckt_t * p_gprs)
+unsigned char VerifyAndSendGPRS (char * message)
 {
     unsigned char answer = GPRS_WORKING;
     
-    switch (gprs_send_state)
+    answer = FuncsGSMSendGPRS(message);
+
+    if (answer == resp_gsm_ok)
     {
-    case gprs_verify_data:
-        if (p_gprs->alarm_input)
-            Usart2Send("External 12V: ");    // 12V input alarm activate
-
-        if (p_gprs->panel_input)
-            Usart2Send("Keypad ACT: ");
-                    
-        //check sitio_prop before send gprs
-        if (!VerifySiteString(sitio_prop))
-        {
-            Usart2Send("no site saved\n");
-            return GPRS_NOT_PROPER_DATA;
-        }
-
-        //check apn and all socket data before send gprs
-        if (!VerifySocketData())
-        {
-            Usart2Send("no socket data\n");
-            return GPRS_NOT_PROPER_DATA;
-        }
-
-        gprs_send_state++;
-        break;
-
-    case gprs_sending:
-        answer = FuncsGSMSendGPRS(p_gprs);
-
-        if (answer == resp_gsm_ok)
-        {
-            Usart2Send("connection ok\n");
-            gprs_send_state = gprs_verify_data;
-            
-            return GPRS_SENT;
-        }
+        Usart2Send("connection ok\n");
+        return GPRS_SENT;
+    }
         
-        if (answer > resp_gsm_ok)
-        {
-            Usart2Send("connection fail!!!\n");
-            gprs_send_state = gprs_verify_data;
-
-            return GPRS_NOT_SEND;
-        }
-        break;
-
-    default:
-        gprs_send_state = gprs_verify_data;        
-        break;
+    if (answer > resp_gsm_ok)
+    {
+        Usart2Send("connection fail!!!\n");
+        return GPRS_NOT_SEND;
     }
 
     return GPRS_WORKING;

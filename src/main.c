@@ -148,8 +148,8 @@ int main(void)
         memset(num_tel_prop, '\0', sizeof(num_tel_prop));
         memset(sitio_prop, '\0', sizeof(sitio_prop));
         // strcpy(num_tel_rep, "1141747063");
-        strcpy(num_tel_rep, "");        
-        strcpy(sitio_prop, "Prueba Kirno");
+        // strcpy(num_tel_rep, "");        
+        // strcpy(sitio_prop, "Prueba Kirno");
         //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
         // strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
     
@@ -169,7 +169,6 @@ int main(void)
 
     static char buff [SITE_MAX_LEN + 20] = { 0 };
     unsigned char sms_not_sent_cnt = 0;
-    sms_pckt_t sms_info;
     unsigned char answer = 0;    //multi pourpose answer
 
     while (1)
@@ -196,6 +195,7 @@ int main(void)
             num_tel_rep_change_reset;
             sitio_prop_change_reset;
             battery_check_change_reset;
+            socket_conf_change_reset;
             
             break;
 
@@ -321,19 +321,56 @@ int main(void)
             break;
 
         case main_report_alarm_input_or_panel:
+            // check all data before send anything
+            // check num_tel_rep before send sms
+            if (!VerifyNumberString(num_tel_rep))
+            {
+                ChangeLedActivate(1);
+                Usart2Send("no phone number\n");
+                main_state = main_sms_not_sended;
+                timer_standby = 6000;
+            }
+
+            // check sitio_prop before send sms
+            else if (!VerifySiteString(sitio_prop))
+            {
+                ChangeLedActivate(2);
+                Usart2Send("no site saved\n");
+                main_state = main_sms_not_sended;
+                timer_standby = 6000;
+            }
+
             // check if gprs is needed
-            // or go directly to sms
-            main_state = main_report_alarm_by_gprs;
-            sms_not_sent_cnt = 5;
+            // check apn and all socket data before send gprs
+            else if (!VerifySocketData())
+            {
+                ChangeLedActivate(3);
+                Usart2Send("no socket data\n");
+                main_state = main_sms_not_sended;
+                timer_standby = 6000;
+            }
+            else
+            {
+                Activation_12V_On();    // ACT_12V_ON;
+                // prepair the packet
+                // gprs or sms assemble packet
+                if (alarm_input)
+                {
+                    strcpy(buff, "Activacion en: ");
+                    Usart2Send("External 12V: ");    // 12V input alarm activate
+                }
 
-            // gprs or sms assemble packet
-            sms_info.alarm_input = alarm_input;
-            sms_info.panel_input = panel_input;
-            sms_info.remote_number = remote_number;
-            sms_info.buff = buff;
-
-            timer_standby = 0;
-
+                if (panel_input)
+                {
+                    sprintf(buff, "Activo %03d en: ", remote_number);
+                    Usart2Send("Keypad ACT: ");
+                }    
+                strcat(buff, sitio_prop);
+                
+                timer_standby = 0;
+                main_state = main_report_alarm_by_gprs;
+                sms_not_sent_cnt = 5;
+            }
             break;
 
         case main_report_alarm_by_gprs:
@@ -341,7 +378,7 @@ int main(void)
                 break;
 
             // check data to send a GPRS packet            
-            answer = VerifyAndSendGPRS(&sms_info);
+            answer = VerifyAndSendGPRS(buff);
             
             if (answer == GPRS_NOT_SEND)
             {
@@ -358,16 +395,9 @@ int main(void)
                     Usart2Send("gprs bad network go to sms\n");
                 }
             }
-            else if (answer == GPRS_NOT_PROPER_DATA)
+
+            if (answer == GPRS_SENT)
             {
-                main_state = main_report_alarm_by_sms;
-                timer_standby = 0;
-                sms_not_sent_cnt = 5;
-                Usart2Send("gprs bad data go to sms\n");
-            }
-            else if (answer == GPRS_SENT)
-            {
-                Activation_12V_On();    // ACT_12V_ON;
                 main_state = main_enable_act_12V_input;
                 Usart2Send("gprs packet sent OK\n");
                 if (panel_input)
@@ -380,7 +410,7 @@ int main(void)
                 break;
             
             // check data and send a GSM packet
-            answer = VerifyAndSendSMS (&sms_info);
+            answer = VerifyAndSendSMS (buff);
 
             if (answer == SMS_NOT_SEND)
             {
@@ -395,12 +425,8 @@ int main(void)
                     timer_standby = 6000;
                 }
             }
-            else if (answer == SMS_NOT_PROPER_DATA)
-            {
-                main_state = main_sms_not_sended;
-                timer_standby = 6000;
-            }
-            else    //SMS_SENT
+
+            if (answer == SMS_SENT)
             {
                 main_state = main_enable_act_12V_input;
                 Usart2Send("OK\n");
@@ -489,6 +515,12 @@ void ConfigurationCheck (void)
     if (battery_check_change)
     {
         battery_check_change_reset;
+        ConfigurationChange();
+    }
+
+    if (socket_conf_change)
+    {
+        socket_conf_change_reset;
         ConfigurationChange();
     }
 }

@@ -14,23 +14,14 @@
 
 
 // Exported Types Constants and Macros -----------------------------------------
-typedef struct {
-    unsigned char alarm_input;
-    unsigned char panel_input;
-    unsigned short remote_number;
-    char * buff;
-    
-} sms_pckt_t;
-
 #define SMS_NOT_SEND    0
 #define SMS_SENT    1
-#define SMS_NOT_PROPER_DATA    2
 
 
 // Module Exported Functions ---------------------------------------------------
 unsigned char VerifyNumberString (char * number);
 unsigned char VerifySiteString (char * site);
-unsigned char VerifyAndSendSMS (sms_pckt_t * p_sms);
+unsigned char VerifyAndSendSMS (char * message);
 
 #endif    /* _SMS_DATA_H_ */
 

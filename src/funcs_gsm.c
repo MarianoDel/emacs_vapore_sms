@@ -572,7 +572,7 @@ typedef enum {
 // needs message
 send_gprs_e send_gprs_state;
 // unsigned char FuncsGSMSendGPRS (char *ptrMSG)
-unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet)
+unsigned char FuncsGSMSendGPRS (char * message)
 {
     unsigned char resp = resp_gsm_continue;
     resp_cmd_e resp_cmd = cmd_continue;
@@ -714,7 +714,7 @@ unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet)
         break;
 
     case gprs_send_msg_wait_sign:
-        strcpy(sbuff, packet->buff);
+        strcpy(sbuff, message);
         strcat(sbuff, "\032");
         resp_cmd = GSMSendCommand (sbuff, 65000, 0, &s_msg[0]);
 

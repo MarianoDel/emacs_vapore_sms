@@ -200,10 +200,14 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         unsigned char len = strlen(payload);
         *(payload + len - 2) = '\0';
         if (GPRS_Config(payload, 0))
+        {
             Usart2Debug("socket config ok\n");
+            socket_conf_change_set;
+        }
         else
             Usart2Debug("bad socket data!\n");
-        
+
+        CommsCheckSendOK (orig_num);        
     }
     else if (!strncmp(payload, "IPDN:", sizeof ("IPDN:") - 1))
     {
@@ -212,17 +216,21 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         unsigned char len = strlen(payload);
         *(payload + len - 2) = '\0';
         if (GPRS_Config(payload, 1))
+        {
             Usart2Debug("socket config ok\n");
+            socket_conf_change_set;
+        }
         else
             Usart2Debug("bad socket data!\n");
-            
+
+        CommsCheckSendOK (orig_num);
     }
 
     // Diagnostics and Activations    
     else if (!strncmp(payload, (const char *)"PRENDER:", sizeof ("PRENDER:") - 1))
     {
         diag_prender_set;
-        CommsCheckSendOK (orig_num);        
+        CommsCheckSendOK (orig_num);
     }
 
     else if (!strncmp(payload, "BATERIA:", sizeof ("BATERIA:") - 1))

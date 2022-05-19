@@ -92,7 +92,7 @@ unsigned char FuncsGSMStateAsk (void);
 void FuncsGSMShutdown (void);
 void FuncsGSMShutdownAlways (void);
 unsigned char FuncsGSMSendSMS (char *, char *);
-unsigned char FuncsGSMSendGPRS (gprs_pckt_t * packet);
+unsigned char FuncsGSMSendGPRS (char *);
 
 void FuncsGSMMessageFlags (unsigned short);
 unsigned short FuncsGSMMessageFlagsAsk (void);
