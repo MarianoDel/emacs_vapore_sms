@@ -353,6 +353,7 @@ void UpdateLed (void);
 
 void ChangeLedActivate (unsigned char how_many);
 void UpdateLedActivate (void);
+void ToggleLedActivate (void);
 
 void Activation_12V_On (void);
 void Activation_12V_Off (void);

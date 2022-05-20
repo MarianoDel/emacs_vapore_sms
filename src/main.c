@@ -143,6 +143,7 @@ int main(void)
         envios_ok = 0;
         prender_ring = 0;
         battery_check = 0;
+        socket_use_enable = 0;        
         memset(num_tel_rep, '\0', sizeof(num_tel_rep));
         memset(num_tel_imei, '\0', sizeof(num_tel_imei));
         memset(num_tel_prop, '\0', sizeof(num_tel_prop));
@@ -342,7 +343,7 @@ int main(void)
 
             // check if gprs is needed
             // check apn and all socket data before send gprs
-            else if (!VerifySocketData())
+            else if ((!VerifySocketData()) && (socket_use_enable))
             {
                 ChangeLedActivate(3);
                 Usart2Send("no socket data\n");
@@ -367,8 +368,12 @@ int main(void)
                 }    
                 strcat(buff, sitio_prop);
                 
+                if (socket_use_enable)
+                    main_state = main_report_alarm_by_gprs;
+                else
+                    main_state = main_report_alarm_by_sms;
+                
                 timer_standby = 0;
-                main_state = main_report_alarm_by_gprs;
                 sms_not_sent_cnt = 5;
             }
             break;
@@ -400,8 +405,7 @@ int main(void)
             {
                 main_state = main_enable_act_12V_input;
                 Usart2Send("gprs packet sent OK\n");
-                if (panel_input)
-                    timer_standby = 1000;
+                timer_standby = 2000;    // two seconds for show led cycle
             }
             break;
 
@@ -430,12 +434,13 @@ int main(void)
             {
                 main_state = main_enable_act_12V_input;
                 Usart2Send("OK\n");
-                if (panel_input)
-                    timer_standby = 1000;
+                timer_standby = 2000;    // two seconds for show led cycle
             }
             break;
 
         case main_enable_act_12V_input:
+            ToggleLedActivate();    // show led cycle
+            
             if (!Check_Alarm_Input() && (!timer_standby))
             {
                 ACT_12V_OFF;

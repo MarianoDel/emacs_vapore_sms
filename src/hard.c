@@ -186,6 +186,19 @@ void UpdateLedActivate (void)
 }
 
 
+void ToggleLedActivate (void)
+{
+    if (!timer_led_activate)
+    {
+        timer_led_activate = 125;
+        if (ACT_12V)
+            ACT_12V_OFF;
+        else
+            ACT_12V_ON;
+    }
+}
+
+
 void WelcomeCode (void)
 {
     char str [128] = { 0 };

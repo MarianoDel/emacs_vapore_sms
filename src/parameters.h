@@ -39,7 +39,8 @@ typedef struct parameters {
     char domain [68];    //386
 
     // // // complete alignment with dummys
-    unsigned char dummy1 [62];    //448    (multiply of eight)
+    unsigned char bkp_socket_use;
+    unsigned char dummy1 [61];    //448    (multiply of eight)
 
 } parameters_typedef;
 
@@ -106,9 +107,12 @@ typedef struct parameters {
 #define diag_battery_good_voltage_reset	(mem_conf.internal_comms_flag &= 0xFEFF)
 
 // Extended Flags (forth nibble)
+#define socket_use_enable    (mem_conf.bkp_socket_use)
 #define socket_conf_change	(mem_conf.internal_comms_flag & 0x1000)
 #define socket_conf_change_set	(mem_conf.internal_comms_flag |= 0x1000)
 #define socket_conf_change_reset	(mem_conf.internal_comms_flag &= 0xEFFF)
+
+
 
 
 //- End of Data Struct to Backup -----------------------------------------------

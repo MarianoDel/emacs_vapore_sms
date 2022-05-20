@@ -202,6 +202,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         if (GPRS_Config(payload, 0))
         {
             Usart2Debug("socket config ok\n");
+            socket_use_enable = 1;
             socket_conf_change_set;
         }
         else
@@ -218,11 +219,18 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         if (GPRS_Config(payload, 1))
         {
             Usart2Debug("socket config ok\n");
-            socket_conf_change_set;
+            socket_use_enable = 1;            
+            socket_conf_change_set;            
         }
         else
             Usart2Debug("bad socket data!\n");
 
+        CommsCheckSendOK (orig_num);
+    }
+    else if (!strncmp(payload, "IPNO:", sizeof ("IPNO:") - 1))
+    {
+        socket_use_enable = 0;
+        socket_conf_change_set;            
         CommsCheckSendOK (orig_num);
     }
 

@@ -679,7 +679,12 @@ unsigned char FuncsGSMSendGPRS (char * message)
             FuncsGSMGPRSFlags(GPRS_RESET_FLAG | GPRS_CONN_OK | GPRS_CONN_FAIL);
             FuncsGSMGPRSFlags(GPRS_ENABLE_FLAGS);
             funcs_gsm_timeout_timer = 65000;
-            send_gprs_state++;
+
+            // check for UDP or TCP conn
+            if (!strncmp(mem_conf.ip_proto, "UDP", sizeof("UDP") - 1))
+                send_gprs_state = gprs_send_msg;
+            else
+                send_gprs_state++;
         }
         
         if (resp_cmd > cmd_ok)
@@ -720,8 +725,8 @@ unsigned char FuncsGSMSendGPRS (char * message)
 
         if (resp_cmd == cmd_ok)    // wait for SEND OK
         {
-            funcs_gsm_timeout_timer = 20000;
-            Usart2Send("wait conn delay 20s\n");
+            funcs_gsm_timeout_timer = 2000;
+            Usart2Send("wait conn delay 2secs\n");
             send_gprs_state++;
         }
         
