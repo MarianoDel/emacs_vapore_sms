@@ -281,4 +281,44 @@
     - cargar el numero a reportar
 
 * Hardware ver 2.0 12-04-2022
-** TODO Gpio pins change
+** Gpio pins change
+
+* Firmware ver 1.5
+** DONE corrije el reboot del modulo cuando contesta mal
+   CLOSED: [2022-05-23 Mon 10:32]
+   - igual funcionalidad que el firmware 1.4 pero corrije 
+     errores de comunicacion con el modulo
+
+   - cuando aparecen errores de comunicacion entre gsm y micro
+     reinicia
+
+** Errores permitidos
+   - MAX_STARTUP_ERRORS = 10, cuando esta arrancando el modulo 10 errores en 
+     comandos AT
+
+   - MAX_COMMS_ERRORS = 20, cuando esta funcionando y chequea RSSI + estado
+     de la red
+
+   - MAX_SMS_ERRORS = 20, cuando intenta enviar un reporte por SMS
+
+* Firmware ver 1.6
+** DONE Puede conectar con Server por GPRS
+   CLOSED: [2022-05-23 Mon 10:11]
+   - agrego nuevos comandos SMS
+     IPNO:
+     IP:configuracion de ipv4
+     IPDN:configuracion con nombre de dominio
+
+** Mensajes tipicos
+   - IPNO:
+     configura solo uso por SMS
+     
+   - IP:192.168.1.1,PROTO:TCP,PORT:3000,APN:gprs.movistar.com
+     configura automaticamente uso por GPRS, luego SMS
+     ip, protocolo, puerto, apn del proveedor
+
+   - IPDN:vhfkirno.duckdns.com,PROTO:TCP,PORT:3000,APN:gprs.movistar.com
+     configura automaticamente uso por GPRS, luego SMS
+     nombre de dominio, protocolo, puerto, apn del proveedor
+     
+

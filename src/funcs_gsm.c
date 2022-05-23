@@ -33,8 +33,7 @@ typedef enum {
 } resp_cmd_e;
 
 
-// #define MAX_STARTUP_ERRORS		5		//a veces tarda mas en registrar
-#define MAX_STARTUP_ERRORS		10		//lo paso a 10
+#define MAX_STARTUP_ERRORS    10    // 10 error allowed, give space for register
 #define MAX_COMMS_ERRORS    20    // 20 errors on common use
 #define MAX_SMS_ERRORS    20    // 20 errors on common use
 

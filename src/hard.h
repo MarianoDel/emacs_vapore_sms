@@ -29,7 +29,8 @@
 // #define HARDWARE_VER_1_0    // original version
 
 //----------- Firmware Version -------------------
-#define FIRMWARE_VER_1_5    // fix gsm module bad answers and reboot
+#define FIRMWARE_VER_1_6    // possibility to connect via gprs
+// #define FIRMWARE_VER_1_5    // fix gsm module bad answers and reboot
 // #define FIRMWARE_VER_1_4    // can send battery reports by sms
 // #define FIRMWARE_VER_1_3    // delay sms message
 // #define FIRMWARE_VER_1_2    // all programs in one
@@ -58,6 +59,10 @@
 #define HARD    "Hardware version 1.0\n"
 #endif
 
+#ifdef FIRMWARE_VER_1_6
+#define SOFT    "Firmware version 1.6\n"
+#endif
+
 #ifdef FIRMWARE_VER_1_5
 #define SOFT    "Firmware version 1.5\n"
 #endif
@@ -82,7 +87,8 @@
 #error "define hardware version on hard.h"
 #endif
 
-#if (!defined FIRMWARE_VER_1_5) && \
+#if (!defined FIRMWARE_VER_1_6) && \
+    (!defined FIRMWARE_VER_1_5) && \
     (!defined FIRMWARE_VER_1_4) && \
     (!defined FIRMWARE_VER_1_3) && \
     (!defined FIRMWARE_VER_1_2)
@@ -98,15 +104,6 @@
 
 #if (!defined WITH_PA1_TEST1_INPUT) && (!defined WITH_PA1_V4V_SENSE)
 #error "no inputs selection on hard.h"
-#endif
-
-#if (defined FIRMWARE_VER_1_5) || \
-    (defined FIRMWARE_VER_1_4) || \
-    (defined FIRMWARE_VER_1_3) || \
-    (defined FIRMWARE_VER_1_2)
-#if (!defined WITH_PA1_TEST1_INPUT)
-#error "no input for 12V activation on hard.h"
-#endif
 #endif
 
 #endif    // HARDWARE_VER_1_1 or HARDWARE_VER_1_0

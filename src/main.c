@@ -116,8 +116,8 @@ int main(void)
     // TIM_16_Init();    //o utilizo para synchro de relay
     // TIM16Enable();
 
-#if (defined FIRMWARE_VER_1_5) || \
-    (defined FIRMWARE_VER_1_4)
+#if (!defined HARDWARE_VER_1_1) && \
+    (!defined HARDWARE_VER_1_0)
     //-- ADC Init
     AdcConfig();
 
@@ -233,8 +233,8 @@ int main(void)
                 Usart2Send("ACT_12V ACTIVO\n");
             }
 
-#if (defined FIRMWARE_VER_1_5) || \
-    (defined FIRMWARE_VER_1_4)
+#if (!defined HARDWARE_VER_1_1) && \
+    (!defined HARDWARE_VER_1_0)
             // reports from battery status
             if ((battery_check) &&
                 (FuncsGSMStateAsk () == gsm_state_ready))
