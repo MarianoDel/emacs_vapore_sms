@@ -100,9 +100,6 @@ void FuncsGSM (void)
     case gsm_state_verify_at:
         resp = GSMSendCommand ("AT\r\n", 1000, 0, &s_msg[0]);
 
-        // if (resp == 2)
-        //     gsm_state = gsm_state_wait_cpin;
-
         if (resp == 2)
         {
             // reset the expected flags

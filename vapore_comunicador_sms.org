@@ -169,7 +169,7 @@
    - [X] main.c
 
 
-* TODO Ultimas Mejoras al programa antes de produccion
+* Ultimas Mejoras al programa antes de produccion
 ** DONE Configurar Gpios
    CLOSED: [2020-09-12 Sat 13:03]
 ** DONE Armar Tests de Hardware
@@ -177,9 +177,9 @@
 ** DONE Posibilidad de armar GSM Gateway en el programa principal
    CLOSED: [2020-09-14 Mon 09:04]
 
-** TODO Modificar memoria bkp cuando este disponible placa/micro
+** Modificar memoria bkp cuando este disponible placa/micro
 
-* Placa nueva ver1.0
+* Hardware nueva ver 1.0
 ** mejorar algunos strings
 ** no dice version en placa
 ** la tension del regulador 3.3V es mas baja porque sale de 4V
@@ -189,7 +189,7 @@
    - se quemo el pin del micro al led PA12, habra que investigar...
    - agrego un capa 100pF en la linea del micro para evitar un posible problema de rf
 
-* Placa ver 1.1
+* Hardware ver 1.1
 ** Falla de Hardware
    - pin desconectado del micro, pata 5 debe ser gnd, quedo desconectada
 
@@ -202,7 +202,7 @@
    - el conector de test1 se cambia a .1 blanco
    - test2 se corta la pista al micro y se lo pone a masa
    - test1 entrada de 12V, test2 entrada de masa de la senial
-* Placa ver 1.2
+* Hardware ver 1.2
 ** Hago un merge de ambos programas
 ** Alargo el site name
 ** Tengo problemas con los acentos que envia el modulo
@@ -260,6 +260,12 @@
     RSSI: 10
     +CREG: 0,1OK
     REG: 1
+
+* Hardware ver 2.0
+** DONE Gpio pins change
+   CLOSED: [2022-04-12 Mon 11:40]
+
+
 * Firmware ver 1.3
 ** DONE retraso la salida del sms si esta verificando la red
    CLOSED: [2021-11-30 Tue 09:15]
@@ -279,9 +285,6 @@
 *** para que pueda enviar reportes
     - habiliar los reportes
     - cargar el numero a reportar
-
-* Hardware ver 2.0 12-04-2022
-** Gpio pins change
 
 * Firmware ver 1.5
 ** DONE corrije el reboot del modulo cuando contesta mal

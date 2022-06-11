@@ -35,6 +35,7 @@ void * KeyboardInput (void * arg);
 void * MillisTimeout (void * arg);
 
 void Activation_Input (void);
+void SetDefaults (void);
 
 // Module Auxialiary Functions (Mocked) ----------------------------------------
 void Led_On (void);
@@ -130,6 +131,8 @@ void main(void)
     int DTR_flag;
     DTR_flag = TIOCM_DTR;
 
+    SetDefaults ();
+    
     while (!main_quit)
     {
         if (usart1_data_send)
@@ -188,6 +191,7 @@ void main(void)
 }
 
 
+// Module Auxialiary Functions -------------------------------------------------
 int OpenSerialPort (int * file_descp)
 {
     int fd;    //local fd
@@ -200,8 +204,10 @@ int OpenSerialPort (int * file_descp)
 
     /* Change /dev/ttyUSB0 to the one corresponding to your system */
 
-    // fd = open("/dev/ttyUSB0",O_RDWR | O_NOCTTY | O_NDELAY);	/* ttyUSB0 is the FT232 based USB2SERIAL Converter   */
-    fd = open("/dev/ttyUSB0",O_RDWR | O_NOCTTY);	/* ttyUSB0 is the FT232 based USB2SERIAL Converter   */    
+    // ttyUSB0 is the FT232 based USB2SERIAL Converter
+    fd = open("/dev/ttyUSB0",O_RDWR | O_NOCTTY | O_NDELAY);
+    // fd = open("/dev/ttyUSB0",O_RDWR | O_NOCTTY);
+    
     /* O_RDWR Read/Write access to serial port           */
     /* O_NOCTTY - No terminal will control the process   */
     /* O_NDELAY -Non Blocking Mode,Does not care about-  */
@@ -237,13 +243,15 @@ int OpenSerialPort (int * file_descp)
     SerialPortSettings.c_iflag &= ~(IXON | IXOFF | IXANY);          /* Disable XON/XOFF flow control both i/p and o/p */
     SerialPortSettings.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG);  /* Non Cannonical mode                            */
 
-    SerialPortSettings.c_oflag &= ~OPOST;/*No Output Processing*/
+    SerialPortSettings.c_oflag = 0;
+    SerialPortSettings.c_lflag = 0;    
 
     /* Setting Time outs */
     // SerialPortSettings.c_cc[VMIN] = 10; /* Read at least 10 characters */
     // SerialPortSettings.c_cc[VTIME] = 0; /* Wait indefinetly   */
-    SerialPortSettings.c_cc[VMIN] = 0;
-    SerialPortSettings.c_cc[VTIME] = 1;    //100ms entre lecturas
+    SerialPortSettings.c_cc[VMIN] = 1;
+    // SerialPortSettings.c_cc[VTIME] = 1;    //100ms entre lecturas
+    SerialPortSettings.c_cc[VTIME] = 5;    //500ms entre lecturas
     
     if((tcsetattr(fd,TCSANOW,&SerialPortSettings)) != 0) /* Set the attributes to the termios structure*/
     {
@@ -255,7 +263,7 @@ int OpenSerialPort (int * file_descp)
 			
     /*------------------------------- Write data to serial port -----------------------------*/
 
-    char write_buffer[] = "A";	/* Buffer containing characters to write into port	     */	
+    char write_buffer[] = "ANSWER";	/* Buffer containing characters to write into port	     */	
     int  bytes_written  = 0;  	/* Value for storing the number of bytes written to the port */ 
 
     bytes_written = write(fd,write_buffer,sizeof(write_buffer));/* use write() to send data to port                                            */
@@ -291,6 +299,7 @@ int OpenSerialPort (int * file_descp)
 
 int pckt_flag = 0;
 int pckt_bytes = 0;
+int buffer_rx_full = 0;
 void * SerialInput (void * arg)
 {
     int fd = *(int *) arg;
@@ -301,15 +310,26 @@ void * SerialInput (void * arg)
     printf("thread fd: %d\n", fd);
     while (!main_quit)
     {
-        bytes_read = read(fd, &buff_rx, sizeof(buff_rx));
-        // printf("one second\n");
+        memset(buff_rx, '\0', sizeof(buff_rx));
+        bytes_read = read(fd, buff_rx, sizeof(buff_rx));        
+
         if (bytes_read > 0)
         {
             pckt_flag = 1;
-            strcpy((char *) (usart1_data_buff_rx + pckt_bytes), buff_rx);
-            // strncpy((char *) (usart1_data_buff_rx + pckt_bytes), buff_rx, bytes_read);            
-            // strncpy((char *) (usart1_data_buff_rx + pckt_bytes + bytes_read), '\0', 1);
-            pckt_bytes += bytes_read;
+            if (sizeof(usart1_data_buff_rx) > pckt_bytes + bytes_read)
+            {
+                strcpy((char *) (usart1_data_buff_rx + pckt_bytes), buff_rx);
+                // strncpy((char *) (usart1_data_buff_rx + pckt_bytes), buff_rx, bytes_read);
+                // strncpy((char *) (usart1_data_buff_rx + pckt_bytes + bytes_read), '\0', 1);
+                pckt_bytes += bytes_read;
+            }
+            else
+            {
+                PrintBoldWhite("rx buff full\n");
+                tcflush(fd, TCIFLUSH);    // Discards old data in the rx buffer
+                pckt_bytes = 0;
+                pckt_flag = 0;            
+            }
         }
         else if (pckt_flag)
         {
@@ -318,9 +338,11 @@ void * SerialInput (void * arg)
             PrintBoldWhite(buff);
             printf("%s\n", usart1_data_buff_rx);
             pckt_bytes = 0;
-            pckt_flag = 0;
+            pckt_flag = 0;            
             usart1_data_receiv = 1;
         }
+
+        usleep(2000);
     }
 
     pthread_exit(NULL);
@@ -341,6 +363,7 @@ void * KeyboardInput (void * arg)
         {
             loop = 0;
             main_quit = 1;
+            printf("ending simulation\n");
         }
         else if (key == '1')
         {
@@ -356,11 +379,25 @@ void * KeyboardInput (void * arg)
         }
         else if (key == 's')
         {
-            printf("Memory Params...\n");
-            printf("num_reportar: %s\n", mem_conf.num_reportar);
-            printf("imei: %s\n", mem_conf.imei);
-            printf("num_propio: %s\n", mem_conf.num_propio);
-            printf("sitio_propio: %s\n", mem_conf.sitio_propio);                        
+            printf("  Memory Params...\n");
+            printf("  num_reportar: %s\n", mem_conf.num_reportar);
+            printf("  imei: %s\n", mem_conf.imei);
+            printf("  num_propio: %s\n", mem_conf.num_propio);
+            printf("  sitio_propio: %s\n", mem_conf.sitio_propio);
+
+            printf("  ip: %s\n", mem_conf.ip);
+            printf("  ip_proto: %s\n", mem_conf.ip_proto);
+            printf("  ip_port: %s\n", mem_conf.ip_port);
+            printf("  apn: %s\n", mem_conf.apn);
+            printf("  domain: %s\n", mem_conf.domain);
+
+            printf("\n  Backup flags...\n");
+            printf("  bkp_envios_ok: %d\n", mem_conf.bkp_envios_ok);
+            printf("  bkp_timer_reportar: %d\n", mem_conf.bkp_timer_reportar);
+            printf("  bkp_prender_ring: %d\n", mem_conf.bkp_prender_ring);
+            printf("  bkp_sense_bat: %d\n", mem_conf.bkp_sense_bat);
+            printf("  bkp_socket_use: %d\n", mem_conf.bkp_socket_use);
+            
         }
         else
         {
@@ -447,6 +484,23 @@ void Activation_Input (void)
 }
 
 
+void SetDefaults (void)
+{
+    // For SMS communications
+    // sitio
+    strcpy(mem_conf.sitio_propio, "Kirno 457");
+    // num reporte
+    strcpy(mem_conf.num_reportar, "1145376762");
+
+    // For GPRS connections
+    strcpy(mem_conf.apn, "gprs.personal.com");
+    strcpy(mem_conf.ip_proto, "UDP");
+    strcpy(mem_conf.ip, "");
+    strcpy(mem_conf.ip_port, "10000");
+
+}
+
+
 // Module Mocked Functions -----------------------------------------------------
 unsigned char led_status = 0;
 void Led_On (void)
@@ -528,6 +582,14 @@ void Usart2Send (char * s)
 }
 
 
+void Usart2Debug (char * s)
+{
+    int len = strlen(s);
+    PrintCyan("debug port -> ");
+    printf("%d bytes: %s\n", len, s);
+}
+
+
 void Usart1Send (char * s)
 {
     PrintBoldWhite("tx -> ");
@@ -539,11 +601,17 @@ void Usart1Send (char * s)
 }
 
 
-unsigned char Usart1ReadBuffer (char * new_buff)
+unsigned char Usart1ReadBuffer (unsigned char * bout, unsigned short max_len)
 {
     unsigned char len = 0;
     len = strlen(usart1_data_buff_rx);
-    strcpy(new_buff, usart1_data_buff_rx);
+    if (max_len > len)
+        strcpy(bout, usart1_data_buff_rx);
+    else
+    {
+        printf("error on Usart1ReadBuffer max_len\n");
+        len = 0;
+    }
 
     return len;
 }
@@ -558,6 +626,14 @@ unsigned char Usart1HaveData (void)
 void Usart1HaveDataReset (void)
 {
     usart1_data_receiv = 0;
+}
+
+
+// Mock battery.c module -----------
+void Battery_Voltage (unsigned char * v_int, unsigned char * v_dec)
+{
+    *v_int = 13;
+    *v_dec = 8;
 }
 
 

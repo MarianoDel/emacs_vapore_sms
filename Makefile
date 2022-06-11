@@ -306,6 +306,18 @@ tests_comm_profiling:
 	# process profiling
 	gprof a.out gmon.out > gprof.txt
 
+tests_hard_simul:
+	# first module objects to test
+	gcc -g -c src/funcs_gsm.c -I $(INCDIR) $(DDEFS)
+	gcc -g -c src/sim900_800.c -I $(INCDIR) $(DDEFS)
+	gcc -g -c src/comm.c -I $(INCDIR) $(DDEFS)
+	gcc -g -c src/sms_data.c -I $(INCDIR) $(DDEFS)
+	gcc -g -c src/gprs_data.c -I $(INCDIR) $(DDEFS)
+	# second auxiliary helper modules
+	gcc -g -c src/tests_ok.c -I $(INCDIR)
+	gcc -g src/tests_hard_simul.c tests_ok.o funcs_gsm.o sim900_800.o comm.o sms_data.o gprs_data.o -I $(INCDIR) $(DDEFS) -lpthread
+	# test execution
+	./a.out
 
 
 # *** EOF ***
