@@ -11,6 +11,7 @@
 #include "funcs_gsm.h"
 #include "parameters.h"
 #include "comm.h"
+#include "sms_data.h"
 
 //helper modules
 #include "tests_ok.h"
@@ -36,6 +37,7 @@ void * MillisTimeout (void * arg);
 
 void Activation_Input (void);
 void SetDefaults (void);
+int Activation_Input_GPRS (void);
 
 // Module Auxialiary Functions (Mocked) ----------------------------------------
 void Led_On (void);
@@ -82,7 +84,8 @@ char usart1_data_buff_tx [256] = { '\0' };
 int usart1_data_receiv = 0;
 
 int dtr_line = -1;
-int activation = 0;
+int activation_sms = 0;
+int activation_gprs = 0;
 
 // -- miliseconds delay
 int millis = 0;
@@ -155,11 +158,28 @@ void main(void)
             printf("clearing DTR\n");
         }
 
-        if (activation)
+        if (activation_sms)
         {
-            activation = 0;
-            printf("Activation Input!\n");
-            Activation_Input();
+            activation_sms = 0;
+            printf("Activation Input for SMS!\n");
+            Activation_Input_SMS();
+        }
+
+        if (activation_gprs)
+        {
+            if (activation_gprs != 2)
+            {
+                printf("Activation Input for GPRS!\n");
+                activation_gprs++;
+            }
+            
+            int answer = Activation_Input_GPRS ();
+
+            if (answer)
+            {
+                printf("end of GPRS routine\n");
+                activation_gprs = 0;
+            }
         }
         
         // for the function
@@ -373,13 +393,17 @@ void * KeyboardInput (void * arg)
         {
             dtr_line = 0;            
         }
-        else if (key == 'a')
-        {
-            activation = 1;
-        }
         else if (key == 's')
         {
-            printf("  Memory Params...\n");
+            activation_sms = 1;
+        }
+        else if (key == 'g')
+        {
+            activation_gprs = 1;
+        }
+        else if (key == 'm')
+        {
+            printf("\n  Memory Params...\n");
             printf("  num_reportar: %s\n", mem_conf.num_reportar);
             printf("  imei: %s\n", mem_conf.imei);
             printf("  num_propio: %s\n", mem_conf.num_propio);
@@ -391,7 +415,7 @@ void * KeyboardInput (void * arg)
             printf("  apn: %s\n", mem_conf.apn);
             printf("  domain: %s\n", mem_conf.domain);
 
-            printf("\n  Backup flags...\n");
+            printf("\n  Backup Flags...\n");
             printf("  bkp_envios_ok: %d\n", mem_conf.bkp_envios_ok);
             printf("  bkp_timer_reportar: %d\n", mem_conf.bkp_timer_reportar);
             printf("  bkp_prender_ring: %d\n", mem_conf.bkp_prender_ring);
@@ -429,7 +453,7 @@ void * MillisTimeout (void * arg)
         else
         {
             printf("gsm_state: %d ", gsm_state);
-            printf("(q to quit) (1/0 DTR) (a for activation) (s for mem_conf)\n");
+            printf("(q to quit) (1/0 DTR) (s act sms) (g act gprs) (m for mem_conf)\n");
             millis = 0;
         }
         
@@ -439,8 +463,9 @@ void * MillisTimeout (void * arg)
 }
 
 
-void Activation_Input (void)
+void Activation_Input_SMS (void)
 {
+    char buff [SITE_MAX_LEN + 20] = { 0 };
     unsigned char sms_ready = 1;
 
     //check num_tel_rep before send sms
@@ -451,6 +476,7 @@ void Activation_Input (void)
         if (!sms_ready)
         {
             Usart2Send("sin numero\n");
+            return;
         }
     }
 
@@ -462,25 +488,55 @@ void Activation_Input (void)
         if (!sms_ready)
         {
             Usart2Send("sin sitio\n");
+            return;
         }
     }
 
     if (sms_ready)
     {
-        static char buff [SITE_MAX_LEN + 20] = { 0 };
-
         strcpy(buff, "Activacion en: ");
         strcat(buff, sitio_prop);
         // printf("reportar: %s\n", buff);
-        if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
-        {
-            Usart2Send("OK\n");
-        }
-        else
-        {
-            Usart2Send("sin red\n");
-        }
     }
+
+    unsigned char answer = SMS_NOT_SEND;
+    
+    // check data and send a GSM packet
+    answer = VerifyAndSendSMS (buff);
+
+    if (answer == SMS_NOT_SEND)
+    {
+        Usart2Send("sms bad network\n");                    
+    }
+
+    if (answer == SMS_SENT)
+    {
+        Usart2Send("sms packet sent OK\n");
+    }
+    
+}
+
+
+int Activation_Input_GPRS (void)
+{
+    unsigned char answer = GPRS_WORKING;
+    
+    // check data to send a GPRS packet            
+    answer = VerifyAndSendGPRS("18 CB83 01 602 01 000");
+            
+    if (answer == GPRS_NOT_SEND)
+    {
+        Usart2Send("gprs bad network go to sms\n");
+        return 1;
+    }
+
+    if (answer == GPRS_SENT)
+    {
+        Usart2Send("gprs packet sent OK\n");
+        return 1;
+    }
+
+    return 0;
 }
 
 
@@ -495,8 +551,8 @@ void SetDefaults (void)
     // For GPRS connections
     strcpy(mem_conf.apn, "gprs.personal.com");
     strcpy(mem_conf.ip_proto, "UDP");
-    strcpy(mem_conf.ip, "");
-    strcpy(mem_conf.ip_port, "10000");
+    strcpy(mem_conf.ip, "186.18.4.68");
+    strcpy(mem_conf.ip_port, "11000");
 
 }
 

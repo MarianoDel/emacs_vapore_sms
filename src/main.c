@@ -322,24 +322,17 @@ int main(void)
             break;
 
         case main_report_alarm_input_or_panel:
-            // check all data before send anything
-            // check num_tel_rep before send sms
-            if (!VerifyNumberString(num_tel_rep))
+            // check if we are going to use gprs mode or sms mode
+            if (socket_use_enable)
             {
-                ChangeLedActivate(1);
-                Usart2Send("no phone number\n");
-                main_state = main_sms_not_sended;
-                timer_standby = 6000;
-            }
-
-            // check sitio_prop before send sms
-            else if (!VerifySiteString(sitio_prop))
-            {
-                ChangeLedActivate(2);
-                Usart2Send("no site saved\n");
-                main_state = main_sms_not_sended;
-                timer_standby = 6000;
-            }
+                // check num_tel_rep before send gprs with sms backup
+                if (!VerifyNumberString(num_tel_rep))
+                {
+                    ChangeLedActivate(1);
+                    Usart2Send("no phone backup number\n");
+                    main_state = main_sms_not_sended;
+                    timer_standby = 6000;
+                }
 
             // check if gprs is needed
             // check apn and all socket data before send gprs
@@ -350,31 +343,53 @@ int main(void)
                 main_state = main_sms_not_sended;
                 timer_standby = 6000;
             }
+                
+            }
             else
             {
-                Activation_12V_On();    // ACT_12V_ON;
-                // prepair the packet
-                // gprs or sms assemble packet
-                if (alarm_input)
+                // check num_tel_rep before send sms
+                if (!VerifyNumberString(num_tel_rep))
                 {
-                    strcpy(buff, "Activacion en: ");
-                    Usart2Send("External 12V: ");    // 12V input alarm activate
+                    ChangeLedActivate(1);
+                    Usart2Send("no phone number\n");
+                    main_state = main_sms_not_sended;
+                    timer_standby = 6000;
                 }
 
-                if (panel_input)
+                // check sitio_prop before send sms
+                else if (!VerifySiteString(sitio_prop))
                 {
-                    sprintf(buff, "Activo %03d en: ", remote_number);
-                    Usart2Send("Keypad ACT: ");
-                }    
-                strcat(buff, sitio_prop);
-                
-                if (socket_use_enable)
-                    main_state = main_report_alarm_by_gprs;
+                    ChangeLedActivate(2);
+                    Usart2Send("no site saved\n");
+                    main_state = main_sms_not_sended;
+                    timer_standby = 6000;
+                }
                 else
-                    main_state = main_report_alarm_by_sms;
+                {
+                    Activation_12V_On();    // ACT_12V_ON;
+                    // prepair the packet
+                    // gprs or sms assemble packet
+                    if (alarm_input)
+                    {
+                        strcpy(buff, "Activacion en: ");
+                        Usart2Send("External 12V: ");    // 12V input alarm activate
+                    }
+
+                    if (panel_input)
+                    {
+                        sprintf(buff, "Activo %03d en: ", remote_number);
+                        Usart2Send("Keypad ACT: ");
+                    }    
+                    strcat(buff, sitio_prop);
                 
-                timer_standby = 0;
-                sms_not_sent_cnt = 5;
+                    if (socket_use_enable)
+                        main_state = main_report_alarm_by_gprs;
+                    else
+                        main_state = main_report_alarm_by_sms;
+                
+                    timer_standby = 0;
+                    sms_not_sent_cnt = 5;
+                }
             }
             break;
 
@@ -427,13 +442,14 @@ int main(void)
                 {
                     main_state = main_sms_not_sended;
                     timer_standby = 6000;
+                    Usart2Send("sms bad network\n");                    
                 }
             }
 
             if (answer == SMS_SENT)
             {
                 main_state = main_enable_act_12V_input;
-                Usart2Send("OK\n");
+                Usart2Send("sms packet sent OK\n");
                 timer_standby = 2000;    // two seconds for show led cycle
             }
             break;

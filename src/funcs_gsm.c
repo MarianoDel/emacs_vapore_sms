@@ -45,6 +45,7 @@ typedef enum {
 extern parameters_typedef mem_conf;
 extern unsigned char register_status;
 extern unsigned char rssi_level;
+extern volatile char buffUARTGSMrx2[];
 
 
 // Globals ---------------------------------------------------------------------
@@ -721,8 +722,8 @@ unsigned char FuncsGSMSendGPRS (char * message)
 
         if (resp_cmd == cmd_ok)    // wait for SEND OK
         {
-            funcs_gsm_timeout_timer = 2000;
-            Usart2Send("wait conn delay 2secs\n");
+            funcs_gsm_timeout_timer = 20000;
+            Usart2Send("wait server answer for 20secs\n");
             send_gprs_state++;
         }
         
@@ -732,6 +733,13 @@ unsigned char FuncsGSMSendGPRS (char * message)
         break;
 
     case gprs_wait_close:
+        // continuosly check if sended is equal to answered
+        if(!strncmp(message, buffUARTGSMrx2, strlen(message)))
+        {
+            Usart2Debug("answer from server getted!!!");
+            send_gprs_state++;
+        }
+        
         if (!funcs_gsm_timeout_timer)
         {
             FuncsGSMGPRSFlags(GPRS_RESET_FLAG | GPRS_ENABLE_FLAGS);

@@ -294,6 +294,16 @@ tests_gprs_data:
 	# process coverage
 	gcov gprs_data.c -m
 
+tests_contact_id:
+	# first compile common modules (modules to test and dependencies)
+	gcc -c --coverage src/contact_id.c -I. $(INCDIR) $(DDEFS)
+	# second auxiliary helper modules
+	gcc -c src/tests_ok.c -I $(INCDIR)
+	gcc --coverage src/tests_contact_id.c contact_id.o tests_ok.o -I $(INCDIR) $(DDEFS)
+	./a.out
+	# process coverage
+	gcov contact_id.c -m
+
 tests_comm_profiling:
 	# first module objects to test and profiling
 	gcc -c -pg src/comm.c -I. $(INCDIR)
