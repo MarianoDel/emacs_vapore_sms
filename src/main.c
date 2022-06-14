@@ -35,6 +35,7 @@
 #include "test_functions.h"
 #include "battery.h"
 #include "sms_data.h"
+#include "contact_id.h"
 
 
 
@@ -236,11 +237,49 @@ int main(void)
 #if (!defined HARDWARE_VER_1_1) && \
     (!defined HARDWARE_VER_1_0)
             // reports from battery status
-            if ((battery_check) &&
-                (FuncsGSMStateAsk () == gsm_state_ready))
+            if (FuncsGSMStateAsk () == gsm_state_ready)
             {
-                if ((diag_battery_low_voltage) ||
-                    (diag_battery_disconnect_voltage))
+                // if we are in gprs mode check always
+                if (socket_use_enable)
+                {
+                    if (VerifyNumberString(num_tel_rep) &&
+                        (VerifySocketData()))
+                    {
+                        char remote_number_str [4] = { 0 };
+                        
+                        if (diag_battery_low_voltage)
+                        {
+                            strcpy(remote_number_str, "000");
+                            ContactIDString(low_system_battery_opening,
+                                            mem_conf.client_number,
+                                            remote_number_str,
+                                            buff);
+                                    
+                            main_state = main_report_alarm_by_gprs;
+                            timer_standby = 0;
+                            sms_not_sent_cnt = 1;
+                            diag_battery_low_voltage_reset;
+                        }
+                        else if (diag_battery_good_voltage)
+                        {
+                            strcpy(remote_number_str, "000");
+                            ContactIDString(low_system_battery_close,
+                                            mem_conf.client_number,
+                                            remote_number_str,
+                                            buff);
+                                    
+                            main_state = main_report_alarm_by_gprs;
+                            timer_standby = 0;
+                            sms_not_sent_cnt = 1;
+                            diag_battery_good_voltage_reset;
+                        }
+                    }
+                }
+
+                // if we are in sms mode check if its configured
+                else if ((battery_check) &&
+                         ((diag_battery_low_voltage) ||
+                          (diag_battery_disconnect_voltage)))
                 {
                     if (VerifyNumberString(num_tel_rep))
                     {
@@ -334,16 +373,33 @@ int main(void)
                     timer_standby = 6000;
                 }
 
-            // check if gprs is needed
-            // check apn and all socket data before send gprs
-            else if ((!VerifySocketData()) && (socket_use_enable))
-            {
-                ChangeLedActivate(3);
-                Usart2Send("no socket data\n");
-                main_state = main_sms_not_sended;
-                timer_standby = 6000;
-            }
-                
+                // check apn and all socket data before send gprs
+                else if (!VerifySocketData())
+                {
+                    ChangeLedActivate(3);
+                    Usart2Send("no socket data\n");
+                    main_state = main_sms_not_sended;
+                    timer_standby = 6000;
+                }
+                else
+                {
+                    char remote_number_str [4] = { 0 };
+                    
+                    if (alarm_input)
+                        strcpy(remote_number_str, "000");
+                    else if (panel_input)
+                        sprintf(remote_number_str, "%03d", remote_number);
+                    
+                    ContactIDString(panic_alarm,
+                                    mem_conf.client_number,
+                                    remote_number_str,
+                                    buff);
+                                    
+                    main_state = main_report_alarm_by_gprs;
+                    timer_standby = 0;
+                    sms_not_sent_cnt = 5;
+                    FuncsGSM_ServerAnswer_Reset();
+                }
             }
             else
             {
@@ -379,14 +435,10 @@ int main(void)
                     {
                         sprintf(buff, "Activo %03d en: ", remote_number);
                         Usart2Send("Keypad ACT: ");
-                    }    
-                    strcat(buff, sitio_prop);
-                
-                    if (socket_use_enable)
-                        main_state = main_report_alarm_by_gprs;
-                    else
-                        main_state = main_report_alarm_by_sms;
-                
+                    }
+                    
+                    strcat(buff, sitio_prop);                
+                    main_state = main_report_alarm_by_sms;                
                     timer_standby = 0;
                     sms_not_sent_cnt = 5;
                 }
@@ -418,9 +470,27 @@ int main(void)
 
             if (answer == GPRS_SENT)
             {
-                main_state = main_enable_act_12V_input;
-                Usart2Send("gprs packet sent OK\n");
-                timer_standby = 2000;    // two seconds for show led cycle
+                if (FuncsGSM_ServerAnswer_Get())
+                {
+                    main_state = main_enable_act_12V_input;
+                    Usart2Send("gprs packet sent OK and server answer getted\n");
+                    timer_standby = 2000;    // two seconds for show led cycle
+                }
+                else
+                {
+                    if (sms_not_sent_cnt)
+                    {
+                        sms_not_sent_cnt--;
+                        timer_standby = 1000;
+                    }
+                    else
+                    {
+                        main_state = main_report_alarm_by_sms;
+                        timer_standby = 0;
+                        sms_not_sent_cnt = 5;
+                        Usart2Send("server never answer go to sms\n");
+                    }
+                }
             }
             break;
 

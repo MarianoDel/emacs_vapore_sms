@@ -87,7 +87,7 @@ void Battery_Check (void)
         if (battery_filter_out > BAT_LOW_VOLTAGE_RECONNECT)
         {
             battery_status = BATTERY_GOOD;
-            // diag_battery_good_voltage_set;
+            diag_battery_good_voltage_set;
         }
         break;
         

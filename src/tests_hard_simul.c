@@ -12,6 +12,7 @@
 #include "parameters.h"
 #include "comm.h"
 #include "sms_data.h"
+#include "contact_id.h"
 
 //helper modules
 #include "tests_ok.h"
@@ -35,7 +36,7 @@ void * SerialInput (void * arg);
 void * KeyboardInput (void * arg);
 void * MillisTimeout (void * arg);
 
-void Activation_Input (void);
+void Activation_Input_SMS (void);
 void SetDefaults (void);
 int Activation_Input_GPRS (void);
 
@@ -74,8 +75,6 @@ extern t_GsmState gsm_state;
 // Globals ---------------------------------------------------------------------
 int main_quit = 0;
 
-int keep_alive = 1;
-
 // -- envios de usart1 al puerto serie
 int usart1_data_len = 0;
 int usart1_data_send = 0;
@@ -89,6 +88,9 @@ int activation_gprs = 0;
 
 // -- miliseconds delay
 int millis = 0;
+
+// sms buffer
+char my_own_buff [SITE_MAX_LEN + 20] = { 0 };
 
 // Module Functions ------------------------------------------------------------
 void main(void)
@@ -190,7 +192,6 @@ void main(void)
 
     }
 
-    keep_alive = 0;
     pthread_join(p1, NULL);
     pthread_join(p2, NULL);
     pthread_join(p3, NULL);    
@@ -409,11 +410,14 @@ void * KeyboardInput (void * arg)
             printf("  num_propio: %s\n", mem_conf.num_propio);
             printf("  sitio_propio: %s\n", mem_conf.sitio_propio);
 
-            printf("  ip: %s\n", mem_conf.ip);
+            printf("  ip1: %s\n", mem_conf.ip1);
+            printf("  ip_port1: %s\n", mem_conf.ip_port1);
+            printf("  ip2: %s\n", mem_conf.ip2);
+            printf("  ip_port2: %s\n", mem_conf.ip_port2);
             printf("  ip_proto: %s\n", mem_conf.ip_proto);
-            printf("  ip_port: %s\n", mem_conf.ip_port);
             printf("  apn: %s\n", mem_conf.apn);
-            printf("  domain: %s\n", mem_conf.domain);
+            printf("  client_number: %s\n", mem_conf.client_number);
+            printf("  keepalive: %d\n", mem_conf.keepalive);
 
             printf("\n  Backup Flags...\n");
             printf("  bkp_envios_ok: %d\n", mem_conf.bkp_envios_ok);
@@ -465,7 +469,6 @@ void * MillisTimeout (void * arg)
 
 void Activation_Input_SMS (void)
 {
-    char buff [SITE_MAX_LEN + 20] = { 0 };
     unsigned char sms_ready = 1;
 
     //check num_tel_rep before send sms
@@ -494,15 +497,15 @@ void Activation_Input_SMS (void)
 
     if (sms_ready)
     {
-        strcpy(buff, "Activacion en: ");
-        strcat(buff, sitio_prop);
+        strcpy(my_own_buff, "Activacion en: ");
+        strcat(my_own_buff, sitio_prop);
         // printf("reportar: %s\n", buff);
     }
 
     unsigned char answer = SMS_NOT_SEND;
     
     // check data and send a GSM packet
-    answer = VerifyAndSendSMS (buff);
+    answer = VerifyAndSendSMS (my_own_buff);
 
     if (answer == SMS_NOT_SEND)
     {
@@ -511,7 +514,7 @@ void Activation_Input_SMS (void)
 
     if (answer == SMS_SENT)
     {
-        Usart2Send("sms packet sent OK\n");
+        Usart2Send("sms packet load OK give some time...\n");
     }
     
 }
@@ -521,8 +524,9 @@ int Activation_Input_GPRS (void)
 {
     unsigned char answer = GPRS_WORKING;
     
-    // check data to send a GPRS packet            
-    answer = VerifyAndSendGPRS("18 CB83 01 602 01 000");
+    // check data to send a GPRS packet
+    ContactIDString(panic_alarm, mem_conf.client_number, "989", my_own_buff);
+    answer = VerifyAndSendGPRS(my_own_buff);
             
     if (answer == GPRS_NOT_SEND)
     {
@@ -551,8 +555,11 @@ void SetDefaults (void)
     // For GPRS connections
     strcpy(mem_conf.apn, "gprs.personal.com");
     strcpy(mem_conf.ip_proto, "UDP");
-    strcpy(mem_conf.ip, "186.18.4.68");
-    strcpy(mem_conf.ip_port, "11000");
+    strcpy(mem_conf.ip1, "186.18.4.68");
+    strcpy(mem_conf.ip_port1, "11000");
+
+    // For monitoring system
+    strcpy(mem_conf.client_number, "CB53");
 
 }
 

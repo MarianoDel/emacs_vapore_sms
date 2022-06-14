@@ -104,6 +104,10 @@ void FuncsGSMTimeoutCounters (void);
 void FuncsGSMGPRSFlags (unsigned char flag);
 unsigned short FuncsGSMGPRSFlagsAsk (void);
 
+void FuncsGSM_ServerAnswer_Set (void);
+void FuncsGSM_ServerAnswer_Reset (void);
+unsigned char FuncsGSM_ServerAnswer_Get (void);
+
 #endif    /* _FUNCS_GSM_H_ */
 
 //--- end of file ---//

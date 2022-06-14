@@ -193,45 +193,55 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         }
     }
 
-    else if (!strncmp(payload, "IP:", sizeof ("IP:") - 1))
+    else if (!strncmp(payload, "IP1:", sizeof ("IP1:") - 1))
     {
         // GPRS config, call the correspondig module function
         // cut the trailing OK
         unsigned char len = strlen(payload);
         *(payload + len - 2) = '\0';
-        if (GPRS_Config(payload, 0))
+        if (GPRS_Config(payload))
         {
             Usart2Debug("socket config ok\n");
             socket_use_enable = 1;
             socket_conf_change_set;
+
+            enviar_sms = 1;
+            strcpy(enviar_sms_num, orig_num);
+            strcpy(enviar_sms_msg, "OK");
         }
         else
             Usart2Debug("bad socket data!\n");
 
-        CommsCheckSendOK (orig_num);        
     }
-    else if (!strncmp(payload, "IPDN:", sizeof ("IPDN:") - 1))
-    {
-        // GPRS config, call the correspondig module function
-        // cut the trailing OK
-        unsigned char len = strlen(payload);
-        *(payload + len - 2) = '\0';
-        if (GPRS_Config(payload, 1))
-        {
-            Usart2Debug("socket config ok\n");
-            socket_use_enable = 1;            
-            socket_conf_change_set;            
-        }
-        else
-            Usart2Debug("bad socket data!\n");
+    // else if (!strncmp(payload, "IPDN:", sizeof ("IPDN:") - 1))
+    // {
+    //     // GPRS config, call the correspondig module function
+    //     // cut the trailing OK
+    //     unsigned char len = strlen(payload);
+    //     *(payload + len - 2) = '\0';
+    //     if (GPRS_Config(payload, 1))
+    //     {
+    //         Usart2Debug("socket config ok\n");
+    //         socket_use_enable = 1;            
+    //         socket_conf_change_set;
 
-        CommsCheckSendOK (orig_num);
-    }
+    //         enviar_sms = 1;
+    //         strcpy(enviar_sms_num, orig_num);
+    //         strcpy(enviar_sms_msg, "OK");
+    //     }
+    //     else
+    //         Usart2Debug("bad socket data!\n");
+
+    // }
     else if (!strncmp(payload, "IPNO:", sizeof ("IPNO:") - 1))
     {
         socket_use_enable = 0;
         socket_conf_change_set;            
-        CommsCheckSendOK (orig_num);
+        // CommsCheckSendOK (orig_num);
+
+        enviar_sms = 1;
+        strcpy(enviar_sms_num, orig_num);
+        strcpy(enviar_sms_msg, "OK");
     }
 
     // Diagnostics and Activations    

@@ -23,7 +23,7 @@
 
 // Module Exported Functions ---------------------------------------------------
 unsigned char VerifyAndSendGPRS (char * message);
-unsigned char GPRS_Config (char * payload, unsigned char ipdomain);
+unsigned char GPRS_Config (char * payload);
 unsigned char VerifySocketData (void);
 
 #endif    /* _GPRS_DATA_H_ */

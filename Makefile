@@ -92,6 +92,7 @@ SRC += ./src/dsp.c
 SRC += ./src/battery.c
 SRC += ./src/sms_data.c
 SRC += ./src/gprs_data.c
+SRC += ./src/contact_id.c
 
 
 ## Core Support
@@ -323,9 +324,10 @@ tests_hard_simul:
 	gcc -g -c src/comm.c -I $(INCDIR) $(DDEFS)
 	gcc -g -c src/sms_data.c -I $(INCDIR) $(DDEFS)
 	gcc -g -c src/gprs_data.c -I $(INCDIR) $(DDEFS)
+	gcc -g -c src/contact_id.c -I $(INCDIR) $(DDEFS)
 	# second auxiliary helper modules
 	gcc -g -c src/tests_ok.c -I $(INCDIR)
-	gcc -g src/tests_hard_simul.c tests_ok.o funcs_gsm.o sim900_800.o comm.o sms_data.o gprs_data.o -I $(INCDIR) $(DDEFS) -lpthread
+	gcc -g src/tests_hard_simul.c tests_ok.o funcs_gsm.o sim900_800.o comm.o sms_data.o gprs_data.o contact_id.o -I $(INCDIR) $(DDEFS) -lpthread
 	# test execution
 	./a.out
 

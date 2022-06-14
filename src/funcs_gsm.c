@@ -667,8 +667,8 @@ unsigned char FuncsGSMSendGPRS (char * message)
         // resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"186.18.4.68\",\"10000\"\r\n", 65000, 1, &s_msg[0]);
         sprintf(sbuff, "AT+CIPSTART=\"%s\",\"%s\",\"%s\"\r\n",
                 mem_conf.ip_proto,
-                mem_conf.ip,
-                mem_conf.ip_port);
+                mem_conf.ip1,
+                mem_conf.ip_port1);
         resp_cmd = GSMSendCommand (sbuff, 65000, 1, &s_msg[0]);
 
         if (resp_cmd == cmd_ok)
@@ -734,9 +734,10 @@ unsigned char FuncsGSMSendGPRS (char * message)
 
     case gprs_wait_close:
         // continuosly check if sended is equal to answered
-        if(!strncmp(message, buffUARTGSMrx2, strlen(message)))
+        if(!strncmp(message, (const char *) buffUARTGSMrx2, strlen(message)))
         {
             Usart2Debug("answer from server getted!!!");
+            FuncsGSM_ServerAnswer_Set();
             send_gprs_state++;
         }
         
@@ -898,6 +899,24 @@ void FuncsGSMTimeoutCounters (void)
     if (funcs_gsm_timeout_timer)
         funcs_gsm_timeout_timer--;
     
+}
+
+unsigned char server_answer = 0;
+void FuncsGSM_ServerAnswer_Set (void)
+{
+    server_answer = 1;
+}
+
+
+void FuncsGSM_ServerAnswer_Reset (void)
+{
+    server_answer = 0;
+}
+
+
+unsigned char FuncsGSM_ServerAnswer_Get (void)
+{
+    return server_answer;
 }
 
 //--- end of file ---//

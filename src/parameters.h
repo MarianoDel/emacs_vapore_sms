@@ -32,15 +32,21 @@ typedef struct parameters {
     unsigned int internal_comms_flag;    //224 4 bytes if its aligned
 
     // gprs settings
-    char ip [16];    //240
-    char ip_proto [4];    //244
-    char ip_port [6];    //250
-    char apn [68];    //318
-    char domain [68];    //386
+    char ip1 [16];    //240
+    char ip_port1 [6];    //246
+    char ip2 [16];    //262
+    char ip_port2 [6];    //268
+    char ip_proto [4];    //272
+
+    char apn [68];    //340
+
+    // monitor account
+    char client_number [7];    //347
+    unsigned short keepalive;    //349
+    unsigned char bkp_socket_use;    //350
 
     // // // complete alignment with dummys
-    unsigned char bkp_socket_use;
-    unsigned char dummy1 [61];    //448    (multiply of eight)
+    unsigned char dummy1 [50];    //400    (multiply of eight)
 
 } parameters_typedef;
 
