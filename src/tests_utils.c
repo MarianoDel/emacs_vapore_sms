@@ -9,6 +9,8 @@
 
 #include "tests_utils.h"
 
+#include <stdio.h>
+
 
 // Module Functions ------------------------------------------------------------
 int Utils_Distance_Floats (float a, float b, int percentage)

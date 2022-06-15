@@ -34,9 +34,9 @@
 
 #include "test_functions.h"
 #include "battery.h"
-#include "sms_data.h"
+#include "sms_gprs_data.h"
 #include "contact_id.h"
-
+#include "reports.h"
 
 
 // Externals -------------------------------------------------------------------
@@ -56,19 +56,17 @@ unsigned char rssi_level = 0;
 
 
 // Globals ---------------------------------------------------------------------
-unsigned short show_power_index = 0;	//lo uso como timer sincronizado con la medicion, tick 2 secs.
-unsigned short show_power_index_debug = 0;
+
 
 // - Globals for GSM msjs -------
-char gsmNUM [20];
-char gsmMSG [180];
+// char gsmNUM [20];
+// char gsmMSG [180];
+reports_st repo;
 
 // - Globals from timers -------
 volatile unsigned short timer_standby = 0;
 volatile unsigned short timer_prender_ringing = 0;
 
-// - Globals for delay msgs -------
-unsigned char message_delay = 0;
 
 // Module Private Functions ----------------------------------------------------
 void TimingDelay_Decrement(void);
@@ -170,7 +168,6 @@ int main(void)
     unsigned short remote_number = 0;
 
     static char buff [SITE_MAX_LEN + 20] = { 0 };
-    unsigned char sms_not_sent_cnt = 0;
     unsigned char answer = 0;    //multi pourpose answer
 
     while (1)
@@ -243,7 +240,7 @@ int main(void)
                 if (socket_use_enable)
                 {
                     if (VerifyNumberString(num_tel_rep) &&
-                        (VerifySocketData()))
+                        (VerifySocketData(1)))
                     {
                         char remote_number_str [4] = { 0 };
                         
@@ -255,9 +252,8 @@ int main(void)
                                             remote_number_str,
                                             buff);
                                     
-                            main_state = main_report_alarm_by_gprs;
+                            main_state = main_report_buffer;
                             timer_standby = 0;
-                            sms_not_sent_cnt = 1;
                             diag_battery_low_voltage_reset;
                         }
                         else if (diag_battery_good_voltage)
@@ -268,9 +264,8 @@ int main(void)
                                             remote_number_str,
                                             buff);
                                     
-                            main_state = main_report_alarm_by_gprs;
+                            main_state = main_report_buffer;
                             timer_standby = 0;
-                            sms_not_sent_cnt = 1;
                             diag_battery_good_voltage_reset;
                         }
                     }
@@ -318,9 +313,17 @@ int main(void)
             // activate from 12V on test1 input or activation by panel
             alarm_input = Check_Alarm_Input();
             panel_input = Panel_Check_Alarm (&remote_number);
-            if ((alarm_input) || (panel_input))
+            if (alarm_input)
             {
-                main_state = main_report_alarm_input_or_panel;
+                Activation_12V_On();    // ACT_12V_ON;
+                Usart2Send("External 12V Activation!\n");
+                main_state = main_report_alarm_input;
+            }
+            else if (panel_input)
+            {
+                Activation_12V_On();    // ACT_12V_ON;
+                Usart2Send("Panel Internal Activation!\n");
+                main_state = main_report_panel_input;
             }
             else if (FuncsGSMStateAsk() < gsm_state_ready)
             {
@@ -360,184 +363,96 @@ int main(void)
             }
             break;
 
-        case main_report_alarm_input_or_panel:
+        case main_report_alarm_input:
             // check if we are going to use gprs mode or sms mode
             if (socket_use_enable)
             {
-                // check num_tel_rep before send gprs with sms backup
-                if (!VerifyNumberString(num_tel_rep))
-                {
-                    ChangeLedActivate(1);
-                    Usart2Send("no phone backup number\n");
-                    main_state = main_sms_not_sended;
-                    timer_standby = 6000;
-                }
-
-                // check apn and all socket data before send gprs
-                else if (!VerifySocketData())
-                {
-                    ChangeLedActivate(3);
-                    Usart2Send("no socket data\n");
-                    main_state = main_sms_not_sended;
-                    timer_standby = 6000;
-                }
-                else
-                {
-                    char remote_number_str [4] = { 0 };
-                    
-                    if (alarm_input)
-                        strcpy(remote_number_str, "000");
-                    else if (panel_input)
-                        sprintf(remote_number_str, "%03d", remote_number);
-                    
-                    ContactIDString(panic_alarm,
-                                    mem_conf.client_number,
-                                    remote_number_str,
-                                    buff);
+                // gprs mode, assembly the buffer
+                ContactIDString(panic_alarm,
+                                mem_conf.client_number,
+                                "000",
+                                buff);
                                     
-                    main_state = main_report_alarm_by_gprs;
-                    timer_standby = 0;
-                    sms_not_sent_cnt = 5;
-                    FuncsGSM_ServerAnswer_Reset();
-                }
+                repo.buffer = buff;
+                repo.attempts = 3;
+                repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2 | REPORT_BY_SMS;
             }
             else
             {
-                // check num_tel_rep before send sms
-                if (!VerifyNumberString(num_tel_rep))
-                {
-                    ChangeLedActivate(1);
-                    Usart2Send("no phone number\n");
-                    main_state = main_sms_not_sended;
-                    timer_standby = 6000;
-                }
+                // use only sms mode, assembly buffer
+                strcpy(buff, "Activacion en: ");
+                strcat(buff, sitio_prop);
 
-                // check sitio_prop before send sms
-                else if (!VerifySiteString(sitio_prop))
-                {
-                    ChangeLedActivate(2);
-                    Usart2Send("no site saved\n");
-                    main_state = main_sms_not_sended;
-                    timer_standby = 6000;
-                }
-                else
-                {
-                    Activation_12V_On();    // ACT_12V_ON;
-                    // prepair the packet
-                    // gprs or sms assemble packet
-                    if (alarm_input)
-                    {
-                        strcpy(buff, "Activacion en: ");
-                        Usart2Send("External 12V: ");    // 12V input alarm activate
-                    }
-
-                    if (panel_input)
-                    {
-                        sprintf(buff, "Activo %03d en: ", remote_number);
-                        Usart2Send("Keypad ACT: ");
-                    }
-                    
-                    strcat(buff, sitio_prop);                
-                    main_state = main_report_alarm_by_sms;                
-                    timer_standby = 0;
-                    sms_not_sent_cnt = 5;
-                }
+                repo.buffer = buff;
+                repo.attempts = 3;
+                repo.media_flags = REPORT_BY_SMS;
             }
+
+            main_state = main_report_buffer;
             break;
 
-        case main_report_alarm_by_gprs:
-            if (timer_standby)
-                break;
-
-            // check data to send a GPRS packet            
-            answer = VerifyAndSendGPRS(buff);
-            
-            if (answer == GPRS_NOT_SEND)
+        case main_report_panel_input:
+            // check if we are going to use gprs mode or sms mode
+            if (socket_use_enable)
             {
-                if (sms_not_sent_cnt)
-                {
-                    sms_not_sent_cnt--;
-                    timer_standby = 1000;
-                }
-                else
-                {
-                    main_state = main_report_alarm_by_sms;
-                    timer_standby = 0;
-                    sms_not_sent_cnt = 5;
-                    Usart2Send("gprs bad network go to sms\n");
-                }
+                // gprs mode, assembly the buffer
+                char remote_number_str [4] = { 0 };                
+                sprintf(remote_number_str, "%03d", remote_number);
+
+                ContactIDString(panic_alarm,
+                                mem_conf.client_number,
+                                remote_number_str,
+                                buff);
+
+                repo.buffer = buff;
+                repo.attempts = 3;
+                repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2 | REPORT_BY_SMS;
+            }
+            else
+            {
+                // use only sms mode, assembly buffer
+                sprintf(buff, "Activo %03d en: ", remote_number);
+                strcat(buff, sitio_prop);                
+
+                repo.buffer = buff;
+                repo.attempts = 3;
+                repo.media_flags = REPORT_BY_SMS;
             }
 
-            if (answer == GPRS_SENT)
-            {
-                if (FuncsGSM_ServerAnswer_Get())
-                {
-                    main_state = main_enable_act_12V_input;
-                    Usart2Send("gprs packet sent OK and server answer getted\n");
-                    timer_standby = 2000;    // two seconds for show led cycle
-                }
-                else
-                {
-                    if (sms_not_sent_cnt)
-                    {
-                        sms_not_sent_cnt--;
-                        timer_standby = 1000;
-                    }
-                    else
-                    {
-                        main_state = main_report_alarm_by_sms;
-                        timer_standby = 0;
-                        sms_not_sent_cnt = 5;
-                        Usart2Send("server never answer go to sms\n");
-                    }
-                }
-            }
+            main_state = main_report_buffer;
             break;
-
-        case main_report_alarm_by_sms:
-            if (timer_standby)
-                break;
             
-            // check data and send a GSM packet
-            answer = VerifyAndSendSMS (buff);
 
-            if (answer == SMS_NOT_SEND)
+        case main_report_buffer:
+            answer = ReportsVerifyAndSend(&repo);
+            
+            if (answer == REPORT_NOT_SENT)
             {
-                if (sms_not_sent_cnt)
-                {
-                    sms_not_sent_cnt--;
-                    timer_standby = 1000;
-                }
-                else
-                {
-                    main_state = main_sms_not_sended;
-                    timer_standby = 6000;
-                    Usart2Send("sms bad network\n");                    
-                }
+                main_state = main_report_buffer_not_sended;
+                Usart2Send("report not sended\n");
+                timer_standby = 6000;    // six seconds to show the error
             }
 
-            if (answer == SMS_SENT)
+            if (answer == REPORT_SENT)
             {
-                main_state = main_enable_act_12V_input;
-                Usart2Send("sms packet sent OK\n");
+                main_state = main_report_buffer_sended;
+                Usart2Send("report delivered\n");
                 timer_standby = 2000;    // two seconds for show led cycle
             }
             break;
 
-        case main_enable_act_12V_input:
-            ToggleLedActivate();    // show led cycle
-            
-            if (!Check_Alarm_Input() && (!timer_standby))
+        case main_report_buffer_not_sended:
+            UpdateLedActivate();
+            if (!timer_standby)
             {
                 ACT_12V_OFF;
                 main_state = main_ready;
-            }
+            }            
             break;
 
-        case main_sms_not_sended:
-            UpdateLedActivate();
-
-            if (!timer_standby)
+        case main_report_buffer_sended:
+            ToggleLedActivate();    // sended ok show led cycle
+            if (!Check_Alarm_Input() && (!timer_standby))    // sended ok
             {
                 ACT_12V_OFF;
                 main_state = main_ready;
@@ -651,7 +566,10 @@ void TimingDelay_Decrement(void)
 
     FuncsGSMTimeoutCounters ();
 
+    ReportsTimeouts ();
+
     // FuncsGSMG_Timeouts ();
+    
 }
 
 void SysTickError (void)

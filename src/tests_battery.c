@@ -9,6 +9,7 @@
 
 // Includes Modules for tests --------------------------------------------------
 #include "battery.h"
+#include "parameters.h"
 
 //helper modules
 #include "tests_ok.h"
@@ -24,12 +25,15 @@ extern unsigned short battery_filter_out;
 
 // Globals ---------------------------------------------------------------------
 volatile unsigned short adc_ch [2] = { 0 };
+parameters_typedef mem_conf;
+
 
 // Module Auxialiary Functions -------------------------------------------------
 
 
 // Module Functions for testing ------------------------------------------------
-void Test_Battery (void);
+void Test_Battery_Check (void);
+void Test_Battery_Voltage (void);
     
 
 // Module Functions ------------------------------------------------------------
@@ -38,12 +42,29 @@ void Test_Battery (void);
 int main(int argc, char *argv[])
 {
 
-    Test_Battery ();
+    Test_Battery_Check ();
+
+    Test_Battery_Voltage ();
     
 }
 
 
-void Test_Battery (void)
+void Test_Battery_Check (void)
+{
+    Battery_Check_Init ();
+
+    for (int i = 0; i < 100; i++)
+        Battery_Check();
+    
+    // if (distance == 1)
+    //     PrintOK();
+    // else
+    //     PrintERR();
+
+}
+
+
+void Test_Battery_Voltage (void)
 {
     unsigned char vint = 0;
     unsigned char vdec = 0;
@@ -93,6 +114,19 @@ void Test_Battery (void)
         PrintOK();
     else
         PrintERR();
+}
+
+
+// Module Auxiliary Mocked Functions -------------------------------------------
+unsigned char DMASequenceReadyGet (void)
+{
+    return 1;
+}
+
+
+void DMASequenceReadyReset (void)
+{
+
 }
 
 

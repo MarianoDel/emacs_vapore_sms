@@ -11,8 +11,9 @@
 #include "funcs_gsm.h"
 #include "parameters.h"
 #include "comm.h"
-#include "sms_data.h"
+#include "sms_gprs_data.h"
 #include "contact_id.h"
+#include "reports.h"
 
 //helper modules
 #include "tests_ok.h"
@@ -85,12 +86,14 @@ int usart1_data_receiv = 0;
 int dtr_line = -1;
 int activation_sms = 0;
 int activation_gprs = 0;
+int activation_report = 0;
 
 // -- miliseconds delay
 int millis = 0;
 
 // sms buffer
 char my_own_buff [SITE_MAX_LEN + 20] = { 0 };
+reports_st repo;
 
 // Module Functions ------------------------------------------------------------
 void main(void)
@@ -181,6 +184,23 @@ void main(void)
             {
                 printf("end of GPRS routine\n");
                 activation_gprs = 0;
+            }
+        }
+
+        if (activation_report)
+        {
+            if (activation_report != 2)
+            {
+                printf("Activation report by GPRS and SMS\n");
+                activation_report++;
+            }
+            
+            int answer = Activation_Report ();
+
+            if (answer)
+            {
+                printf("end of reports by GPRS or SMS routine\n");
+                activation_report = 0;
             }
         }
         
@@ -402,6 +422,10 @@ void * KeyboardInput (void * arg)
         {
             activation_gprs = 1;
         }
+        else if (key == 'r')
+        {
+            activation_report = 1;
+        }
         else if (key == 'm')
         {
             printf("\n  Memory Params...\n");
@@ -460,6 +484,8 @@ void * MillisTimeout (void * arg)
             printf("(q to quit) (1/0 DTR) (s act sms) (g act gprs) (m for mem_conf)\n");
             millis = 0;
         }
+
+        ReportsTimeouts();
         
     }
     
@@ -469,53 +495,53 @@ void * MillisTimeout (void * arg)
 
 void Activation_Input_SMS (void)
 {
-    unsigned char sms_ready = 1;
+    // unsigned char sms_ready = 1;
 
-    //check num_tel_rep before send sms
-    if (sms_ready)
-    {
-        sms_ready = VerifyNumberString(num_tel_rep);
+    // //check num_tel_rep before send sms
+    // if (sms_ready)
+    // {
+    //     sms_ready = VerifyNumberString(num_tel_rep);
 
-        if (!sms_ready)
-        {
-            Usart2Send("sin numero\n");
-            return;
-        }
-    }
+    //     if (!sms_ready)
+    //     {
+    //         Usart2Send("sin numero\n");
+    //         return;
+    //     }
+    // }
 
-    //check sitio_prop before send sms
-    if (sms_ready)
-    {
-        sms_ready = VerifySiteString(sitio_prop);
+    // //check sitio_prop before send sms
+    // if (sms_ready)
+    // {
+    //     sms_ready = VerifySiteString(sitio_prop);
 
-        if (!sms_ready)
-        {
-            Usart2Send("sin sitio\n");
-            return;
-        }
-    }
+    //     if (!sms_ready)
+    //     {
+    //         Usart2Send("sin sitio\n");
+    //         return;
+    //     }
+    // }
 
-    if (sms_ready)
-    {
-        strcpy(my_own_buff, "Activacion en: ");
-        strcat(my_own_buff, sitio_prop);
-        // printf("reportar: %s\n", buff);
-    }
+    // if (sms_ready)
+    // {
+    //     strcpy(my_own_buff, "Activacion en: ");
+    //     strcat(my_own_buff, sitio_prop);
+    //     // printf("reportar: %s\n", buff);
+    // }
 
-    unsigned char answer = SMS_NOT_SEND;
+    // unsigned char answer = SMS_NOT_SEND;
     
-    // check data and send a GSM packet
-    answer = VerifyAndSendSMS (my_own_buff);
+    // // check data and send a GSM packet
+    // answer = VerifyAndSendSMS (my_own_buff);
 
-    if (answer == SMS_NOT_SEND)
-    {
-        Usart2Send("sms bad network\n");                    
-    }
+    // if (answer == SMS_NOT_SEND)
+    // {
+    //     Usart2Send("sms bad network\n");                    
+    // }
 
-    if (answer == SMS_SENT)
-    {
-        Usart2Send("sms packet load OK give some time...\n");
-    }
+    // if (answer == SMS_SENT)
+    // {
+    //     Usart2Send("sms packet load OK give some time...\n");
+    // }
     
 }
 
@@ -544,6 +570,32 @@ int Activation_Input_GPRS (void)
 }
 
 
+int Activation_Report (void)
+{
+    unsigned char answer = REPORT_SENDING;
+
+    // check data to send a GPRS packet
+    ContactIDString(panic_alarm, mem_conf.client_number, "989", my_own_buff);
+    repo.buffer = my_own_buff;
+    repo.media_flags = REPORT_BY_IP1 | REPORT_BY_SMS;
+    answer = ReportsVerifyAndSend (&repo);
+    
+    if (answer == REPORT_NOT_SENT)
+    {
+        Usart2Send("report not send bad network\n");
+        return 1;
+    }
+
+    if (answer == REPORT_SENT)
+    {
+        Usart2Send("report packet sent OK\n");
+        return 1;
+    }
+
+    return 0;
+}
+
+
 void SetDefaults (void)
 {
     // For SMS communications
@@ -557,6 +609,8 @@ void SetDefaults (void)
     strcpy(mem_conf.ip_proto, "UDP");
     strcpy(mem_conf.ip1, "186.18.4.68");
     strcpy(mem_conf.ip_port1, "11000");
+    strcpy(mem_conf.ip2, "186.18.4.68");
+    strcpy(mem_conf.ip_port2, "11001");
 
     // For monitoring system
     strcpy(mem_conf.client_number, "CB53");

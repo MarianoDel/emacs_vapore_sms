@@ -10,19 +10,22 @@
 
 #include "dma.h"
 #include "stm32g0xx.h"
-
 #include "adc.h"
 
-/* Externals variables ---------------------------------------------------------*/
+// Module Private Types Constants and Macros -----------------------------------
+#define RCC_DMA_CLK    (RCC->AHBENR & RCC_AHBENR_DMA1EN)
+#define RCC_DMA_CLK_ON    (RCC->AHBENR |= RCC_AHBENR_DMA1EN)
+#define RCC_DMA_CLK_OFF    (RCC->AHBENR &= ~RCC_AHBENR_DMA1EN)
+
+
+// Externals -------------------------------------------------------------------
 extern volatile unsigned short adc_ch [];
 
-/* Global variables ---------------------------------------------------------*/
+
+// Globals ---------------------------------------------------------------------
 
 
-/* Module Definitions ---------------------------------------------------------*/
-
-
-/* Module functions ---------------------------------------------------------*/
+// Module functions ------------------------------------------------------------
 void DMAConfig(void)
 {
     /* DMA1 clock enable */
@@ -59,6 +62,18 @@ void DMAConfig(void)
     NVIC_EnableIRQ(DMA1_Channel1_IRQn);
     NVIC_SetPriority(DMA1_Channel1_IRQn, 5);
 #endif
+}
+
+
+unsigned char DMASequenceReadyGet (void)
+{
+    return sequence_ready;
+}
+
+
+void DMASequenceReadyReset (void)
+{
+    sequence_ready_reset;
 }
 
 

@@ -5,12 +5,11 @@
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
 // ##
-// #### GPRS_DATA.C ################################
+// #### SMS_GPRS_DATA.C ############################
 //--------------------------------------------------
 
 // Includes --------------------------------------------------------------------
-#include "gprs_data.h"
-// #include "sms_data.h"
+#include "sms_gprs_data.h"
 #include "parameters.h"
 #include "usart.h"
 #include "hard.h"
@@ -23,7 +22,6 @@
 
 
 // Module Private Types Constants and Macros -----------------------------------
-// #define VerifyDomainString((X),(Y))    VerifyAPNString((X),(Y))
 
 
 // Externals -------------------------------------------------------------------
@@ -34,15 +32,16 @@ extern parameters_typedef mem_conf;
 
 
 // Module Private Functions ----------------------------------------------------
+// gprs data functions
 unsigned char VerifyAPNString (char * apn, unsigned char len);
 unsigned char VerifyIPString (char * ip, unsigned char len);
 unsigned char VerifyIPProtocol (char * ip_proto, unsigned char len);
 unsigned char VerifyPort (char * ip, unsigned char len);
 unsigned char VerifyIsANumber (char * pn, unsigned int * number);
-unsigned char VerifySocketData (void);
 unsigned char VerifyDomainString (char * domain, unsigned char len);
 unsigned char VerifyClientNumber (char * client, unsigned char len);
 unsigned char VerifyKeepString (char * keep, unsigned char len);
+unsigned char VerifyKeepNumber (unsigned short keep);
 
 
 // Module Functions -----------------------------------------------------------
@@ -50,7 +49,7 @@ unsigned char VerifyAndSendGPRS (char * message)
 {
     unsigned char answer = GPRS_WORKING;
     
-    answer = FuncsGSMSendGPRS(message);
+    answer = FuncsGSMSendGPRS(message, 1);
 
     if (answer == resp_gsm_ok)
     {
@@ -69,15 +68,26 @@ unsigned char VerifyAndSendGPRS (char * message)
 
 
 //answer 1 -> ok; 0 -> some error
-unsigned char VerifySocketData (void)
+unsigned char VerifySocketData (unsigned char which_ip)
 {
-    if (!VerifyIPString (mem_conf.ip1, strlen(mem_conf.ip1)))
-        return 0;
+    if (which_ip == IP1)
+    {
+        if (!VerifyIPString (mem_conf.ip1, strlen(mem_conf.ip1)))
+            return 0;
+
+        if (!VerifyPort (mem_conf.ip_port1, strlen(mem_conf.ip_port1)))
+            return 0;
+    }
+    else
+    {
+        if (!VerifyIPString (mem_conf.ip2, strlen(mem_conf.ip2)))
+            return 0;
+
+        if (!VerifyPort (mem_conf.ip_port2, strlen(mem_conf.ip_port2)))
+            return 0;
+    }
 
     if (!VerifyIPProtocol (mem_conf.ip_proto, strlen(mem_conf.ip_proto)))
-        return 0;
-
-    if (!VerifyPort (mem_conf.ip_port1, strlen(mem_conf.ip_port1)))
         return 0;
 
     if (!VerifyAPNString (mem_conf.apn, strlen(mem_conf.apn)))
@@ -85,7 +95,10 @@ unsigned char VerifySocketData (void)
 
     if (!VerifyClientNumber (mem_conf.client_number, strlen(mem_conf.client_number)))
         return 0;
-    
+
+    if (!VerifyKeepNumber (mem_conf.keepalive))
+        return 0;
+        
     return 1;
 }
 
@@ -93,6 +106,15 @@ unsigned char VerifySocketData (void)
 unsigned char VerifyClientNumber (char * client, unsigned char len)
 {
     if ((len < 4) || (len > 6))
+        return 0;
+
+    return 1;
+}
+
+
+unsigned char VerifyKeepNumber (unsigned short keep)
+{
+    if (keep > 900)
         return 0;
 
     return 1;
@@ -272,7 +294,7 @@ unsigned char VerifyIsANumber (char * pn, unsigned int * number)
 #define FIELD_KEEP    7
 
 //answer 1 -> ok; 0 -> some error
-unsigned char GPRS_Config (char * payload)
+unsigned char VerifyGPRSConfig (char * payload)
 {
     unsigned char len = strlen (payload);
     unsigned char commas[CONFIG_FIELDS] = { 0 };
@@ -461,6 +483,82 @@ unsigned short GetValue (unsigned char * pn, char delimiter)
 	}
 	return new_val;
 }
+
+
+////////////////////////
+// SMS Data Functions //
+////////////////////////
+//answer 1 -> ok; 0 -> some error
+unsigned char VerifySMSData (void)
+{
+    if (!VerifyNumberString (mem_conf.num_reportar))
+        return 0;
+    
+    return 1;
+}
+
+
+//answer 1 -> ok; 0 -> some error
+unsigned char VerifyNumberString (char * number)
+{
+    unsigned char len = 0;
+    len = strlen(number);
+
+    if ((len > PHONE_NUMBER_MAX_LEN) || (len < 3))
+        return 0;
+
+    for (unsigned char i = 0; i < len; i++)
+    {
+        if (*(number + i) != '+')
+        {
+            if ((*(number + i) > '9') ||
+                (*(number + i) < '0'))
+                return 0;
+        }
+    }
+
+    return 1;
+}
+
+
+//answer 1 -> ok; 0 -> some error
+unsigned char VerifySiteString (char * site)
+{
+    unsigned char len = 0;
+    len = strlen(site);
+
+    if ((len > SITE_MAX_LEN) || (len < 3))
+        return 0;
+
+    for (unsigned char i = 0; i < len; i++)
+    {
+        if ((*(site + i) == 'á') ||
+            (*(site + i) == 'é') ||
+            (*(site + i) == 'í') ||
+            (*(site + i) == 'ó') ||
+            (*(site + i) == 'ú'))
+        {
+            // do nothing here
+        }
+        else if ((unsigned char) *(site + i) == 193)
+            *(site + i) = 'A';
+        else if ((unsigned char) *(site + i) == 201)
+            *(site + i) = 'E';
+        else if ((unsigned char) *(site + i) == 205)
+            *(site + i) = 'I';
+        else if ((unsigned char) *(site + i) == 211)
+            *(site + i) = 'O';
+        else if ((unsigned char) *(site + i) == 218)
+            *(site + i) = 'U';
+        else if ((*(site + i) > '~') ||
+                 (*(site + i) < ' '))
+            return 0;
+    }
+
+    return 1;
+    
+}
+
 
 //--- end of file ---//
 

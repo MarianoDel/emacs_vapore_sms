@@ -12,8 +12,7 @@
 #include "comm.h"
 #include "parameters.h"
 #include "battery.h"
-#include "sms_data.h"
-#include "gprs_data.h"
+#include "sms_gprs_data.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -199,7 +198,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         // cut the trailing OK
         unsigned char len = strlen(payload);
         *(payload + len - 2) = '\0';
-        if (GPRS_Config(payload))
+        if (VerifyGPRSConfig(payload))
         {
             Usart2Debug("socket config ok\n");
             socket_use_enable = 1;

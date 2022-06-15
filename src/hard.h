@@ -312,11 +312,12 @@ typedef enum
     main_init = 0,
     main_wait_for_gsm_network,
     main_ready,
-    main_report_alarm_input_or_panel,
-    main_report_alarm_by_gprs,
-    main_report_alarm_by_sms,
+    main_report_alarm_input,
+    main_report_panel_input,
+    main_report_buffer,
+    main_report_buffer_not_sended,
+    main_report_buffer_sended,
     main_enable_output,
-    main_enable_act_12V_input,
     main_sms_not_sended
 
 } main_state_t;

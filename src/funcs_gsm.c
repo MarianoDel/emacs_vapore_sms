@@ -15,6 +15,8 @@
 // #include "flash_program.h"
 #include "parameters.h"
 #include "comm.h"
+#include "sms_gprs_data.h"
+#include "reports.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -569,7 +571,7 @@ typedef enum {
 // needs message
 send_gprs_e send_gprs_state;
 // unsigned char FuncsGSMSendGPRS (char *ptrMSG)
-unsigned char FuncsGSMSendGPRS (char * message)
+unsigned char FuncsGSMSendGPRS (char * message, unsigned char which_ip)
 {
     unsigned char resp = resp_gsm_continue;
     resp_cmd_e resp_cmd = cmd_continue;
@@ -665,11 +667,22 @@ unsigned char FuncsGSMSendGPRS (char * message)
     case gprs_start_tcp_udp:
         // resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"echo.u-blox.com\",\"13\"\r\n", 65000, 1, &s_msg[0]);
         // resp_cmd = GSMSendCommand ("AT+CIPSTART=\"TCP\",\"186.18.4.68\",\"10000\"\r\n", 65000, 1, &s_msg[0]);
-        sprintf(sbuff, "AT+CIPSTART=\"%s\",\"%s\",\"%s\"\r\n",
-                mem_conf.ip_proto,
-                mem_conf.ip1,
-                mem_conf.ip_port1);
-        resp_cmd = GSMSendCommand (sbuff, 65000, 1, &s_msg[0]);
+        if (which_ip == IP1)
+        {
+            sprintf(sbuff, "AT+CIPSTART=\"%s\",\"%s\",\"%s\"\r\n",
+                    mem_conf.ip_proto,
+                    mem_conf.ip1,
+                    mem_conf.ip_port1);
+            resp_cmd = GSMSendCommand (sbuff, 65000, 1, &s_msg[0]);
+        }
+        else
+        {
+            sprintf(sbuff, "AT+CIPSTART=\"%s\",\"%s\",\"%s\"\r\n",
+                    mem_conf.ip_proto,
+                    mem_conf.ip2,
+                    mem_conf.ip_port2);
+            resp_cmd = GSMSendCommand (sbuff, 65000, 1, &s_msg[0]);
+        }
 
         if (resp_cmd == cmd_ok)
         {

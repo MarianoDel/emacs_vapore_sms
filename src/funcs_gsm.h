@@ -12,16 +12,8 @@
 #ifndef _FUNCS_GSM_H_
 #define _FUNCS_GSM_H_
 
-// Includes for Configurations -------------------------------------------------
-#include "hard.h"
-#include "gprs_data.h"    //TODO: for the packet data
 
-
-// Module Configurations -------------------------------------------------------
-// #define GSM_SEND_SMS_ON_START    //envia un SMS con el dato del IMEI al conseguir red
-
-
-// Exported Types --------------------------------------------------------------
+// Exported Types Constants and Macros -----------------------------------------
 typedef enum {
 	gsm_state_reset = 0,
 	gsm_state_verify_at,
@@ -62,10 +54,6 @@ typedef enum {
 
 } t_RespGsm;
 
-typedef struct {
-    char orig_num [22];
-    char payload [160];
-} sms_t;
 
 // Exported Constants ----------------------------------------------------------
 //FLAGS de string del gsm
@@ -92,7 +80,7 @@ unsigned char FuncsGSMStateAsk (void);
 void FuncsGSMShutdown (void);
 void FuncsGSMShutdownAlways (void);
 unsigned char FuncsGSMSendSMS (char *, char *);
-unsigned char FuncsGSMSendGPRS (char *);
+unsigned char FuncsGSMSendGPRS (char *, unsigned char which_ip);
 
 void FuncsGSMMessageFlags (unsigned short);
 unsigned short FuncsGSMMessageFlagsAsk (void);

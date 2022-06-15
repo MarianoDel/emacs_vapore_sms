@@ -103,9 +103,9 @@ void Battery_Check (void)
         break;
     }
     
-    if (sequence_ready)
+    if (DMASequenceReadyGet())
     {
-        sequence_ready_reset;
+        DMASequenceReadyReset();
         if (cntr < 100)
             cntr++;
         else

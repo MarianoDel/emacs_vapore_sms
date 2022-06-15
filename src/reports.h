@@ -5,24 +5,37 @@
 // ## @Editor: Emacs - ggtags
 // ## @TAGS:   Global
 // ##
-// #### SMS_DATA.H #################################
+// #### REPORTS.H ##################################
 //--------------------------------------------------
 
 // Define to prevent recursive inclusion ---------------------------------------
-#ifndef _SMS_DATA_H_
-#define _SMS_DATA_H_
+#ifndef _REPORTS_H_
+#define _REPORTS_H_
 
 
 // Exported Types Constants and Macros -----------------------------------------
-#define SMS_NOT_SEND    0
-#define SMS_SENT    1
+typedef struct {
+    char * buffer;
+    unsigned char attempts;
+    unsigned char media_flags;
+
+} reports_st;
+
+
+#define REPORT_SENDING    0
+#define REPORT_SENT    1
+#define REPORT_NOT_SENT    2
+
+#define REPORT_BY_IP1    0x01
+#define REPORT_BY_IP2    0x02
+#define REPORT_BY_SMS    0x04
 
 
 // Module Exported Functions ---------------------------------------------------
-unsigned char VerifyNumberString (char * number);
-unsigned char VerifySiteString (char * site);
-unsigned char VerifyAndSendSMS (char * message);
+unsigned char ReportsVerifyAndSend (reports_st * report);
+void ReportsTimeouts (void);
 
-#endif    /* _SMS_DATA_H_ */
+
+#endif    /* _REPORTS_H_ */
 
 //--- end of file ---//

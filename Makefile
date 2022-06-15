@@ -90,9 +90,9 @@ SRC += ./src/comm.c
 SRC += ./src/comms_from_panel.c
 SRC += ./src/dsp.c
 SRC += ./src/battery.c
-SRC += ./src/sms_data.c
-SRC += ./src/gprs_data.c
+SRC += ./src/sms_gprs_data.c
 SRC += ./src/contact_id.c
+SRC += ./src/reports.c
 
 
 ## Core Support
@@ -255,45 +255,37 @@ tests_comm:
 
 tests_battery:
 	# first module objects to test
-	gcc -c src/battery.c -I. $(INCDIR) $(DDEFS)
+	gcc -c --coverage src/battery.c -I. $(INCDIR) $(DDEFS)
 	gcc -c src/dsp.c -I. $(INCDIR) $(DDEFS)
 	# second auxiliary helper modules
 	gcc -c src/tests_ok.c
 	gcc -c src/tests_utils.c
-	gcc src/tests_battery.c battery.o dsp.o tests_ok.o tests_utils.o -I $(INCDIR) $(DDEFS)
+	gcc --coverage src/tests_battery.c battery.o dsp.o tests_ok.o tests_utils.o -I $(INCDIR) $(DDEFS)
 	./a.out
+	# process coverage
+	gcov battery.c -m
 
 tests_comms_from_panel:
 	# first module objects to test
-	gcc -c src/comms_from_panel.c -I. $(INCDIR) $(DDEFS)
+	gcc -c --coverage src/comms_from_panel.c -I. $(INCDIR) $(DDEFS)
 	# second auxiliary helper modules
 	gcc -c src/tests_ok.c -I $(INCDIR)
 	gcc -c src/tests_mock_usart.c -I $(INCDIR)
-	gcc src/tests_comms_from_panel.c comms_from_panel.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
-	./a.out
-
-tests_sms_data:
-	# first compile common modules (modules to test and dependencies)
-	gcc -c --coverage src/sms_data.c -I. $(INCDIR) $(DDEFS)
-	# second auxiliary helper modules
-	gcc -c src/tests_ok.c -I $(INCDIR)
-	gcc -c src/tests_mock_usart.c -I $(INCDIR)
-	gcc --coverage src/tests_sms_data.c sms_data.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
+	gcc --coverage src/tests_comms_from_panel.c comms_from_panel.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
 	./a.out
 	# process coverage
-	gcov sms_data.c -m
+	gcov comms_from_panel.c -m
 
-tests_gprs_data:
+tests_sms_gprs_data:
 	# first compile common modules (modules to test and dependencies)
-	gcc -c --coverage src/gprs_data.c -I. $(INCDIR) $(DDEFS)
-	gcc -c src/sms_data.c -I. $(INCDIR) $(DDEFS)
+	gcc -c --coverage src/sms_gprs_data.c -I. $(INCDIR) $(DDEFS)
 	# second auxiliary helper modules
 	gcc -c src/tests_ok.c -I $(INCDIR)
 	gcc -c src/tests_mock_usart.c -I $(INCDIR)
-	gcc --coverage src/tests_gprs_data.c gprs_data.o sms_data.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
+	gcc --coverage src/tests_sms_gprs_data.c sms_gprs_data.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
 	./a.out
 	# process coverage
-	gcov gprs_data.c -m
+	gcov sms_gprs_data.c -m
 
 tests_contact_id:
 	# first compile common modules (modules to test and dependencies)
@@ -322,12 +314,12 @@ tests_hard_simul:
 	gcc -g -c src/funcs_gsm.c -I $(INCDIR) $(DDEFS)
 	gcc -g -c src/sim900_800.c -I $(INCDIR) $(DDEFS)
 	gcc -g -c src/comm.c -I $(INCDIR) $(DDEFS)
-	gcc -g -c src/sms_data.c -I $(INCDIR) $(DDEFS)
-	gcc -g -c src/gprs_data.c -I $(INCDIR) $(DDEFS)
+	gcc -g -c src/sms_gprs_data.c -I $(INCDIR) $(DDEFS)
 	gcc -g -c src/contact_id.c -I $(INCDIR) $(DDEFS)
+	gcc -g -c src/reports.c -I $(INCDIR) $(DDEFS)
 	# second auxiliary helper modules
 	gcc -g -c src/tests_ok.c -I $(INCDIR)
-	gcc -g src/tests_hard_simul.c tests_ok.o funcs_gsm.o sim900_800.o comm.o sms_data.o gprs_data.o contact_id.o -I $(INCDIR) $(DDEFS) -lpthread
+	gcc -g src/tests_hard_simul.c tests_ok.o funcs_gsm.o sim900_800.o comm.o sms_gprs_data.o contact_id.o reports.o -I $(INCDIR) $(DDEFS) -lpthread
 	# test execution
 	./a.out
 

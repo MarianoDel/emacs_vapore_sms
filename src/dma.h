@@ -11,28 +11,25 @@
 #ifndef _DMA_H_
 #define _DMA_H_
 
-//--- Defines for configuration ----------------
-// #define DMA_WITH_INTERRUPT
-
-//--- Exported types ---//
-#define RCC_DMA_CLK    (RCC->AHBENR & RCC_AHBENR_DMA1EN)
-#define RCC_DMA_CLK_ON    (RCC->AHBENR |= RCC_AHBENR_DMA1EN)
-#define RCC_DMA_CLK_OFF    (RCC->AHBENR &= ~RCC_AHBENR_DMA1EN)
-
+// Module Exported Types Constants and Macros ----------------------------------
 #define sequence_ready         (DMA1->ISR & DMA_ISR_TCIF1)
 #define sequence_ready_reset   (DMA1->IFCR = DMA_ISR_TCIF1)
 
+// -- Defines for configuration
+// #define DMA_WITH_INTERRUPT
 
-//--- Exported constants ---//
 
-
-//--- Module Functions ---//
+// Module Exported Functions ---------------------------------------------------
 void DMAConfig(void);
+unsigned char DMASequenceReadyGet (void);
+void DMASequenceReadyReset (void);
+
+
+#ifdef DMA_WITH_INTERRUPT
 void DMAEnableInterrupt (void);
 void DMADisableInterrupt (void);
 void DMA1_Channel1_IRQHandler (void);
-
-
+#endif
 
 
 #endif /* _DMA_H_ */
