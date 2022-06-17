@@ -8,7 +8,6 @@
 // #### USART.C ##################
 //--------------------------------
 
-/* Includes ------------------------------------------------------------------*/
 #include "hard.h"
 #include "stm32g0xx.h"
 #include "usart.h"
@@ -16,11 +15,19 @@
 #include <string.h>
 
 
+// Module Private Types Constants and Macros -----------------------------------
+#define USART1_CLK    (RCC->APBENR2 & 0x00004000)
+#define USART1_CLK_ON    (RCC->APBENR2 |= 0x00004000)
+#define USART1_CLK_OFF    (RCC->APBENR2 &= ~0x00004000)
 
+#define USART2_CLK    (RCC->APBENR1 & 0x00020000)
+#define USART2_CLK_ON    (RCC->APBENR1 |= 0x00020000)
+#define USART2_CLK_OFF    (RCC->APBENR1 &= ~0x00020000)
 
-//--- Private typedef ---//
-//--- Private define ---//
-//--- Private macro ---//
+#define USART_64MHz_9600    6666
+#define USART_16MHz_9600    1666
+#define USART_115200    416
+#define USART_250000    192
 
 
 
@@ -260,6 +267,15 @@ void Usart2Send (char * send)
 
     i = strlen(send);
     Usart2SendUnsigned((unsigned char *)send, i);
+}
+
+
+unsigned char Usart2SendVerifyEmpty (void)
+{
+    if (ptx2_pckt_index == tx2buff)
+        return 1;
+
+    return 0;
 }
 
 

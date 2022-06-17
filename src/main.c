@@ -556,6 +556,8 @@ void ConfigurationChange (void)
 {
     unsigned char saved_ok = 0;
 
+    while (!Usart2SendVerifyEmpty());
+    
     __disable_irq();
     saved_ok = Flash_WriteConfigurations((uint32_t *)&mem_conf, sizeof(mem_conf));
     __enable_irq();                

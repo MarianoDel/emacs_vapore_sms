@@ -567,10 +567,7 @@ typedef enum {
 } send_gprs_e;
 
 
-// needs apn, tcp/udp, server ip or domain, server port
-// needs message
 send_gprs_e send_gprs_state;
-// unsigned char FuncsGSMSendGPRS (char *ptrMSG)
 unsigned char FuncsGSMSendGPRS (char * message, unsigned char which_ip)
 {
     unsigned char resp = resp_gsm_continue;
@@ -587,6 +584,7 @@ unsigned char FuncsGSMSendGPRS (char * message, unsigned char which_ip)
         {
             // blocks FuncsGSM SM
             gsm_state = gsm_state_sending_gprs;
+            FuncsGSM_ServerAnswer_Reset ();
             send_gprs_state++;
         }
         break;
@@ -779,7 +777,11 @@ unsigned char FuncsGSMSendGPRS (char * message, unsigned char which_ip)
         {
             if (!strncmp(s_msg, "SHUT OK", sizeof("SHUT OK") - 1))
             {
-                resp = resp_gsm_ok;
+                if (FuncsGSM_ServerAnswer_Get())
+                    resp = resp_gsm_ok;
+                else
+                    resp = resp_gsm_error;
+                
                 send_gprs_state = gprs_init;
                 // unblock FuncsGSM SM
                 gsm_state = gsm_state_ready;
