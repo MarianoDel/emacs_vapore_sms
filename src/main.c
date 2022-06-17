@@ -66,6 +66,8 @@ reports_st repo;
 // - Globals from timers -------
 volatile unsigned short timer_standby = 0;
 volatile unsigned short timer_prender_ringing = 0;
+volatile unsigned short keepalive_cnt = 0;
+volatile unsigned short secs_millis = 0;
 
 
 // Module Private Functions ----------------------------------------------------
@@ -170,6 +172,13 @@ int main(void)
     static char buff [SITE_MAX_LEN + 20] = { 0 };
     unsigned char answer = 0;    //multi pourpose answer
 
+    // for memory alignment pourpose
+    // sprintf(buff, "memory size: %d\n", sizeof(mem_conf));
+    // Usart2Debug(buff);
+    
+    // set the first keepalive
+    keepalive_cnt = mem_conf.keepalive;
+
     while (1)
     {
         switch (main_state)
@@ -185,6 +194,7 @@ int main(void)
             diag_battery_reset;
             diag_battery_low_voltage_reset;
             diag_battery_disconnect_voltage_reset;
+            diag_battery_good_voltage_reset;
 
             //reset de configuraciones del gsm
             // see ConfigurationCheck() for all the following
@@ -238,71 +248,62 @@ int main(void)
             {
                 // if we are in gprs mode check always
                 if (socket_use_enable)
-                {
-                    if (VerifyNumberString(num_tel_rep) &&
-                        (VerifySocketData(1)))
+                {                
+                    if (diag_battery_low_voltage)
                     {
-                        char remote_number_str [4] = { 0 };
-                        
-                        if (diag_battery_low_voltage)
-                        {
-                            strcpy(remote_number_str, "000");
-                            ContactIDString(low_system_battery_opening,
-                                            mem_conf.client_number,
-                                            remote_number_str,
-                                            buff);
+                        ContactIDString(low_system_battery_opening,
+                                        mem_conf.client_number,
+                                        "000",
+                                        buff);
+
+                        diag_battery_low_voltage_reset;
                                     
-                            main_state = main_report_buffer;
-                            timer_standby = 0;
-                            diag_battery_low_voltage_reset;
-                        }
-                        else if (diag_battery_good_voltage)
-                        {
-                            strcpy(remote_number_str, "000");
-                            ContactIDString(low_system_battery_close,
-                                            mem_conf.client_number,
-                                            remote_number_str,
-                                            buff);
+                        repo.buffer = buff;
+                        repo.attempts = 3;
+                        repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2 | REPORT_BY_SMS;
+                        main_state = main_report_buffer;
+                    }
+                    else if (diag_battery_good_voltage)
+                    {
+                        ContactIDString(low_system_battery_close,
+                                        mem_conf.client_number,
+                                        "000",
+                                        buff);
                                     
-                            main_state = main_report_buffer;
-                            timer_standby = 0;
-                            diag_battery_good_voltage_reset;
-                        }
+                        diag_battery_good_voltage_reset;
+
+                        repo.buffer = buff;
+                        repo.attempts = 3;
+                        repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2 | REPORT_BY_SMS;
+                        main_state = main_report_buffer;
                     }
                 }
-
-                // if we are in sms mode check if its configured
+                // in sms mode check only if its configured
                 else if ((battery_check) &&
                          ((diag_battery_low_voltage) ||
                           (diag_battery_disconnect_voltage)))
                 {
-                    if (VerifyNumberString(num_tel_rep))
+                    unsigned char volts_int = 0;
+                    unsigned char volts_dec = 0;
+                    Battery_Voltage(&volts_int, &volts_dec);
+                    
+                    if (diag_battery_low_voltage)
                     {
-                        unsigned char volts_int = 0;
-                        unsigned char volts_dec = 0;
-                        Battery_Voltage(&volts_int, &volts_dec);
-                        if (diag_battery_low_voltage)
-                        {
-                            sprintf(buff, "BAT_LOW: %02d.%02dV", volts_int, volts_dec);
-                            diag_battery_low_voltage_reset;
-                        }
-                        
-                        if (diag_battery_disconnect_voltage)
-                        {
-                            sprintf(buff, "BAT_DISC: %02d.%02dV", volts_int, volts_dec);
-                            diag_battery_disconnect_voltage_reset;
-                        }
-                        
-                        if (FuncsGSMSendSMS (buff, num_tel_rep) == resp_gsm_ok)
-                        {
-                            Usart2Debug(buff);
-                            Usart2Debug(" -> Sended OK!\n");
-                        }
-                        else    // cant send
-                            Usart2Debug("Battery report not sended!\n");
+                        sprintf(buff, "BAT_LOW: %02d.%02dV", volts_int, volts_dec);
+                        diag_battery_low_voltage_reset;
                     }
-                    else
-                        Usart2Debug("sin numero grabado para reportes\n");
+                        
+                    if (diag_battery_disconnect_voltage)
+                    {
+                        sprintf(buff, "BAT_DISC: %02d.%02dV", volts_int, volts_dec);
+                        diag_battery_disconnect_voltage_reset;
+                    }
+
+                    // send report by sms
+                    repo.buffer = buff;
+                    repo.attempts = 3;
+                    repo.media_flags = REPORT_BY_SMS;
+                    main_state = main_report_buffer;
                 }
             }
 
@@ -352,6 +353,25 @@ int main(void)
                     ChangeLed(LED_GSM_NETWORK_LOW_RSSI);
                     led_rssi_status = LED_RSSI_LOW;
                 }
+            }
+
+
+            if ((socket_use_enable) &&
+                (mem_conf.keepalive) &&
+                (!keepalive_cnt))    // check keepalive timer and enable
+            {
+                ContactIDString(keep_alive,
+                                mem_conf.client_number,
+                                "000",
+                                buff);
+
+                keepalive_cnt = mem_conf.keepalive;
+                                    
+                repo.buffer = buff;
+                repo.attempts = 3;
+                repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2;
+                main_state = main_report_buffer;
+                Usart2Debug("send keepalive msg!!!\n");
             }
             break;
 
@@ -568,6 +588,15 @@ void TimingDelay_Decrement(void)
 
     ReportsTimeouts ();
 
+    if (secs_millis < 1000)
+        secs_millis++;
+    else
+    {
+        secs_millis = 0;
+        if (keepalive_cnt)
+            keepalive_cnt--;
+    }
+    
     // FuncsGSMG_Timeouts ();
     
 }

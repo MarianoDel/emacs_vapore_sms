@@ -35,8 +35,19 @@
 // #define PAGE31_START	768
 // #define PAGE31_END		1023
 
-#define PAGE15        (15U)
-#define PAGE15_ADDR        ((uint32_t)0x08007800)
+#define PAGE15    (15U)
+#define PAGE31    (31U)
+#if (FLASH_PAGE_SIZE == 2048)
+#define PAGE15_ADDR    ((uint32_t)0x08007800)
+#define PAGE31_ADDR    ((uint32_t)0x0800F800)
+#endif
+#if (FLASH_PAGE_SIZE == 1024)
+#define PAGE30_ADDR    ((uint32_t)0x08007800)
+#define PAGE31_ADDR    ((uint32_t)0x08007C00)
+#define PAGE62_ADDR    ((uint32_t)0x0800F800)
+#define PAGE63_ADDR    ((uint32_t)0x0800FC00)
+#endif
+
 // #define PAGE28			((uint32_t)0x08007000)
 // #define PAGE29			((uint32_t)0x08007400)
 // #define PAGE30			((uint32_t)0x08007800)

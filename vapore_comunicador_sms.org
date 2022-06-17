@@ -282,6 +282,9 @@
     - REPORTAR_BAT:1 habilita reportes del estado de bateria
     - REPORTAR_BAT:0 deshabilita
 
+*** manda por bateria baja y bateria desconectada
+    - no envia cuando se restituye el valor de bateria
+
 *** para que pueda enviar reportes
     - habiliar los reportes
     - cargar el numero a reportar

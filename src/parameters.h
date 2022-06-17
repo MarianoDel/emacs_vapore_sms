@@ -29,7 +29,7 @@ typedef struct parameters {
     unsigned char memory_saved_flag;    //220
 
     // conf running flags
-    unsigned int internal_comms_flag;    //224 4 bytes if its aligned
+    unsigned int internal_comms_flag;    //224 4 bytes if its aligned to 4
 
     // gprs settings
     char ip1 [16];    //240
@@ -42,8 +42,8 @@ typedef struct parameters {
 
     // monitor account
     char client_number [7];    //347
-    unsigned short keepalive;    //349
-    unsigned char bkp_socket_use;    //350
+    unsigned char bkp_socket_use;    //348
+    unsigned short keepalive;    //350 2 bytes if its aligned to 4
 
     // // // complete alignment with dummys
     unsigned char dummy1 [50];    //400    (multiply of eight)

@@ -167,18 +167,6 @@ unsigned char FuncsGSMGateway_SM (void)
 void FuncsGSMGateway (void)
 {
 //---------- Pruebas con GSM GATEWAY --------//
-    Led_Off();
-    for (unsigned char i = 0; i < 6; i++)
-    {
-        if (Led_Status())
-            Led_Off();
-        else
-            Led_On();
-
-        Wait_ms (300);
-    }
-
-    Wait_ms (100);
     Usart2Send("GSM GATEWAY.. no module reboot\r\n");
     Wait_ms (100);
     Usart2Send("GSM GATEWAY working in loop - Ready\r\n");

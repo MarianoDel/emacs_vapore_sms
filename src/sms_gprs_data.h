@@ -23,8 +23,9 @@
 #define IP2    2
 
 
-// Module Exported Functions ---------------------------------------------------
-unsigned char VerifyGPRSConfig (char * payload);
+// Module Exported Functions --------------------------------------------------
+unsigned char VerifyGPRSConfig_IP1 (char * payload);
+unsigned char VerifyGPRSConfig_IP2 (char * payload);
 unsigned char VerifySocketData (unsigned char which_ip);
 
 unsigned char VerifySMSData (void);

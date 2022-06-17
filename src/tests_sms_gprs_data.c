@@ -39,6 +39,8 @@ extern unsigned char VerifyIPProtocol (char * ip_proto, unsigned char len);
 extern unsigned char VerifyPort (char * ip, unsigned char len);
 extern unsigned char StringIsANumber (char * pn, unsigned short * number);    
 extern unsigned char VerifyKeepNumber (unsigned short keep);
+extern unsigned char VerifyKeepString (char * keep, unsigned char len);
+extern unsigned char VerifyDomainString (char * keep, unsigned char len);
 
 
 // Module Mocked Functions -----------------------------------------------------
@@ -50,9 +52,11 @@ void FuncsGSMSendGPRS_Answer (unsigned char answer);
 
 // Module Functions for testing ------------------------------------------------
 void Test_Verify_APN (void);
+void Test_Verify_Domain (void);
 void Test_Verify_IP_Protocol (void);
 void Test_Verify_IP_String (void);
 void Test_Verify_IP_Port (void);
+void Test_Verify_Keep_String (void);
 
 void Test_GPRS_Config (void);
 void Test_GPRS_Send (void);
@@ -76,9 +80,12 @@ int main(int argc, char *argv[])
 
     Test_Verify_Number ();
 
-    // Test_Verify_And_Send_SMS ();
-
+    ////////////////////////////
+    // Gprs Testing Functions //
+    ////////////////////////////
     Test_Verify_APN ();
+
+    Test_Verify_Domain ();
 
     Test_Verify_IP_String ();
 
@@ -86,9 +93,13 @@ int main(int argc, char *argv[])
 
     Test_Verify_IP_Port ();
 
+    Test_Verify_Keep_String ();
+
     Test_Verify_Socket_Data ();
     
-    // Test_GPRS_Config ();
+    // Test_Verify_And_Send_SMS ();
+
+    Test_GPRS_Config ();
 
     // Test_GPRS_Send ();
 }
@@ -106,7 +117,7 @@ void Test_Verify_Socket_Data (void)
         PrintERR();
 
     strcpy(mem_conf.ip1, "255.255.255.255");
-    strcpy(mem_conf.ip_port1, "2");    
+    strcpy(mem_conf.ip_port1, "67000");
     printf("  error on ip_port1: ");
     if (!VerifySocketData(IP1))
         PrintOK();
@@ -428,6 +439,49 @@ void Test_Verify_Site (void)
     
 }
 
+
+void Test_Verify_Keep_String (void)
+{
+    char keep_str [20]; 
+    unsigned char len = 0;
+    
+    strcpy(keep_str, "09");    
+    printf("Verify keep string error %s: ", keep_str);
+    len = strlen(keep_str);
+    if (!VerifyKeepString(keep_str, len))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(keep_str, "1000");
+    printf("Verify keep string error %s: ", keep_str);
+    len = strlen(keep_str);
+    if (!VerifyKeepString(keep_str, len))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(keep_str, "1aa");
+    printf("Verify keep string error %s: ", keep_str);
+    len = strlen(keep_str);
+    if (!VerifyKeepString(keep_str, len))
+        PrintOK();
+    else
+        PrintERR();
+    
+    strcpy(keep_str, "100");
+    printf("Verify keep string ok %s: ", keep_str);
+    len = strlen(keep_str);
+    if (VerifyKeepString(keep_str, len))
+        PrintOK();
+    else
+        PrintERR();
+    
+    printf("\n");
+    
+}
+
+
 // void Test_GPRS_Send (void)
 // {
 //     gprs_pckt_t packet;
@@ -470,41 +524,23 @@ void Test_Verify_Site (void)
 void Test_GPRS_Config (void)
 {
     char conf_test [165] = { 0 };
-    char ip1 [20] = { 0 };
-    char port1 [20] = { 0 };    
-    char ip2 [20] = { 0 };
-    char port2 [20] = { 0 };    
-    char proto [20] = { 0 };
-    char apn [67] = { 0 };
-    char client [20] = { 0 };
-    char keep [20] = { 0 };
     
-    // conf okeys
-    strcpy(conf_test,"IP1:192.168.1.1,PORT1:10000,IP2:192.168.1.1,PORT2:9000,PROTO:UDP,APN:gprs.movistar.com,CLI:554433,KEEP:60OK");
-    printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);
+    // conf ip1 with trailing OK
+    strcpy(conf_test,"IP1:192.168.1.1,PORT1:10000,PROTO:UDP,APN:gprs.movistar.com,CLI:554433,KEEP:60OK");
+    printf("Test gprs conf ip1 len %d %s :", strlen(conf_test), conf_test);
     unsigned char len = strlen(conf_test);
     *(conf_test + len - 2) = '\0';
-    printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);    
-    if (VerifyGPRSConfig(conf_test))
-        PrintOK();
-    else
-        PrintERR();
-
-    strcpy(conf_test,"IP1:192.168.1.1,PORT1:10000,IP2:,PORT2:,PROTO:UDP,APN:gprs.movistar.com,CLI:554433,KEEP:60OK");
-    printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);
-    len = strlen(conf_test);
-    *(conf_test + len - 2) = '\0';
-    printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);    
-    if (VerifyGPRSConfig(conf_test))
+    printf("Test gprs conf ip1 len %d %s :", strlen(conf_test), conf_test);    
+    if (VerifyGPRSConfig_IP1(conf_test))
         PrintOK();
     else
         PrintERR();
     
 
-    // conf errors
+    // conf ip1 with errors
     strcpy(conf_test,"IP:2.168.1.1,PROTO:TCP,PORT:2,APN:gprs.movistar.com");
-    printf("Test gprs conf len %d %s :", strlen(conf_test), conf_test);    
-    if (!VerifyGPRSConfig(conf_test))
+    printf("Test gprs conf ip1 len %d %s :", strlen(conf_test), conf_test);    
+    if (!VerifyGPRSConfig_IP1(conf_test))
         PrintOK();
     else
         PrintERR();
@@ -576,6 +612,17 @@ void Test_GPRS_Config (void)
     // printf("\nmem ip_proto %s", mem_conf.ip_proto);
     // printf("\nmem ip_port %s", mem_conf.ip_port);
     // printf("\nmem apn %s", mem_conf.apn);    
+
+    // conf ip2 with trailing OK
+    strcpy(conf_test,"IP2:192.168.1.1,PORT2:10000OK");
+    printf("Test gprs conf ip2 len %d %s :", strlen(conf_test), conf_test);
+    len = strlen(conf_test);
+    *(conf_test + len - 2) = '\0';
+    printf("Test gprs conf ip2 len %d %s :", strlen(conf_test), conf_test);    
+    if (VerifyGPRSConfig_IP2(conf_test))
+        PrintOK();
+    else
+        PrintERR();
     
     printf("\n");
 }
@@ -669,9 +716,38 @@ void Test_Verify_APN (void)
         PrintOK();
     else
         PrintERR();    
+
+    memset(apn_test, 'm', 68);
+    printf("Test verify error too long on apn: %s: ", apn_test);
+    if (!VerifyAPNString(apn_test, strlen(apn_test)))
+        PrintOK();
+    else
+        PrintERR();    
     
     printf("\n");
     
+}
+
+
+void Test_Verify_Domain (void)
+{
+    char domain [80] = { 0 };
+    
+    strcpy(domain, "gprs.personal.com");
+    printf("Test verify domain ok: %s: ", domain);
+    if (VerifyDomainString(domain, strlen(domain)))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(domain, "gprs.personal. com");
+    printf("Test verify domain error: %s: ", domain);
+    if (!VerifyDomainString(domain, strlen(domain)))
+        PrintOK();
+    else
+        PrintERR();
+
+    printf("\n");    
 }
 
 
@@ -714,6 +790,14 @@ void Test_Verify_IP_String (void)
     else
         PrintERR();
 
+    char new_ip [22];
+    strcpy(new_ip, "01234567890123456789");
+    printf("Test verify error on ip %s: ", new_ip);
+    if (!VerifyIPString(new_ip, strlen(new_ip)))
+        PrintOK();
+    else
+        PrintERR();
+    
     printf("Test verify error on ip %s: ", ip6);
     if (!VerifyIPString(ip6, sizeof(ip6) - 1))
         PrintOK();
@@ -790,6 +874,21 @@ void Test_Verify_IP_Port (void)
 
     printf("Test verify error on ip port %s: ", ip8);
     if (!VerifyPort(ip8, sizeof(ip8) - 1))
+        PrintOK();
+    else
+        PrintERR();
+
+    char new_port[22];
+    strcpy(new_port, "aaaa");
+    printf("Test verify error on ip port %s: ", new_port);
+    if (!VerifyPort(new_port, strlen(new_port)))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(new_port, "112233");
+    printf("Test verify error on ip port %s: ", new_port);
+    if (!VerifyPort(new_port, strlen(new_port)))
         PrintOK();
     else
         PrintERR();

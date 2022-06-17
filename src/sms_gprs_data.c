@@ -283,21 +283,19 @@ unsigned char VerifyIsANumber (char * pn, unsigned int * number)
 
 
 // callback with sms payloads
-#define CONFIG_FIELDS    8
+#define CONFIG_FIELDS_IP1    6
 #define FIELD_IP1    0
 #define FIELD_PORT1    1
-#define FIELD_IP2    2
-#define FIELD_PORT2    3
-#define FIELD_PROTO    4
-#define FIELD_APN    5
-#define FIELD_CLI    6
-#define FIELD_KEEP    7
+#define FIELD_PROTO    2
+#define FIELD_APN    3
+#define FIELD_CLI    4
+#define FIELD_KEEP    5
 
 //answer 1 -> ok; 0 -> some error
-unsigned char VerifyGPRSConfig (char * payload)
+unsigned char VerifyGPRSConfig_IP1 (char * payload)
 {
     unsigned char len = strlen (payload);
-    unsigned char commas[CONFIG_FIELDS] = { 0 };
+    unsigned char commas[CONFIG_FIELDS_IP1] = { 0 };
     unsigned char field_len;
     unsigned char field_start;    
 
@@ -312,7 +310,7 @@ unsigned char VerifyGPRSConfig (char * payload)
         if (*(payload + i) == ',')
         {
             commas[comma_cnt] = i;
-            if (comma_cnt < (CONFIG_FIELDS - 1))
+            if (comma_cnt < (CONFIG_FIELDS_IP1 - 1))
                 comma_cnt++;
             else
             {
@@ -322,7 +320,7 @@ unsigned char VerifyGPRSConfig (char * payload)
         }        
     }
 
-    if (comma_cnt != (CONFIG_FIELDS - 1))
+    if (comma_cnt != (CONFIG_FIELDS_IP1 - 1))
         return 0;
 
     // check for valid ip1
@@ -341,22 +339,6 @@ unsigned char VerifyGPRSConfig (char * payload)
 
     Usart2Debug("port1 ok\n");
 
-    // check for valid ip2 or nothing
-    field_start = commas[FIELD_IP2 - 1] + sizeof("IP2:");    // take the comma in account
-    field_len = commas[FIELD_IP2] - field_start;
-    if (!VerifyIPString(payload + field_start, field_len))
-        return 0;
-
-    Usart2Debug("ip2 ok\n");
-
-    // check for valid port2 or nothing
-    field_start = commas[FIELD_PORT2 - 1] + sizeof("PORT2:");    // take the comma in account
-    field_len = commas[FIELD_PORT2] - field_start;
-    if (!VerifyPort(payload + field_start, field_len))
-        return 0;
-
-    Usart2Debug("port2 ok\n");
-    
     // check for valid ip protocol
     field_start = commas[FIELD_PROTO - 1] + sizeof("PROTO:");    // take the comma in account
     field_len = commas[FIELD_PROTO] - field_start;
@@ -405,18 +387,6 @@ unsigned char VerifyGPRSConfig (char * payload)
     pcut = mem_conf.ip_port1;
     *(pcut + field_len) = '\0';
 
-    field_start = commas[FIELD_IP2 - 1] + sizeof("IP2:");    // take the comma in account
-    field_len = commas[FIELD_IP2] - field_start;
-    strncpy(mem_conf.ip2, (payload + field_start), field_len);
-    pcut = mem_conf.ip2;
-    *(pcut + field_len) = '\0';
-
-    field_start = commas[FIELD_PORT2 - 1] + sizeof("PORT2:");    // take the comma in account
-    field_len = commas[FIELD_PORT2] - field_start;
-    strncpy(mem_conf.ip_port2, (payload + field_start), field_len);
-    pcut = mem_conf.ip_port2;
-    *(pcut + field_len) = '\0';
-    
     field_start = commas[FIELD_PROTO - 1] + sizeof("PROTO:");    // take the comma in account
     field_len = commas[FIELD_PROTO] - field_start;    
     strncpy(mem_conf.ip_proto, (payload + field_start), field_len);
@@ -435,9 +405,81 @@ unsigned char VerifyGPRSConfig (char * payload)
     pcut = mem_conf.client_number;
     *(pcut + field_len) = '\0';    
 
-    field_start = commas[FIELD_KEEP] + sizeof("KEEP:");    // take the comma in account
+    field_start = commas[FIELD_KEEP - 1] + sizeof("KEEP:");    // take the comma in account
     field_len = len - field_start;    //no trailing comma
     mem_conf.keepalive = atoi(payload + field_start);
+
+    return 1;
+}
+
+
+// callback with sms payloads
+#define CONFIG_FIELDS_IP2    2
+#define FIELD_IP2    0
+#define FIELD_PORT2    1
+
+//answer 1 -> ok; 0 -> some error
+unsigned char VerifyGPRSConfig_IP2 (char * payload)
+{
+    unsigned char len = strlen (payload);
+    unsigned char commas[CONFIG_FIELDS_IP2] = { 0 };
+    unsigned char field_len;
+    unsigned char field_start;    
+
+    // check for max len
+    if (len > 165)
+        return 0;
+
+    // check for config fields
+    unsigned char comma_cnt = 0;
+    for (int i = 0; i < len; i++)
+    {
+        if (*(payload + i) == ',')
+        {
+            commas[comma_cnt] = i;
+            if (comma_cnt < (CONFIG_FIELDS_IP2 - 1))
+                comma_cnt++;
+            else
+            {
+                comma_cnt = 255;
+                break;
+            }
+        }        
+    }
+
+    if (comma_cnt != (CONFIG_FIELDS_IP2 - 1))
+        return 0;
+
+    // check for valid ip2
+    field_start = sizeof("IP2:") - 1;
+    field_len = commas[FIELD_IP2] - field_start;
+    if (!VerifyIPString(payload + field_start, field_len))
+        return 0;
+
+    Usart2Debug("ip2 ok\n");
+
+    // check for valid port1
+    field_start = commas[FIELD_PORT2 - 1] + sizeof("PORT2:");    // take the comma in account
+    field_len = len - field_start;    //no trailing comma
+    if (!VerifyPort(payload + field_start, field_len))
+        return 0;
+
+    Usart2Debug("port2 ok\n");
+
+    // all data is valid, save it
+    char * pcut;
+
+    field_start = sizeof("IP2:") - 1;
+    field_len = commas[FIELD_IP2] - field_start;    
+    strncpy(mem_conf.ip2, (payload + field_start), field_len);
+    pcut = mem_conf.ip2;
+    *(pcut + field_len) = '\0';
+    
+    field_start = commas[FIELD_PORT2 - 1] + sizeof("PORT2:");    // take the comma in account
+    field_len = len - field_start;    //no trailing comma
+    strncpy(mem_conf.ip_port2, (payload + field_start), field_len);
+    pcut = mem_conf.ip_port2;
+    *(pcut + field_len) = '\0';
 
     return 1;
 }

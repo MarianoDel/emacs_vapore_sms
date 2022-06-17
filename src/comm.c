@@ -198,11 +198,35 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         // cut the trailing OK
         unsigned char len = strlen(payload);
         *(payload + len - 2) = '\0';
-        if (VerifyGPRSConfig(payload))
+        if (VerifyGPRSConfig_IP1(payload))
         {
             Usart2Debug("socket config ok\n");
             socket_use_enable = 1;
             socket_conf_change_set;
+            diag_battery_low_voltage_reset;
+            diag_battery_good_voltage_reset;
+
+            enviar_sms = 1;
+            strcpy(enviar_sms_num, orig_num);
+            strcpy(enviar_sms_msg, "OK");
+        }
+        else
+            Usart2Debug("bad socket data!\n");
+
+    }
+    else if (!strncmp(payload, "IP2:", sizeof ("IP2:") - 1))
+    {
+        // GPRS config, call the correspondig module function
+        // cut the trailing OK
+        unsigned char len = strlen(payload);
+        *(payload + len - 2) = '\0';
+        if (VerifyGPRSConfig_IP2(payload))
+        {
+            Usart2Debug("socket config ok\n");
+            socket_use_enable = 2;
+            socket_conf_change_set;
+            // diag_battery_low_voltage_reset;
+            // diag_battery_good_voltage_reset;
 
             enviar_sms = 1;
             strcpy(enviar_sms_num, orig_num);

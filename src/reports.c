@@ -32,6 +32,8 @@ typedef enum {
 
 } report_state_e;
 
+#define ATTEMPTS_TIMER    3000
+
 
 // Externals -------------------------------------------------------------------
 extern parameters_typedef mem_conf;
@@ -86,7 +88,7 @@ unsigned char ReportsVerifyAndSend (reports_st * report)
             if (report_repeat_cnt)
             {
                 report_repeat_cnt--;
-                report_timer = 1000;
+                report_timer = ATTEMPTS_TIMER;
             }
             else
             {
@@ -133,7 +135,7 @@ unsigned char ReportsVerifyAndSend (reports_st * report)
             if (report_repeat_cnt)
             {
                 report_repeat_cnt--;
-                report_timer = 1000;
+                report_timer = ATTEMPTS_TIMER;
             }
             else
             {
@@ -175,7 +177,7 @@ unsigned char ReportsVerifyAndSend (reports_st * report)
             if (report_repeat_cnt)
             {
                 report_repeat_cnt--;
-                report_timer = 1000;
+                report_timer = ATTEMPTS_TIMER;
             }
             else
                 answer = REPORT_NOT_SENT;
