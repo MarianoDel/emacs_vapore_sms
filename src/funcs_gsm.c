@@ -413,7 +413,7 @@ void FuncsGSM (void)
         break;
 
     case gsm_state_sending_sms:
-        resp = GSMSendSMS (p_MSG, p_NUM, 60000);
+        resp = GSMSendSMS (p_MSG, p_NUM);
 
         if (resp == resp_gsm_ok)
         {

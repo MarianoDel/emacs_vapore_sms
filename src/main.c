@@ -54,6 +54,10 @@ unsigned char rssi_level = 0;
 #define LED_RSSI_HIGH    1
 #define LED_RSSI_CMD_ERRORS    2            
 
+// - Externals for comms flags
+unsigned short comms_global_flag = 0;
+volatile unsigned short keepalive_cnt = 0;
+
 
 // Globals ---------------------------------------------------------------------
 
@@ -66,14 +70,12 @@ reports_st repo;
 // - Globals from timers -------
 volatile unsigned short timer_standby = 0;
 volatile unsigned short timer_prender_ringing = 0;
-volatile unsigned short keepalive_cnt = 0;
 volatile unsigned short secs_millis = 0;
 
 
 // Module Private Functions ----------------------------------------------------
 void TimingDelay_Decrement(void);
 void ConfigurationChange (void);
-void ConfigurationCheck (void);
 void SysTickError (void);
 
 
@@ -140,15 +142,17 @@ int main(void)
     {
         //memoria vacia --> Configuracion a Default
         mem_conf.memory_saved_flag = 0;
-        timer_rep = 2;
-        envios_ok = 0;
-        prender_ring = 0;
-        battery_check = 0;
-        socket_use_enable = 0;        
-        memset(num_tel_rep, '\0', sizeof(num_tel_rep));
+        timer_rep_conf = 2;
+        envios_ok_conf = 0;
+        prender_ring_conf = 0;
+        battery_check_conf = 0;
+        socket_use_enable_conf = 0;
+        
         memset(num_tel_imei, '\0', sizeof(num_tel_imei));
         memset(num_tel_prop, '\0', sizeof(num_tel_prop));
+        memset(num_tel_rep, '\0', sizeof(num_tel_rep));
         memset(sitio_prop, '\0', sizeof(sitio_prop));
+
         // strcpy(num_tel_rep, "1141747063");
         // strcpy(num_tel_rep, "");        
         // strcpy(sitio_prop, "Prueba Kirno");
@@ -187,25 +191,6 @@ int main(void)
             ChangeLed(LED_STANDBY);
             ACT_12V_OFF;
             main_state = main_wait_for_gsm_network;
-
-            //reset de flags del gsm
-            diag_prender_reset;
-            diag_ringing_reset;
-            diag_battery_reset;
-            diag_battery_low_voltage_reset;
-            diag_battery_disconnect_voltage_reset;
-            diag_battery_good_voltage_reset;
-
-            //reset de configuraciones del gsm
-            // see ConfigurationCheck() for all the following
-            timer_rep_change_reset;
-            envios_ok_change_reset;
-            prender_ring_change_reset;
-            num_tel_rep_change_reset;
-            sitio_prop_change_reset;
-            battery_check_change_reset;
-            socket_conf_change_reset;
-            
             break;
 
         case main_wait_for_gsm_network:
@@ -219,25 +204,25 @@ int main(void)
         case main_ready:
 
             // activate from SMS
-            if (diag_prender)
+            if (comms_activate_sms_flag)
             {
-                diag_prender_reset;
+                comms_activate_sms_flag_reset;
                 main_state = main_enable_output;
-                ACT_12V_ON;
-                timer_standby = timer_rep * 1000;
+                Activation_12V_On();    // ACT_12V_ON;
+                timer_standby = timer_rep_conf * 1000;
                 Usart2Send("ACT_12V ACTIVO\n");
             }
 
             // activate from phone ringing
-            else if ((diag_ringing) &&
-                     (prender_ring) &&
+            else if ((comms_activate_ringing_flag) &&
+                     (prender_ring_conf) &&
                      (!timer_prender_ringing))
             {
-                diag_ringing_reset;
+                comms_activate_ringing_flag_reset;
                 timer_prender_ringing = 12000;
                 main_state = main_enable_output;
-                ACT_12V_ON;
-                timer_standby = timer_rep * 1000;
+                Activation_12V_On();    // ACT_12V_ON;
+                timer_standby = timer_rep_conf * 1000;
                 Usart2Send("ACT_12V ACTIVO\n");
             }
 
@@ -247,30 +232,30 @@ int main(void)
             if (FuncsGSMStateAsk () == gsm_state_ready)
             {
                 // if we are in gprs mode check always
-                if (socket_use_enable)
+                if (socket_use_enable_conf)
                 {                
-                    if (diag_battery_low_voltage)
+                    if (comms_battery_low_flag)
                     {
                         ContactIDString(low_system_battery_opening,
                                         mem_conf.client_number,
                                         "000",
                                         buff);
 
-                        diag_battery_low_voltage_reset;
+                        comms_battery_low_flag_reset;
                                     
                         repo.buffer = buff;
                         repo.attempts = 3;
                         repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2 | REPORT_BY_SMS;
                         main_state = main_report_buffer;
                     }
-                    else if (diag_battery_good_voltage)
+                    else if (comms_battery_good_flag)
                     {
                         ContactIDString(low_system_battery_close,
                                         mem_conf.client_number,
                                         "000",
                                         buff);
                                     
-                        diag_battery_good_voltage_reset;
+                        comms_battery_good_flag_reset;
 
                         repo.buffer = buff;
                         repo.attempts = 3;
@@ -279,24 +264,24 @@ int main(void)
                     }
                 }
                 // in sms mode check only if its configured
-                else if ((battery_check) &&
-                         ((diag_battery_low_voltage) ||
-                          (diag_battery_disconnect_voltage)))
+                else if ((battery_check_conf) &&
+                         ((comms_battery_low_flag) ||
+                          (comms_battery_disconnect_flag)))
                 {
                     unsigned char volts_int = 0;
                     unsigned char volts_dec = 0;
                     Battery_Voltage(&volts_int, &volts_dec);
                     
-                    if (diag_battery_low_voltage)
+                    if (comms_battery_low_flag)
                     {
                         sprintf(buff, "BAT_LOW: %02d.%02dV", volts_int, volts_dec);
-                        diag_battery_low_voltage_reset;
+                        comms_battery_low_flag_reset;
                     }
                         
-                    if (diag_battery_disconnect_voltage)
+                    if (comms_battery_disconnect_flag)
                     {
                         sprintf(buff, "BAT_DISC: %02d.%02dV", volts_int, volts_dec);
-                        diag_battery_disconnect_voltage_reset;
+                        comms_battery_disconnect_flag_reset;
                     }
 
                     // send report by sms
@@ -356,9 +341,11 @@ int main(void)
             }
 
 
-            if ((socket_use_enable) &&
+            // check if keepalive is enabled, check if gsm is free
+            if ((socket_use_enable_conf) &&
                 (mem_conf.keepalive) &&
-                (!keepalive_cnt))    // check keepalive timer and enable
+                (!keepalive_cnt) &&
+                (FuncsGSMStateAsk() == gsm_state_ready))
             {
                 ContactIDString(keep_alive,
                                 mem_conf.client_number,
@@ -385,7 +372,7 @@ int main(void)
 
         case main_report_alarm_input:
             // check if we are going to use gprs mode or sms mode
-            if (socket_use_enable)
+            if (socket_use_enable_conf)
             {
                 // gprs mode, assembly the buffer
                 ContactIDString(panic_alarm,
@@ -413,7 +400,7 @@ int main(void)
 
         case main_report_panel_input:
             // check if we are going to use gprs mode or sms mode
-            if (socket_use_enable)
+            if (socket_use_enable_conf)
             {
                 // gprs mode, assembly the buffer
                 char remote_number_str [4] = { 0 };                
@@ -486,7 +473,7 @@ int main(void)
 
         // check configuration changes and the need for a memory save
         if (main_state >= main_ready)
-            ConfigurationCheck();
+            ConfigurationChange();
         
         // The things that do not depend on the program state
         UpdateLed ();
@@ -506,67 +493,25 @@ int main(void)
 
 
 // Module Functions ------------------------------------------------------------
-void ConfigurationCheck (void)
-{
-    if (timer_rep_change)
-    {
-        timer_rep_change_reset;
-        ConfigurationChange();
-    }            
-
-    if (envios_ok_change)
-    {
-        envios_ok_change_reset;
-        ConfigurationChange();
-    }
-
-    if (prender_ring_change)
-    {
-        prender_ring_change_reset;
-        ConfigurationChange();
-    }
-
-    if (num_tel_rep_change)
-    {
-        num_tel_rep_change_reset;
-        ConfigurationChange();
-    }
-
-    if (sitio_prop_change)
-    {
-        sitio_prop_change_reset;
-        ConfigurationChange();
-    }
-    
-    if (battery_check_change)
-    {
-        battery_check_change_reset;
-        ConfigurationChange();
-    }
-
-    if (socket_conf_change)
-    {
-        socket_conf_change_reset;
-        ConfigurationChange();
-    }
-}
-
-
 void ConfigurationChange (void)
 {
     unsigned char saved_ok = 0;
 
-    while (!Usart2SendVerifyEmpty());
+    if (comms_memory_save_flag)
+    {
+        comms_memory_save_flag_reset;
+        while (!Usart2SendVerifyEmpty());
     
-    __disable_irq();
-    saved_ok = Flash_WriteConfigurations((uint32_t *)&mem_conf, sizeof(mem_conf));
-    __enable_irq();                
+        __disable_irq();
+        saved_ok = Flash_WriteConfigurations((uint32_t *)&mem_conf, sizeof(mem_conf));
+        __enable_irq();                
 #ifdef DEBUG_ON
-    if (saved_ok == FLASH_COMPLETE)
-        Usart2Send("Memory Saved OK!\n");
-    else
-        Usart2Send("Memory Error!!!\n");
+        if (saved_ok == FLASH_COMPLETE)
+            Usart2Send("Memory Saved OK!\n");
+        else
+            Usart2Send("Memory Error!!!\n");
 #endif
+    }
 }
 
 

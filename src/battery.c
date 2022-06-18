@@ -15,6 +15,7 @@
 #include "stm32g0xx.h"
 #include "dsp.h"
 #include "parameters.h"
+#include "comm.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -40,6 +41,7 @@ typedef enum {
 // Externals -------------------------------------------------------------------
 extern volatile unsigned short adc_ch [];
 extern parameters_typedef mem_conf;
+extern unsigned short comms_global_flag;
 
 
 // Globals ---------------------------------------------------------------------
@@ -73,7 +75,7 @@ void Battery_Check (void)
         if (battery_filter_out < BAT_LOW_VOLTAGE)
         {
             battery_status = BATTERY_LOW_VOLTAGE;
-            diag_battery_low_voltage_set;
+            comms_battery_low_flag_set;
         }
         break;
         
@@ -81,13 +83,13 @@ void Battery_Check (void)
         if (battery_filter_out < BAT_DISC_VOLTAGE)
         {
             battery_status = BATTERY_DISCONNECT;
-            diag_battery_disconnect_voltage_set;
+            comms_battery_disconnect_flag_set;
         }
 
         if (battery_filter_out > BAT_LOW_VOLTAGE_RECONNECT)
         {
             battery_status = BATTERY_GOOD;
-            diag_battery_good_voltage_set;
+            comms_battery_good_flag_set;
         }
         break;
         

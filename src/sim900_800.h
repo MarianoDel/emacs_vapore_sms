@@ -59,22 +59,17 @@ void GSM_Start_Stop_ResetSM (void);
 unsigned char GSM_Delay (unsigned short);
 
 void GSMReceive (void);
-//void GSMReceive (unsigned char * pAlertasReportar, char * puserCode, unsigned char * pclaveAct, unsigned char * pActDact);
 char GSMSendCommand (char *ptrCommand, unsigned short timeOut, unsigned char rta,char *ptrRta);
 // char GSM_Config(unsigned short timeOut);
-char GSMSendSMS (char *ptrMSG, char *ptrNUM, unsigned short timeOut);
+
 char GSMConfigGPRS (char sim, char *ptrAPN, char *ptrUSER, char *ptrKEY , char *ptrIPAdd, char *ptrIPremote, char *ptrPORTremote,unsigned short timeOut);
 char GSM_SetSIM (unsigned char sim);
-char GSMSendIP (char *ptrMSG, unsigned short timeOut);
+// char GSMSendIP (char *ptrMSG, unsigned short timeOut);
 void GSMTimeoutCounters (void);
-//void GSMPrestador(unsigned char * prestadorSim1, unsigned char * prestadorSim2);
-void GSMPrestador(unsigned char * pGSMHWstatus, unsigned char * prestadorSim1, unsigned char * prestadorSim2, char * pCONFIGURACIONgprsAPN1, char * pCONFIGURACIONgprsUsuario1, char * pCONFIGURACIONgprsClave1, char * pCONFIGURACIONgprsProveedor1, char * pCONFIGURACIONgprsAPN2, char * pCONFIGURACIONgprsUsuario2, char * pCONFIGURACIONgprsClave2, char * pCONFIGURACIONgprsProveedor2, char * pCONFIGURACIONIPREMOTE, char * pCONFIGURACIONPORTREMOTE);
-void GSMrxSMS(unsigned char * pAlertasReportar, char * puserCode, unsigned char * pclaveAct, unsigned char * pActDact, char * pGSMReadSMStel);
-char GSMCloseIP(void);
-char GSMConfigPDPGPRS (char sim, char *ptrAPN, char *ptrUSER, char *ptrKEY , char *ptrIPAdd, char *ptrIPremote, char *ptrPORTremote,unsigned short timeOut);
 
 
 void GSMProcess (void);
+t_RespGsm GSMSendSMS (char *ptrMSG, char *ptrNUM);
 t_RespGsm GSMReceivSMS (void);
 #define UARTGSMSend(X)	Usart1Send(X)
 unsigned char SMSLeft (void);

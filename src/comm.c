@@ -29,6 +29,8 @@ extern unsigned char enviar_sms;
 extern char enviar_sms_num [];
 extern char enviar_sms_msg [];
 extern parameters_typedef mem_conf;
+extern unsigned short comms_global_flag;
+extern volatile unsigned short keepalive_cnt;
 
 
 // Globals ---------------------------------------------------------------------
@@ -49,16 +51,15 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         char * p_new = (payload + sizeof ("REPORTAR_OK:") - 1);
         if (*p_new == '1')
         {
-            envios_ok = 1;
-            envios_ok_change_set;
+            envios_ok_conf = 1;
+            comms_memory_save_flag_set;
 
-            enviar_sms = 1;
             CommsCheckSendOK (orig_num);
         }
         else if (*p_new == '0')
         {
-            envios_ok = 0;
-            envios_ok_change_set;
+            envios_ok_conf = 0;
+            comms_memory_save_flag_set;            
         }
     }
 
@@ -67,14 +68,14 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         char * p_new = (payload + sizeof ("PRENDER_RING:") - 1);
         if (*p_new == '1')
         {
-            prender_ring = 1;
-            prender_ring_change_set;
+            prender_ring_conf = 1;
+            comms_memory_save_flag_set;
             CommsCheckSendOK (orig_num);
         }
         else if (*p_new == '0')
         {
-            prender_ring = 0;
-            prender_ring_change_set;
+            prender_ring_conf = 0;
+            comms_memory_save_flag_set;            
             CommsCheckSendOK (orig_num);
         }
     }
@@ -87,7 +88,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
 
         if ((*(payload + 6) == 'F') && (*(payload + 7) == 'F'))
         {
-            timer_rep = 0;
+            timer_rep_conf = 0;
         }
         else if ((index > 1) && (index <= 60))
         {
@@ -96,8 +97,8 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
             sprintf(debug, "nuevo timer %d", index);
             Usart2Send(debug);
 #endif
-            timer_rep = index;
-            timer_rep_change_set;
+            timer_rep_conf = index;
+            comms_memory_save_flag_set;
         }
         
         CommsCheckSendOK (orig_num);
@@ -121,13 +122,13 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
 #endif
             if (VerifyNumberString(new_number) == 1)
             {
-                num_tel_rep_change_set;
+                comms_memory_save_flag_set;
                 strcpy(num_tel_rep, new_number);
                 report_ok = 1;
             }
         }
         
-        if (envios_ok)
+        if (envios_ok_conf)
         {
             enviar_sms = 1;
             strcpy(enviar_sms_num, orig_num);
@@ -157,13 +158,13 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
 #endif
             if (VerifySiteString(new_site) == 1)
             {
-                sitio_prop_change_set;
+                comms_memory_save_flag_set;
                 strcpy(sitio_prop, new_site);
                 report_ok = 1;
             }
         }
         
-        if (envios_ok)
+        if (envios_ok_conf)
         {
             enviar_sms = 1;
             strcpy(enviar_sms_num, orig_num);
@@ -180,14 +181,14 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         char * p_new_conf = (payload + sizeof ("REPORTAR_BAT:") - 1);
         if (*p_new_conf == '0')
         {
-            battery_check = 0;
-            battery_check_change_set;
+            battery_check_conf = 0;
+            comms_memory_save_flag_set;
             CommsCheckSendOK (orig_num);
         }
         else if (*p_new_conf == '1')
         {
-            battery_check = 1;
-            battery_check_change_set;
+            battery_check_conf = 1;
+            comms_memory_save_flag_set;
             CommsCheckSendOK (orig_num);
         }
     }
@@ -201,10 +202,11 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         if (VerifyGPRSConfig_IP1(payload))
         {
             Usart2Debug("socket config ok\n");
-            socket_use_enable = 1;
-            socket_conf_change_set;
-            diag_battery_low_voltage_reset;
-            diag_battery_good_voltage_reset;
+            // update the keepalive timer & enable socket use
+            keepalive_cnt = mem_conf.keepalive;
+            socket_use_enable_conf = 1;
+
+            comms_memory_save_flag_set;
 
             enviar_sms = 1;
             strcpy(enviar_sms_num, orig_num);
@@ -223,10 +225,8 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         if (VerifyGPRSConfig_IP2(payload))
         {
             Usart2Debug("socket config ok\n");
-            socket_use_enable = 2;
-            socket_conf_change_set;
-            // diag_battery_low_voltage_reset;
-            // diag_battery_good_voltage_reset;
+            socket_use_enable_conf = 2;
+            comms_memory_save_flag_set;
 
             enviar_sms = 1;
             strcpy(enviar_sms_num, orig_num);
@@ -258,10 +258,9 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
     // }
     else if (!strncmp(payload, "IPNO:", sizeof ("IPNO:") - 1))
     {
-        socket_use_enable = 0;
-        socket_conf_change_set;            
-        // CommsCheckSendOK (orig_num);
-
+        socket_use_enable_conf = 0;
+        comms_memory_save_flag_set;
+        
         enviar_sms = 1;
         strcpy(enviar_sms_num, orig_num);
         strcpy(enviar_sms_msg, "OK");
@@ -270,7 +269,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
     // Diagnostics and Activations    
     else if (!strncmp(payload, (const char *)"PRENDER:", sizeof ("PRENDER:") - 1))
     {
-        diag_prender_set;
+        comms_activate_sms_flag_set;
         CommsCheckSendOK (orig_num);
     }
 
@@ -290,7 +289,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
 
 void CommsCheckSendOK (char * orig_num)
 {
-    if (envios_ok)
+    if (envios_ok_conf)
     {
         enviar_sms = 1;
         strcpy(enviar_sms_num, orig_num);
