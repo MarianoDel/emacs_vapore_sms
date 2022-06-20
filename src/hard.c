@@ -203,46 +203,40 @@ void WelcomeCode (void)
 {
     char str [128] = { 0 };
     
-    Usart2Send("\r\nKirno -- Comunicador Vapore SMS --\r\n");
+    Usart2Debug("\r\nKirno -- Comunicador Vapore SMS --\r\n", 0);
 
 #ifdef HARD
-    Usart2Send(HARD);
+    Usart2Debug(HARD, 0);
     Wait_ms(100);    
 #else
 #error	"No Hardware defined in hard.h file"
 #endif
 
 #ifdef SOFT
-    Usart2Send(SOFT);
+    Usart2Debug(SOFT, 0);
     Wait_ms(100);    
 #else
 #error	"No Soft Version defined in hard.h file"
 #endif
     
-    Usart2Send("Features:\r\n");
+    Usart2Debug("\r\nFeatures:\r\n", 0);
     
     // Main Program Type
-#ifdef USE_GSM
-    sprintf(str,"[%s] %s\n", __FILE__, str_macro(USE_GSM));
-    Usart2Send(str);
+#ifdef DEFAULT_DEBUG_LVL
+    sprintf(str,"[%s] %s: %d\n", __FILE__, str_macro(DEFAULT_DEBUG_LVL), DEFAULT_DEBUG_LVL);
+    Usart2Debug(str, 0);
     Wait_ms(30);
 #endif
 
 #ifdef USE_GSM_GATEWAY_SM
     sprintf(str,"[%s] %s\n", __FILE__, str_macro(USE_GSM_GATEWAY_SM));
-    Usart2Send(str);
+    Usart2Debug(str, 0);
     Wait_ms(30);    
 #endif
 
 #ifdef USE_GSM_GATEWAY_IN_LOOP
     sprintf(str,"[%s] %s\n", __FILE__, str_macro(USE_GSM_GATEWAY_IN_LOOP));
-    Usart2Send(str);
-    Wait_ms(30);    
-#endif
-
-#ifdef DEBUG_ON
-    sprintf(str,"[%s] %s\n", __FILE__, str_macro(DEBUG_ON));
-    Usart2Send(str);
+    Usart2Debug(str, 0);
     Wait_ms(30);    
 #endif
     

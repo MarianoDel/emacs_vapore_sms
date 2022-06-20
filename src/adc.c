@@ -19,7 +19,7 @@ extern volatile unsigned short adc_ch [];
 
 
 #ifdef ADC_WITH_INT
-extern volatile unsigned char adc_int_seq_ready;
+volatile unsigned char adc_int_seq_ready = 0;
 #endif
 
 #ifdef ADC_WITH_TEMP_SENSE
@@ -54,6 +54,8 @@ unsigned char new_temp_sample = 0;
 //In this mode (DISCEN=1), a hardware or software trigger event is required to start
 //each conversion defined in the sequence. Only with (CONT=0)
 
+//TODO: CUIDADO, no funciona con ADCClock >= 16MHz!!!
+//TODO: CUIDADO2, en dma no funciona con ADCClock >= 8MHz!!!
 void AdcConfig (void)
 {
     if (!RCC_ADC_CLK)
@@ -67,23 +69,31 @@ void AdcConfig (void)
     ADC1->SMPR = 0x00000000;
     ADC1->CHSELR = 0x00000000;
 
+    //--- Sync clk settings
     //set clock in sync
     // ADC1->CFGR2 = ADC_ClockMode_SynClkDiv4;
     // ADC1->CFGR2 = ADC_ClockMode_SynClkDiv2;
     // ADC1->CFGR2 = ADC_ClockMode_SynClkDiv1;
+    // effective freq 64/4 = 16MHz
+    //--- end of Sync clk settings    
 
+    //--- Async clk settings
     //set clock async, expect some jitter, change RCC params too
     ADC1->CFGR2 = ADC_ClockMode_AsynClk;
     //check pllp divider on system clock config & enable it
     RCC->PLLCFGR |= RCC_PLLCFGR_PLLPEN;
     //set ADCSEL to PLLP
     RCC->CCIPR |= RCC_CCIPR_ADCSEL_0;
-    //set the pre divider for async clocks /4 efective freq 8MHz
-    ADC1_COMMON->CCR |= ADC_CCR_PRESC_1;
+    //set the pre divider for async clocks
+    // ADC1_COMMON->CCR |= ADC_CCR_PRESC_1;    // pres / 4 freq = 8MHz
+    ADC1_COMMON->CCR |= ADC_CCR_PRESC_2;    // pres / 8 freq = 4MHz
+    // ADC1_COMMON->CCR |= ADC_CCR_PRESC_0;    // pres / 2 freq = 16MHz NO FUNCIONA!!!
+    //--- end of Async clk settings
     
 
     //set resolution, trigger & Continuos or Discontinuous
-    // ADC1->CFGR1 |= ADC_Resolution_10b | ADC_ExternalTrigConvEdge_Rising | ADC_ExternalTrigConv_T3_TRGO;	//recordar ADC1->CR |= ADC_CR_ADSTART
+    //remember do a start ADC1->CR |= ADC_CR_ADSTART
+    // ADC1->CFGR1 |= ADC_Resolution_10b | ADC_ExternalTrigConvEdge_Rising | ADC_ExternalTrigConv_T3_TRGO;
     // ADC1->CFGR1 |= ADC_Resolution_10b | ADC_ExternalTrigConvEdge_Rising | ADC_ExternalTrigConv_T1_TRGO;
     // ADC1->CFGR1 |= ADC_Resolution_12b | ADC_CFGR1_DISCEN;
     ADC1->CFGR1 |= ADC_Resolution_12b | ADC_CFGR1_CONT;    
@@ -92,6 +102,13 @@ void AdcConfig (void)
     //set sampling time
     ADC1->SMPR |= ADC_SMPR_SMP1_2 | ADC_SMPR_SMP1_1 | ADC_SMPR_SMP1_0 |
         ADC_SMPR_SMP2_2 | ADC_SMPR_SMP2_1 | ADC_SMPR_SMP2_0;
+
+    // effective conversion time (sampling time + sar_res) / eff freq
+    // eff freq = 16MHz, resolution 12b, sampling 160.5, sar_12bits 12.5
+    // (160.5 + 12.5) * 1 / 16MHz = 10.8us
+    
+    // effective end of sequence (conv time * num_chnls)
+    // (10.8 * 2) = 21.6us
     
     //set channel selection
     ADC1->CHSELR |= ADC_All_Orer_Channels;
@@ -127,22 +144,24 @@ void ADC1_IRQHandler (void)
 {
     if (ADC1->ISR & ADC_IT_EOC)
     {
-        // if (ADC1->ISR & ADC_IT_EOSEQ)
-        // {
-        //     p_channel = &adc_ch[ADC_LAST_CHANNEL_QUANTITY];
-        //     *p_channel = ADC1->DR;
-        //     p_channel = &adc_ch[0];
-        //     seq_ready = 1;
-        // }
-        // else
-        // {
-        //     *p_channel = ADC1->DR;		//
-        //     if (p_channel < &adc_ch[ADC_LAST_CHANNEL_QUANTITY])
-        //         p_channel++;
-        // }
-
+#if (ADC_CHANNEL_QUANTITY > 1)
+        if (ADC1->ISR & ADC_IT_EOSEQ)
+        {
+            p_channel = &adc_ch[ADC_LAST_CHANNEL_QUANTITY];
+            *p_channel = ADC1->DR;
+            p_channel = &adc_ch[0];
+            adc_int_seq_ready = 1;            
+        }
+        else
+        {
+            *p_channel = ADC1->DR;
+            if (p_channel < &adc_ch[ADC_LAST_CHANNEL_QUANTITY])
+                p_channel++;
+        }
+#else
         adc_ch[0] = ADC1->DR;
         adc_int_seq_ready = 1;
+#endif
         //clear pending
         ADC1->ISR |= ADC_IT_EOC | ADC_IT_EOSEQ;
     }

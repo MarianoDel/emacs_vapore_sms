@@ -211,6 +211,7 @@ void SystemClock64MHz (void)
 
     //Change PLLP divider for PLLPCLK output /4 = 32MHz
     RCC->PLLCFGR |= RCC_PLLCFGR_PLLP_1 | RCC_PLLCFGR_PLLP_0;
+    // RCC->PLLCFGR |= RCC_PLLCFGR_PLLP_0;    
 
     //PLL Clock source
     RCC->PLLCFGR |= RCC_PLLCFGR_PLLSRC_1;

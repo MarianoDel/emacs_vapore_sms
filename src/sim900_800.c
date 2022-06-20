@@ -366,8 +366,8 @@ void GSMReceive (void)
     if (GSM_PacketReady)
     {
         FuncsGSMParser((unsigned char *)buffUARTGSMrx2, (unsigned char *)buffUARTGSMrx2);
-        Usart2Debug((char *)buffUARTGSMrx2);
-        Usart2Debug("\r\n");
+        Usart2Debug((char *)buffUARTGSMrx2, 3);
+        Usart2Debug("\r\n", 3);
 
         if (GSMSendCommandFlag)
         {
@@ -567,7 +567,7 @@ t_RespGsm GSMSendSMS (char *ptrMSG, char *ptrNUM)
         strcat(&GSMSendSMSbuffAux[0], ptrNUM);
         strcat(&GSMSendSMSbuffAux[0], "\"\r\n");
         GSMSendSMSState++;
-        Usart2Debug("send sms\n");
+        Usart2Debug("send sms\n", 2);
         break;
 
     case 1:
@@ -629,7 +629,7 @@ t_RespGsm GSMReceivSMS (void)
         if (GSMCantSMS)    //avanzo solo si tengo algo que leer
         {
             sprintf(&GSMReadSMScommand[0], (const char *)"AT+CMGR=%d\r\n", GSMCantSMS);
-            Usart2Debug("receiv sms\n");
+            Usart2Debug("receiv sms\n", 1);
             GSMReadSMSState++;
         }
         break;
@@ -673,7 +673,7 @@ t_RespGsm GSMReceivSMS (void)
                 char s_debug [60];
                 strncpy(last_num, &GSMbuffRtaCommand[num_start], num_end - num_start);
                 sprintf(s_debug, "el numero origen: %s\n", last_num);
-                Usart2Debug(s_debug);
+                Usart2Debug(s_debug, 2);
                     
                 //en pToAnswer debo tener la respuesta (payload del SMS)
                 if (colon_index == 8)
@@ -716,7 +716,7 @@ t_RespGsm GSMReceivSMS (void)
         {
             char s_debug [40] = { 0 };
             sprintf(s_debug, "del read answer: %d\n", i);
-            Usart2Debug(s_debug);
+            Usart2Debug(s_debug, 2);
             GSMReadSMSState = 0;
             resp = resp_gsm_ok;
         }

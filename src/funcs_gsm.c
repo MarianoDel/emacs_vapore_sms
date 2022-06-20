@@ -95,7 +95,7 @@ void FuncsGSM (void)
 
         if ((resp == resp_gsm_error) || (resp == resp_gsm_timeout))
         {
-            Usart2Debug("module not started\n");
+            Usart2Debug("module not started\n", 2);
             gsm_state = gsm_state_shutdown;
         }
         break;
@@ -270,9 +270,9 @@ void FuncsGSM (void)
 
             i = strlen(s_msg);
             strncpy(mem_conf.imei, s_msg, (i - 2));
-            Usart2Debug("IMEI: ");
-            Usart2Debug(mem_conf.imei);
-            Usart2Debug("\r\n");
+            Usart2Debug("IMEI: ", 1);
+            Usart2Debug(mem_conf.imei, 1);
+            Usart2Debug("\r\n", 1);
 
             //mando SMS con mi info
             strcpy(s_msg, "IMEI: ");
@@ -283,6 +283,7 @@ void FuncsGSM (void)
             p_NUM = mem_conf.num_reportar;
             gsm_state = gsm_state_sending_sms;
 #else
+            Usart2Debug("GSM is Ready!\n", 1);
             gsm_state = gsm_state_ready;
 #endif
         }
@@ -334,7 +335,7 @@ void FuncsGSM (void)
 
                 char s_ser [20] = { 0 };
                 sprintf(s_ser, "RSSI: %d\n", rssi_level);
-                Usart2Debug(s_ser);
+                Usart2Debug(s_ser, 2);
                 gsm_state = gsm_state_check_network;
                 resp = 2;
             }
@@ -373,7 +374,7 @@ void FuncsGSM (void)
 
                 char s_ser [20] = { 0 };
                 sprintf(s_ser, "REG: %d\n", register_status);
-                Usart2Debug(s_ser);
+                Usart2Debug(s_ser, 2);
                 if ((register_status == 1) || (register_status == 5))
                 {
                     gsm_error_counter = 0;
@@ -420,14 +421,14 @@ void FuncsGSM (void)
             if (gsm_sms_error_counter)
                 gsm_sms_error_counter--;
 
-            Usart2Debug("end send sms ok\n");
+            Usart2Debug("end send sms ok\n", 1);
             gsm_state = gsm_state_ready;
         }
 
         if ((resp == resp_gsm_error) ||
             (resp == resp_gsm_timeout))
         {
-            Usart2Debug("end send sms with errors\n");
+            Usart2Debug("end send sms with errors\n", 1);
             
             if (gsm_sms_error_counter < MAX_SMS_ERRORS)
             {
@@ -458,7 +459,7 @@ void FuncsGSM (void)
                 gsm_error_counter,
                 gsm_sms_error_counter);
         
-        Usart2Debug(s_msg);
+        Usart2Debug(s_msg, 2);
         GSM_Start_Stop_ResetSM ();
         gsm_state = gsm_state_shutdown_2;
         break;
@@ -471,7 +472,7 @@ void FuncsGSM (void)
             if ((resp == resp_gsm_error) ||
                 (resp == resp_gsm_timeout))
             {
-                Usart2Debug("module not stopped\n");
+                Usart2Debug("module not stopped\n", 2);
             }        
             
             GSM_Start_Stop_ResetSM ();
@@ -497,7 +498,7 @@ void FuncsGSM (void)
             if ((resp == resp_gsm_error) ||
                 (resp == resp_gsm_timeout))
             {
-                Usart2Debug("module not stopped\n");
+                Usart2Debug("module not stopped\n", 2);
             }        
             
             GSM_Start_Stop_ResetSM ();
@@ -710,7 +711,7 @@ unsigned char FuncsGSMSendGPRS (char * message, unsigned char which_ip)
         
         if (!funcs_gsm_timeout_timer)
         {
-            Usart2Send("gprs conn timeout\n");
+            Usart2Debug("gprs conn timeout\n", 2);
             resp = resp_gsm_error;
         }
         break;
@@ -734,7 +735,7 @@ unsigned char FuncsGSMSendGPRS (char * message, unsigned char which_ip)
         if (resp_cmd == cmd_ok)    // wait for SEND OK
         {
             funcs_gsm_timeout_timer = 20000;
-            Usart2Send("wait server answer for 20secs\n");
+            Usart2Debug("wait server answer for 20secs\n", 2);
             send_gprs_state++;
         }
         
@@ -747,7 +748,7 @@ unsigned char FuncsGSMSendGPRS (char * message, unsigned char which_ip)
         // continuosly check if sended is equal to answered
         if(!strncmp(message, (const char *) buffUARTGSMrx2, strlen(message)))
         {
-            Usart2Debug("answer from server getted!!!");
+            Usart2Debug("answer from server getted!!!", 1);
             FuncsGSM_ServerAnswer_Set();
             send_gprs_state++;
         }

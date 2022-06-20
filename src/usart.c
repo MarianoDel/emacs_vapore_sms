@@ -51,6 +51,7 @@ volatile unsigned char * prx2;
 volatile unsigned char tx2buff[SIZEOF_DATA];
 volatile unsigned char rx2buff[SIZEOF_DATA];
 
+unsigned char usart_debug_level = 0;
 
 // Module Private Functions ----------------------------------------------------
 
@@ -253,11 +254,22 @@ void Usart2SendSingle (unsigned char b)
 }
 
 
-void Usart2Debug (char * send)
+void Usart2Debug (char * send, unsigned char debug_level)
 {
-#ifdef DEBUG_ON
-    Usart2Send (send);
-#endif
+    if (usart_debug_level >= debug_level)
+        Usart2Send (send);
+}
+
+
+void UsartDebugLevel_Set(unsigned char debug_level)
+{
+    usart_debug_level = debug_level;
+}
+
+
+unsigned char  UsartDebugLevel_Get(void)
+{
+    return usart_debug_level;
 }
 
 

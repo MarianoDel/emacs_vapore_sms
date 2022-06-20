@@ -16,6 +16,7 @@
 #include "hard.h"
 #include "adc.h"
 #include "parameters.h"
+#include "battery.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -64,6 +65,25 @@ void FuncsGSMG_Entering (void)
                 gw_mode = 1;
                 FuncsGSMGateway_SM_Reset();
             }
+
+            if (!strncmp(buff, "debug level ", sizeof ("debug level ") -1))
+            {
+                unsigned char new_level = 0;
+                new_level = *(buff + sizeof ("debug level ") - 1) - '0';
+                UsartDebugLevel_Set(new_level);
+                Usart2Send("changed!\n");
+            }            
+
+            if (!strncmp(buff, "battery", sizeof ("battery") -1))
+            {
+                unsigned char v_i = 0;
+                unsigned char v_d = 0;
+                char volts_buff[20];
+
+                Battery_Voltage(&v_i, &v_d);
+                sprintf(volts_buff, "battery: %d.%02dV\n", v_i, v_d);
+                Usart2Send(volts_buff);
+            }            
         }
     }
     

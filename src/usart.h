@@ -34,7 +34,10 @@ void Usart2SendSingle (unsigned char);
 void Usart2Send (char *);
 void Usart2SendUnsigned(unsigned char *, unsigned char);
 unsigned char Usart2SendVerifyEmpty (void);
-void Usart2Debug (char *);
+void Usart2Debug (char *, unsigned char debug_level);
+void UsartDebugLevel_Set(unsigned char debug_level);
+unsigned char  UsartDebugLevel_Get(void);
+
 
 unsigned char Usart2ReadBuffer (unsigned char *, unsigned short);
 void USART2_IRQHandler(void);

@@ -35,8 +35,12 @@
 // #define FIRMWARE_VER_1_3    // delay sms message
 // #define FIRMWARE_VER_1_2    // all programs in one
 
-// -- select the debug level
-#define DEBUG_ON
+// -- select the default debug level
+// use level 0 for the things to send always
+// use level 1 for the results of functions or process
+// use level 2 for the inner states of functions
+// use level 3 for all other messages
+#define DEFAULT_DEBUG_LVL    1
 
 
 //-------- Clock Frequency ------------------------------------

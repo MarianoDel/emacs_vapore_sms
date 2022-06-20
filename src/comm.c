@@ -13,17 +13,15 @@
 #include "parameters.h"
 #include "battery.h"
 #include "sms_gprs_data.h"
+#include "usart.h"
 
 #include <string.h>
 #include <stdio.h>
 
 
 // Private Types Constants and Macros ------------------------------------------
-#define COMM_DEBUG_ON
 
-#ifdef COMM_DEBUG_ON
-#include "usart.h"
-#endif
+
 // Externals -------------------------------------------------------------------
 extern unsigned char enviar_sms;
 extern char enviar_sms_num [];
@@ -92,11 +90,10 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         }
         else if ((index > 1) && (index <= 60))
         {
-#ifdef COMM_DEBUG_ON
             char debug [60] = {'\0'};
             sprintf(debug, "nuevo timer %d", index);
-            Usart2Send(debug);
-#endif
+            Usart2Debug(debug, 2);
+
             timer_rep_conf = index;
             comms_memory_save_flag_set;
         }
@@ -115,11 +112,10 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
             char new_number [20] = { 0 };
             strncpy(new_number, p_new_number, (len - 2));
 
-#ifdef COMM_DEBUG_ON
             char debug [60] = {'\0'};
             sprintf(debug, "nuevo numero a reportar %s\n", new_number);
-            Usart2Send(debug);
-#endif
+            Usart2Debug(debug, 2);
+
             if (VerifyNumberString(new_number) == 1)
             {
                 comms_memory_save_flag_set;
@@ -151,11 +147,10 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
             char new_site [SITE_MAX_LEN + 1] = { 0 };
             strncpy(new_site, p_new_place, len - 2);    //quito el trailing OK
 
-#ifdef COMM_DEBUG_ON
             char debug [SITE_MAX_LEN + 20] = {'\0'};
             sprintf(debug, "nuevo lugar %s\n", new_site);
-            Usart2Send(debug);
-#endif
+            Usart2Debug(debug, 2);
+
             if (VerifySiteString(new_site) == 1)
             {
                 comms_memory_save_flag_set;
@@ -201,7 +196,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         *(payload + len - 2) = '\0';
         if (VerifyGPRSConfig_IP1(payload))
         {
-            Usart2Debug("socket config ok\n");
+            Usart2Debug("socket config ok\n", 1);
             // update the keepalive timer & enable socket use
             keepalive_cnt = mem_conf.keepalive;
             socket_use_enable_conf = 1;
@@ -213,7 +208,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
             strcpy(enviar_sms_msg, "OK");
         }
         else
-            Usart2Debug("bad socket data!\n");
+            Usart2Debug("bad socket data!\n", 1);
 
     }
     else if (!strncmp(payload, "IP2:", sizeof ("IP2:") - 1))
@@ -224,7 +219,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         *(payload + len - 2) = '\0';
         if (VerifyGPRSConfig_IP2(payload))
         {
-            Usart2Debug("socket config ok\n");
+            Usart2Debug("socket config ok\n", 1);
             socket_use_enable_conf = 2;
             comms_memory_save_flag_set;
 
@@ -233,7 +228,7 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
             strcpy(enviar_sms_msg, "OK");
         }
         else
-            Usart2Debug("bad socket data!\n");
+            Usart2Debug("bad socket data!\n", 1);
 
     }
     // else if (!strncmp(payload, "IPDN:", sizeof ("IPDN:") - 1))

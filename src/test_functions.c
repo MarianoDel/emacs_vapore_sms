@@ -29,6 +29,7 @@ extern volatile unsigned char usart1_have_data;
 extern volatile unsigned char usart2_have_data;
 extern volatile unsigned char adc_int_seq_ready;
 extern volatile unsigned short adc_ch [];
+extern volatile unsigned char adc_int_seq_ready;
 
 // Globals ---------------------------------------------------------------------
 
@@ -44,6 +45,8 @@ void TF_Act_12V (void);
 void TF_Led_Blinking (void);
 void TF_Usart2_TxRx (void);
 void TF_Usart2_NetLight_and_Status (void);
+void TF_Usart2_Adc_Polling (void);
+void TF_Usart2_Adc_Interrupt (void);
 void TF_Usart2_Adc_Dma (void);
 void TF_Usart2_Flash_Empty_Page (void);
 void TF_Usart2_Flash_Write_Data (void);
@@ -67,7 +70,7 @@ void TF_ReadMemory (void);
 // Module Functions ------------------------------------------------------------
 void TF_Hardware_Tests (void)
 {
-    TF_Led ();
+    // TF_Led ();
     // TF_Led_Alarm_Input ();
     // TF_Alarm_Input_As_Output ();
     // TF_Led_Alarm_Input_Filtered ();
@@ -75,7 +78,9 @@ void TF_Hardware_Tests (void)
     // TF_Led_Blinking();
     // TF_Usart2_TxRx ();
     // TF_Usart2_NetLight_and_Status ();
-    // TF_Usart2_Adc_Dma ();
+    // TF_Usart2_Adc_Polling ();
+    // TF_Usart2_Adc_Interrupt ();
+    TF_Usart2_Adc_Dma ();
     // TF_Usart2_Flash_Empty_Page ();
     // TF_Usart2_Flash_Write_Data ();
     
@@ -237,6 +242,89 @@ void TF_Usart2_NetLight_and_Status (void)
 #endif
 
 
+void TF_Usart2_Adc_Polling (void)
+{
+    for (unsigned char i = 0; i < 5; i++)
+    {
+        LED_ON;
+        Wait_ms(250);
+        LED_OFF;
+        Wait_ms(250);
+    }
+    
+    Usart2Config();
+
+    //-- ADC Init
+    AdcConfig();
+    ADC1->CR |= ADC_CR_ADSTART;
+
+    unsigned short cntr = 0;
+    char s_to_send [100] = { 0 };
+    Usart2Send("\nTesting ADC with polling...\n");
+
+    while (1)
+    {
+        if (ADC1->ISR & ADC_ISR_EOC)
+        {
+            ADC1->ISR |= ADC_ISR_EOC;
+            if (cntr < 10000)
+                cntr++;
+            else
+            {
+                sprintf(s_to_send, "last ADC: %d\n", (unsigned short) ADC1->DR);
+                Usart2Send(s_to_send);
+                cntr = 0;
+            }
+        }
+    }
+}
+
+
+void TF_Usart2_Adc_Interrupt (void)
+{
+    for (unsigned char i = 0; i < 5; i++)
+    {
+        LED_ON;
+        Wait_ms(250);
+        LED_OFF;
+        Wait_ms(250);
+    }
+    
+    Usart2Config();
+
+    //-- ADC Init
+    AdcConfig();
+    ADC1->CR |= ADC_CR_ADSTART;
+
+    unsigned short cntr = 0;
+    char s_to_send [100] = { 0 };
+    Usart2Send("\nTesting ADC with Interrupts...\n");
+
+    while (1)
+    {
+        if (adc_int_seq_ready)
+        {
+            adc_int_seq_ready = 0;
+            if (LED)
+                LED_OFF;
+            else
+                LED_ON;
+            
+            if (cntr < 10000)
+                cntr++;
+            else
+            {
+                sprintf(s_to_send, "V_Sense_4V: %d V_Sense_12V: %d\n",
+                        V_Sense_4V,
+                        V_Sense_12V);
+                Usart2Send(s_to_send);
+                cntr = 0;
+            }
+        }
+    }
+}
+
+
 void TF_Usart2_Adc_Dma (void)
 {
     for (unsigned char i = 0; i < 5; i++)
@@ -258,6 +346,8 @@ void TF_Usart2_Adc_Dma (void)
 
     ADC1->CR |= ADC_CR_ADSTART;
 
+    // int eoc = 0;
+    // int ovr = 0;
     unsigned short cntr = 0;
     char s_to_send [100] = { 0 };
     Usart2Send("\nTesting ADC with dma transfers...\n");
@@ -278,7 +368,43 @@ void TF_Usart2_Adc_Dma (void)
                 Usart2Send(s_to_send);
                 cntr = 0;
             }
-        }            
+        }
+
+        // if (ADC1->ISR & ADC_ISR_OVR)
+        // {
+        //     ADC1->ISR |= ADC_ISR_OVR;
+        //     if (!ovr)
+        //         ovr = 1;
+        // }
+
+        // if (ovr == 1)
+        // {
+        //     ovr++;
+        //     Usart2Send("DMA overrun!\n");
+        // }
+        // else if (ovr == 2)
+        // {
+        //     if (Usart2SendVerifyEmpty())
+        //         ovr = 0;
+        // }
+
+        // if (ADC1->ISR & ADC_ISR_EOC)
+        // {
+        //     ADC1->ISR |= ADC_ISR_EOC;
+        //     if (!eoc)
+        //         eoc = 1;
+        // }
+        
+        // if (eoc == 1)
+        // {
+        //     eoc++;
+        //     Usart2Send("EOC\n");
+        // }
+        // else if (eoc == 2)
+        // {
+        //     if (Usart2SendVerifyEmpty())
+        //         eoc = 0;
+        // }
     }
 }
 

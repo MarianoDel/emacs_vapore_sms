@@ -60,9 +60,12 @@ void Battery_Check_Init (void)
 {
     MA16_U16Circular_Reset (&battery_filter);
 
-    // charge the filter
+    // load the filter the first time
     for (unsigned char i = 0; i < 16; i++)
-        battery_filter_out = MA16_U16Circular (&battery_filter, V_Sense_12V);
+    {
+        battery_filter_out = MA16_U16Circular (&battery_filter, 4095);
+        // battery_filter_out = MA16_U16Circular (&battery_filter, V_Sense_12V);
+    }
     
 }
     

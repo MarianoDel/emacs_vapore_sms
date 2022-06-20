@@ -13,7 +13,8 @@
 
 // Module Exported Types Constants and Macros ----------------------------------
 #define sequence_ready         (DMA1->ISR & DMA_ISR_TCIF1)
-#define sequence_ready_reset   (DMA1->IFCR = DMA_ISR_TCIF1)
+// #define sequence_ready_reset   (DMA1->IFCR = DMA_ISR_TCIF1)
+#define sequence_ready_reset   (DMA1->IFCR |= DMA_ISR_TCIF1)
 
 // -- Defines for configuration
 // #define DMA_WITH_INTERRUPT

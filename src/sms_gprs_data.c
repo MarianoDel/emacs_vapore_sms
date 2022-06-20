@@ -53,13 +53,13 @@ unsigned char VerifyAndSendGPRS (char * message)
 
     if (answer == resp_gsm_ok)
     {
-        Usart2Send("gprs connection ok\n");
+        Usart2Debug("gprs connection ok\n", 1);
         return GPRS_SENT;
     }
         
     if (answer > resp_gsm_ok)
     {
-        Usart2Send("gprs connection fail!!!\n");
+        Usart2Debug("gprs connection fail!!!\n", 1);
         return GPRS_NOT_SEND;
     }
 
@@ -329,7 +329,7 @@ unsigned char VerifyGPRSConfig_IP1 (char * payload)
     if (!VerifyIPString(payload + field_start, field_len))
         return 0;
 
-    Usart2Debug("ip1 ok\n");
+    Usart2Debug("ip1 ok\n", 2);
 
     // check for valid port1
     field_start = commas[FIELD_PORT1 - 1] + sizeof("PORT1:");    // take the comma in account
@@ -337,7 +337,7 @@ unsigned char VerifyGPRSConfig_IP1 (char * payload)
     if (!VerifyPort(payload + field_start, field_len))
         return 0;
 
-    Usart2Debug("port1 ok\n");
+    Usart2Debug("port1 ok\n", 2);
 
     // check for valid ip protocol
     field_start = commas[FIELD_PROTO - 1] + sizeof("PROTO:");    // take the comma in account
@@ -345,7 +345,7 @@ unsigned char VerifyGPRSConfig_IP1 (char * payload)
     if (!VerifyIPProtocol(payload + field_start, field_len))
         return 0;
 
-    Usart2Debug("proto ok\n");
+    Usart2Debug("proto ok\n", 2);
         
     // check for valid apn
     field_start = commas[FIELD_APN - 1] + sizeof("APN:");    // take the comma in account
@@ -353,7 +353,7 @@ unsigned char VerifyGPRSConfig_IP1 (char * payload)
     if (!VerifyAPNString((payload + field_start), field_len))
         return 0;
 
-    Usart2Debug("apn ok\n");
+    Usart2Debug("apn ok\n", 2);
 
     // check for valid client
     field_start = commas[FIELD_CLI - 1] + sizeof("CLI:");    // take the comma in account
@@ -361,7 +361,7 @@ unsigned char VerifyGPRSConfig_IP1 (char * payload)
     if (!VerifyClientNumber((payload + field_start), field_len))
         return 0;
 
-    Usart2Debug("client ok\n");
+    Usart2Debug("client ok\n",2);
     
     // check for valid keepalive
     field_start = commas[FIELD_KEEP - 1] + sizeof("KEEP:");    // take the comma in account
@@ -370,7 +370,7 @@ unsigned char VerifyGPRSConfig_IP1 (char * payload)
     if (!VerifyKeepString((payload + field_start), field_len))
         return 0;
 
-    Usart2Debug("keepalive ok\n");
+    Usart2Debug("keepalive ok\n", 2);
     
     // all data is valid, save it
     char * pcut;
@@ -456,7 +456,7 @@ unsigned char VerifyGPRSConfig_IP2 (char * payload)
     if (!VerifyIPString(payload + field_start, field_len))
         return 0;
 
-    Usart2Debug("ip2 ok\n");
+    Usart2Debug("ip2 ok\n", 2);
 
     // check for valid port1
     field_start = commas[FIELD_PORT2 - 1] + sizeof("PORT2:");    // take the comma in account
@@ -464,7 +464,7 @@ unsigned char VerifyGPRSConfig_IP2 (char * payload)
     if (!VerifyPort(payload + field_start, field_len))
         return 0;
 
-    Usart2Debug("port2 ok\n");
+    Usart2Debug("port2 ok\n", 2);
 
     // all data is valid, save it
     char * pcut;

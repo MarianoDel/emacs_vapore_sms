@@ -80,7 +80,7 @@ unsigned char ReportsVerifyAndSend (reports_st * report)
 
         if (answer == resp_gsm_ok)
         {
-            Usart2Debug("report sent by gprs ip1\n");
+            Usart2Debug("report sent by gprs ip1\n", 1);
             answer = REPORT_SENT;
         }
         else if (answer > resp_gsm_ok)
@@ -92,7 +92,7 @@ unsigned char ReportsVerifyAndSend (reports_st * report)
             }
             else
             {
-                Usart2Debug("gprs ip1 connection fail, go to ip2\n");
+                Usart2Debug("gprs ip1 connection fail, go to ip2\n", 1);
                 report_state++;
             }
             answer = REPORT_SENDING;
@@ -127,7 +127,7 @@ unsigned char ReportsVerifyAndSend (reports_st * report)
 
         if (answer == resp_gsm_ok)
         {
-            Usart2Debug("report sent by gprs ip2\n");
+            Usart2Debug("report sent by gprs ip2\n", 1);
             answer = REPORT_SENT;
         }
         else if (answer > resp_gsm_ok)
@@ -139,7 +139,7 @@ unsigned char ReportsVerifyAndSend (reports_st * report)
             }
             else
             {
-                Usart2Debug("gprs ip2 connection fail, go to sms\n");
+                Usart2Debug("gprs ip2 connection fail, go to sms\n", 1);
                 report_state++;
             }
             answer = REPORT_SENDING;
@@ -169,7 +169,7 @@ unsigned char ReportsVerifyAndSend (reports_st * report)
 
         if (FuncsGSMSendSMS (report->buffer, mem_conf.num_reportar) == resp_gsm_ok)
         {
-            Usart2Debug("report sent by sms\n");
+            Usart2Debug("report sent by sms\n", 1);
             answer = REPORT_SENT;
         }
         else

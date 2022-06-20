@@ -114,6 +114,9 @@ int main(void)
 
     EXTIOff();
 
+    // Set default debug level for messages
+    UsartDebugLevel_Set(DEFAULT_DEBUG_LVL);
+    
     // Timers Start Functions
     // TIM_3_Init ();    //lo utilizo para 1 a 10V y para synchro ADC
     // TIM_16_Init();    //o utilizo para synchro de relay
@@ -159,10 +162,10 @@ int main(void)
         //el timer a reportar esta n minutos, yo tengo tick cada 2 segundos
         // strcpy( mem_conf.num_reportar, "1149867843");	//segunda sim de claro
     
-        Usart2Send("Memory Empty\n");
+        Usart2Debug("Memory Empty\n", 1);
     }
     else
-        Usart2Send("Memory Have Saved Data\n");
+        Usart2Debug("Memory Have Saved Data\n", 1);
 
     
 //--- Programa de Activacion SMS - Produccion ---
@@ -210,7 +213,7 @@ int main(void)
                 main_state = main_enable_output;
                 Activation_12V_On();    // ACT_12V_ON;
                 timer_standby = timer_rep_conf * 1000;
-                Usart2Send("ACT_12V ACTIVO\n");
+                Usart2Debug("ACT_12V ACTIVO\n", 0);
             }
 
             // activate from phone ringing
@@ -223,7 +226,7 @@ int main(void)
                 main_state = main_enable_output;
                 Activation_12V_On();    // ACT_12V_ON;
                 timer_standby = timer_rep_conf * 1000;
-                Usart2Send("ACT_12V ACTIVO\n");
+                Usart2Debug("ACT_12V ACTIVO\n", 0);
             }
 
 #if (!defined HARDWARE_VER_1_1) && \
@@ -302,13 +305,13 @@ int main(void)
             if (alarm_input)
             {
                 Activation_12V_On();    // ACT_12V_ON;
-                Usart2Send("External 12V Activation!\n");
+                Usart2Debug("External 12V Activation!\n", 0);
                 main_state = main_report_alarm_input;
             }
             else if (panel_input)
             {
                 Activation_12V_On();    // ACT_12V_ON;
-                Usart2Send("Panel Internal Activation!\n");
+                Usart2Debug("Panel Internal Activation!\n", 0);
                 main_state = main_report_panel_input;
             }
             else if (FuncsGSMStateAsk() < gsm_state_ready)
@@ -358,7 +361,7 @@ int main(void)
                 repo.attempts = 3;
                 repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2;
                 main_state = main_report_buffer;
-                Usart2Debug("send keepalive msg!!!\n");
+                Usart2Debug("send keepalive msg!!!\n", 2);
             }
             break;
 
@@ -436,14 +439,14 @@ int main(void)
             if (answer == REPORT_NOT_SENT)
             {
                 main_state = main_report_buffer_not_sended;
-                Usart2Send("report not sended\n");
+                Usart2Debug("report not sended\n", 1);
                 timer_standby = 6000;    // six seconds to show the error
             }
 
             if (answer == REPORT_SENT)
             {
                 main_state = main_report_buffer_sended;
-                Usart2Send("report delivered\n");
+                Usart2Debug("report delivered\n", 1);
                 timer_standby = 2000;    // two seconds for show led cycle
             }
             break;
@@ -474,6 +477,22 @@ int main(void)
         // check configuration changes and the need for a memory save
         if (main_state >= main_ready)
             ConfigurationChange();
+
+        // if (main_state >= main_ready)
+        // {
+        //     ConfigurationChange();
+        //     if (!timer_standby)
+        //     {
+        //         unsigned char v_i = 0;
+        //         unsigned char v_d = 0;
+        //         char volts_buff[20];
+        //         timer_standby = 10000;
+
+        //         Battery_Voltage(&v_i, &v_d);
+        //         sprintf(volts_buff, "battery: %d.%02dV\n", v_i, v_d);
+        //         Usart2Debug(volts_buff, 1);
+        //     }
+        // }
         
         // The things that do not depend on the program state
         UpdateLed ();
@@ -505,12 +524,11 @@ void ConfigurationChange (void)
         __disable_irq();
         saved_ok = Flash_WriteConfigurations((uint32_t *)&mem_conf, sizeof(mem_conf));
         __enable_irq();                
-#ifdef DEBUG_ON
+
         if (saved_ok == FLASH_COMPLETE)
-            Usart2Send("Memory Saved OK!\n");
+            Usart2Debug("Memory Saved OK!\n", 1);
         else
-            Usart2Send("Memory Error!!!\n");
-#endif
+            Usart2Debug("Memory Error!!!\n", 1);
     }
 }
 
