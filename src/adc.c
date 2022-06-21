@@ -80,10 +80,24 @@ void AdcConfig (void)
     //--- Async clk settings
     //set clock async, expect some jitter, change RCC params too
     ADC1->CFGR2 = ADC_ClockMode_AsynClk;
-    //check pllp divider on system clock config & enable it
+
+    // Pclk
+    // check pllp divider on system clock config & enable it
     RCC->PLLCFGR |= RCC_PLLCFGR_PLLPEN;
-    //set ADCSEL to PLLP
+    // set ADCSEL to PLLP
     RCC->CCIPR |= RCC_CCIPR_ADCSEL_0;
+    // end of Pclk
+
+    // Hsi16
+    // set ADCSEL to HSI16
+    // RCC->CCIPR |= RCC_CCIPR_ADCSEL_1;
+    // end of Hsi16
+
+    // SYSCLK
+    // set ADCSEL to SYSCLK
+    // RCC->CCIPR = 0x00;
+    // end of SYSCLK
+    
     //set the pre divider for async clocks
     // ADC1_COMMON->CCR |= ADC_CCR_PRESC_1;    // pres / 4 freq = 8MHz
     ADC1_COMMON->CCR |= ADC_CCR_PRESC_2;    // pres / 8 freq = 4MHz

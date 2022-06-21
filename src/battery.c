@@ -63,8 +63,8 @@ void Battery_Check_Init (void)
     // load the filter the first time
     for (unsigned char i = 0; i < 16; i++)
     {
-        battery_filter_out = MA16_U16Circular (&battery_filter, 4095);
-        // battery_filter_out = MA16_U16Circular (&battery_filter, V_Sense_12V);
+        // battery_filter_out = MA16_U16Circular (&battery_filter, 4095);
+        battery_filter_out = MA16_U16Circular (&battery_filter, V_Sense_12V);
     }
     
 }
@@ -145,7 +145,7 @@ void Battery_Voltage (unsigned char * v_int, unsigned char * v_dec)
     unsigned int calc_dec = 0;
     unsigned int calc = battery_filter_out;
     calc = calc * 505;
-    calc = calc + 70000;
+    // calc = calc + 70000;
 
     calc_int = calc / 100000;
     *v_int = (unsigned char) calc_int;

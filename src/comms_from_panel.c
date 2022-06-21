@@ -10,6 +10,7 @@
 
 // Includes --------------------------------------------------------------------
 #include "comms_from_panel.h"
+#include "comm.h"
 #include "usart.h"
 
 #include <string.h>
@@ -21,6 +22,7 @@
 
 
 // Externals -------------------------------------------------------------------
+extern unsigned short comms_global_flag;
 
 
 // Globals ---------------------------------------------------------------------
@@ -41,6 +43,7 @@ unsigned char Panel_Check_Alarm (unsigned short * number)
         Usart2HaveActivationBufferReset();
         // Usart2SendUnsigned("algo nuevo\n", sizeof("algo nuevo\n") - 1);
 
+        // activation msg 14 bytes: Activo: 001 B1 
         // buffer is already copied from int
         char * pStr = (char *) comm_from_panel_local_buffer;
         if (!strncmp(pStr, "Activo: ", sizeof("Activo: ") -1))
@@ -62,6 +65,16 @@ unsigned char Panel_Check_Alarm (unsigned short * number)
                 }
             }
         }
+        // ac msg 14 bytes: Keypad with AC
+        if (!strncmp(pStr, "Keypad with AC", sizeof("Keypad with AC") -1))
+        {
+            comms_keypad_with_ac_flag_set;
+        }        
+        // battery msg 14 bytes: Keypad on BATT
+        if (!strncmp(pStr, "Keypad on BATT", sizeof("Keypad on BATT") -1))
+        {
+            comms_keypad_on_batt_flag_set;
+        }        
     }
 
     return answer;

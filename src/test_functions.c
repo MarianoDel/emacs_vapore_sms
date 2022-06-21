@@ -78,9 +78,9 @@ void TF_Hardware_Tests (void)
     // TF_Led_Blinking();
     // TF_Usart2_TxRx ();
     // TF_Usart2_NetLight_and_Status ();
-    // TF_Usart2_Adc_Polling ();
+    TF_Usart2_Adc_Polling ();
     // TF_Usart2_Adc_Interrupt ();
-    TF_Usart2_Adc_Dma ();
+    // TF_Usart2_Adc_Dma ();
     // TF_Usart2_Flash_Empty_Page ();
     // TF_Usart2_Flash_Write_Data ();
     

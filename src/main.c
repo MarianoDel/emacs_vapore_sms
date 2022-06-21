@@ -265,6 +265,34 @@ int main(void)
                         repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2 | REPORT_BY_SMS;
                         main_state = main_report_buffer;
                     }
+                    else if (comms_keypad_with_ac_flag)
+                    {
+                        ContactIDString(ac_loss_close,
+                                        mem_conf.client_number,
+                                        "000",
+                                        buff);
+                                    
+                        comms_keypad_with_ac_flag_reset;
+
+                        repo.buffer = buff;
+                        repo.attempts = 3;
+                        repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2 | REPORT_BY_SMS;
+                        main_state = main_report_buffer;
+                    }
+                    else if (comms_keypad_on_batt_flag)
+                    {
+                        ContactIDString(ac_loss_opening,
+                                        mem_conf.client_number,
+                                        "000",
+                                        buff);
+                                    
+                        comms_keypad_on_batt_flag_reset;
+
+                        repo.buffer = buff;
+                        repo.attempts = 3;
+                        repo.media_flags = REPORT_BY_IP1 | REPORT_BY_IP2 | REPORT_BY_SMS;
+                        main_state = main_report_buffer;
+                    }
                 }
                 // in sms mode check only if its configured
                 else if ((battery_check_conf) &&
@@ -478,22 +506,6 @@ int main(void)
         if (main_state >= main_ready)
             ConfigurationChange();
 
-        // if (main_state >= main_ready)
-        // {
-        //     ConfigurationChange();
-        //     if (!timer_standby)
-        //     {
-        //         unsigned char v_i = 0;
-        //         unsigned char v_d = 0;
-        //         char volts_buff[20];
-        //         timer_standby = 10000;
-
-        //         Battery_Voltage(&v_i, &v_d);
-        //         sprintf(volts_buff, "battery: %d.%02dV\n", v_i, v_d);
-        //         Usart2Debug(volts_buff, 1);
-        //     }
-        // }
-        
         // The things that do not depend on the program state
         UpdateLed ();
         FuncsGSM ();

@@ -42,6 +42,14 @@
 #define comms_memory_save_flag_set    (comms_global_flag |= 0x0040)
 #define comms_memory_save_flag_reset    (comms_global_flag &= 0xFFBF)
 
+#define comms_keypad_with_ac_flag    (comms_global_flag & 0x0080)
+#define comms_keypad_with_ac_flag_set    (comms_global_flag |= 0x0080)
+#define comms_keypad_with_ac_flag_reset    (comms_global_flag &= 0xFF7F)
+
+#define comms_keypad_on_batt_flag    (comms_global_flag & 0x0100)
+#define comms_keypad_on_batt_flag_set    (comms_global_flag |= 0x0100)
+#define comms_keypad_on_batt_flag_reset    (comms_global_flag &= 0xFEFF)
+
 
 
 // Module Exported Functions ---------------------------------------------------
