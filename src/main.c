@@ -70,7 +70,7 @@ reports_st repo;
 // - Globals from timers -------
 volatile unsigned short timer_standby = 0;
 volatile unsigned short timer_prender_ringing = 0;
-volatile unsigned short secs_millis = 0;
+volatile unsigned short mins_millis = 0;
 
 
 // Module Private Functions ----------------------------------------------------
@@ -565,11 +565,11 @@ void TimingDelay_Decrement(void)
 
     ReportsTimeouts ();
 
-    if (secs_millis < 1000)
-        secs_millis++;
+    if (mins_millis < 60000)
+        mins_millis++;
     else
     {
-        secs_millis = 0;
+        mins_millis = 0;
         if (keepalive_cnt)
             keepalive_cnt--;
     }

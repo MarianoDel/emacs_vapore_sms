@@ -123,7 +123,7 @@ unsigned char VerifyKeepNumber (unsigned short keep)
 
 unsigned char VerifyKeepString (char * keep, unsigned char len)
 {
-    if ((len < 2) || (len > 3))
+    if ((len < 1) || (len > 4))
         return 0;
 
     unsigned int num = 0;
@@ -132,7 +132,7 @@ unsigned char VerifyKeepString (char * keep, unsigned char len)
     if (digits != len)
         return 0;
 
-    if ((num < 10) || (num > 600))
+    if ((num < 1) || (num > 1440))
         return 0;
 
     return 1;
