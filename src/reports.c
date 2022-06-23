@@ -161,6 +161,9 @@ unsigned char ReportsVerifyAndSend (reports_st * report)
             report_repeat_cnt = report->attempts;
             report_state++;
         }
+        else
+            answer = REPORT_NOT_SENT;
+        
         break;
 
     case SEND_SMS:
