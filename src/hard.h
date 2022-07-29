@@ -29,7 +29,8 @@
 // #define HARDWARE_VER_1_0    // original version
 
 //----------- Firmware Version -------------------
-#define FIRMWARE_VER_1_6    // possibility to connect via gprs
+#define FIRMWARE_VER_1_7    // fix keepalive less than 900, can answer on VERSION:
+// #define FIRMWARE_VER_1_6    // possibility to connect via gprs
 // #define FIRMWARE_VER_1_5    // fix gsm module bad answers and reboot
 // #define FIRMWARE_VER_1_4    // can send battery reports by sms
 // #define FIRMWARE_VER_1_3    // delay sms message
@@ -63,6 +64,10 @@
 #define HARD    "Hardware version 1.0\n"
 #endif
 
+#ifdef FIRMWARE_VER_1_7
+#define SOFT    "Firmware version 1.7\n"
+#endif
+
 #ifdef FIRMWARE_VER_1_6
 #define SOFT    "Firmware version 1.6\n"
 #endif
@@ -91,7 +96,8 @@
 #error "define hardware version on hard.h"
 #endif
 
-#if (!defined FIRMWARE_VER_1_6) && \
+#if (!defined FIRMWARE_VER_1_7) && \
+    (!defined FIRMWARE_VER_1_6) && \
     (!defined FIRMWARE_VER_1_5) && \
     (!defined FIRMWARE_VER_1_4) && \
     (!defined FIRMWARE_VER_1_3) && \

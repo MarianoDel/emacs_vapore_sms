@@ -14,6 +14,7 @@
 #include "battery.h"
 #include "sms_gprs_data.h"
 #include "usart.h"
+#include "hard.h"    
 
 #include <string.h>
 #include <stdio.h>
@@ -278,6 +279,13 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         enviar_sms = 1;
         strcpy(enviar_sms_num, orig_num);
         sprintf(enviar_sms_msg, "BAT: %02d.%02dV", volts_int, volts_dec);
+    }
+
+    else if (!strncmp(payload, "VERSION:", sizeof ("VERSION:") - 1))
+    {
+        enviar_sms = 1;
+        strcpy(enviar_sms_num, orig_num);
+        sprintf(enviar_sms_msg, "%s\r\n%s", HARD, SOFT);
     }
 }
 

@@ -181,7 +181,7 @@ int main(void)
 
     // for memory alignment pourpose
     // sprintf(buff, "memory size: %d\n", sizeof(mem_conf));
-    // Usart2Debug(buff);
+    // Usart2Debug(buff, 0);
     
     // set the first keepalive
     keepalive_cnt = mem_conf.keepalive;

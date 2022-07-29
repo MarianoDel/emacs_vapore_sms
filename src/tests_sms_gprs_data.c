@@ -448,15 +448,39 @@ void Test_Verify_Keep_String (void)
     strcpy(keep_str, "09");    
     printf("Verify keep string error %s: ", keep_str);
     len = strlen(keep_str);
-    if (!VerifyKeepString(keep_str, len))
+    if (VerifyKeepString(keep_str, len))
         PrintOK();
     else
         PrintERR();
 
+    strcpy(keep_str, "1440");    
+    printf("Verify keep string error %s: ", keep_str);
+    len = strlen(keep_str);
+    if (VerifyKeepString(keep_str, len))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(keep_str, "999");
+    printf("Verify keep string error %s: ", keep_str);
+    len = strlen(keep_str);
+    if (VerifyKeepString(keep_str, len))
+        PrintOK();
+    else
+        PrintERR();
+
+    strcpy(keep_str, "256");
+    printf("Verify keep string error %s: ", keep_str);
+    len = strlen(keep_str);
+    if (VerifyKeepString(keep_str, len))
+        PrintOK();
+    else
+        PrintERR();
+    
     strcpy(keep_str, "1000");
     printf("Verify keep string error %s: ", keep_str);
     len = strlen(keep_str);
-    if (!VerifyKeepString(keep_str, len))
+    if (VerifyKeepString(keep_str, len))
         PrintOK();
     else
         PrintERR();

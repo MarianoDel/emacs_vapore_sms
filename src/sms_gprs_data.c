@@ -22,6 +22,7 @@
 
 
 // Module Private Types Constants and Macros -----------------------------------
+#define KEEPALIVE_MAX    1440
 
 
 // Externals -------------------------------------------------------------------
@@ -114,7 +115,7 @@ unsigned char VerifyClientNumber (char * client, unsigned char len)
 
 unsigned char VerifyKeepNumber (unsigned short keep)
 {
-    if (keep > 900)
+    if (keep > KEEPALIVE_MAX)
         return 0;
 
     return 1;
@@ -128,11 +129,12 @@ unsigned char VerifyKeepString (char * keep, unsigned char len)
 
     unsigned int num = 0;
     unsigned char digits = VerifyIsANumber (keep, &num);
+    // printf("len: %d digits: %d keep: %s num: %d\n", len, digits, keep, num);
 
     if (digits != len)
         return 0;
 
-    if ((num < 1) || (num > 1440))
+    if ((num < 1) || (num > KEEPALIVE_MAX))
         return 0;
 
     return 1;
