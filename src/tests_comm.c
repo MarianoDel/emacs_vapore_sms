@@ -62,7 +62,7 @@ void Test_Comms (void)
     CommsProcessSMSPayload (orig_num, payload);
 
     if ((mem_conf.bkp_envios_ok == 1) &&
-        (envios_ok_change) &&
+        // (envios_ok_change) &&
         (enviar_sms == 1) &&
         (strcmp(enviar_sms_num, orig_num) == 0) &&
         (strcmp(enviar_sms_msg, "OK") == 0))
@@ -72,26 +72,44 @@ void Test_Comms (void)
     else
         PrintERR();
 
-    printf("Desactivar: ");    
-    strcpy(payload, "REPORTAR_OK:0");
-    CommsProcessSMSPayload (orig_num, payload);
+    // printf("Desactivar: ");    
+    // strcpy(payload, "REPORTAR_OK:0");
+    // CommsProcessSMSPayload (orig_num, payload);
 
-    if ((mem_conf.bkp_envios_ok == 0) &&
-        (envios_ok_change))
-    {
-        PrintOK();
-    }
-    else
-        PrintERR();
+    // // if ((mem_conf.bkp_envios_ok == 0) &&
+    // //     (envios_ok_change))
+    // // {
+    // //     PrintOK();
+    // // }
+    // // else
+    // //     PrintERR();
 
-    char my_new_number [] = {"1145376762"};
-    printf("Test REPORTAR_NUM: %s\n", my_new_number);
+    // char my_new_number [] = {"1145376762"};
+    // printf("Test REPORTAR_NUM: %s\n", my_new_number);
     
-    strcpy(payload, "REPORTAR_NUM:1145376762OK");    //+trailing OK
+    // strcpy(payload, "REPORTAR_NUM:1145376762OK");    //+trailing OK
+    // CommsProcessSMSPayload (orig_num, payload);
+
+    // // if ((num_tel_rep_change) &&
+    // //     (strcmp(mem_conf.num_reportar, my_new_number) == 0))
+    // if ( (strcmp(mem_conf.num_reportar, my_new_number) == 0))
+    // {
+    //     PrintOK();
+    // }
+    // else
+    // {
+    //     PrintERR();
+    //     printf("el numero errado es: %s\n", mem_conf.num_reportar);
+    // }
+
+    printf("Test REPORTAR_NUM: %s\n", "+++");
+    
+    strcpy(payload, "REPORTAR_NUM:+++OK");    //+trailing OK
     CommsProcessSMSPayload (orig_num, payload);
 
-    if ((num_tel_rep_change) &&
-        (strcmp(mem_conf.num_reportar, my_new_number) == 0))
+    // if ((num_tel_rep_change) &&
+    //     (strcmp(mem_conf.num_reportar, my_new_number) == 0))
+    if ( (strcmp(mem_conf.num_reportar, my_new_number) == 0))
     {
         PrintOK();
     }
@@ -100,47 +118,49 @@ void Test_Comms (void)
         PrintERR();
         printf("el numero errado es: %s\n", mem_conf.num_reportar);
     }
-
-    char my_new_site [] = {"Las Margaritas Prov. de Maximiliano"};
-    printf("Test REPORTAR_SITIO: %s\n", my_new_site);
     
-    strcpy(payload, "REPORTAR_SITIO:");
-    strcat(payload, my_new_site);
-    strcat(payload, "OK");        //+trailing OK
-    CommsProcessSMSPayload (orig_num, payload);
-
-    if ((sitio_prop_change) &&
-        (strcmp(mem_conf.sitio_propio, my_new_site) == 0))
-    {
-        PrintOK();
-    }
-    else
-    {
-        PrintERR();
-        printf("el sitio errado es: %s\n", mem_conf.sitio_propio);
-    }
-
-    // char my_new_site2 [] = {"ALARMA VECINAL QUIRNO 457 CIUDAD AUTÓNOMA DE BUENOS AIRES ENTRE CALLE AV DIRECTORIO Y TANDIL CODIGO POSTAL 1406"};
-    char my_new_site2 [] = {"ALARMA VECINAL QUIRNO 457 CIUDAD AUTONOMA DE BUENOS AIRES ENTRE CALLE AV DIRECTORIO Y TANDIL CODIGO POSTAL 1406"};
-    // char my_new_site2 [] = {"ALARMA VECINAL QUIRNO 457 CIUDAD AUTÓNOMA DE BUENOS AIRES ENTRE CALLE AV DIRECTORIO"};
-    // char my_new_site2 [] = {"ALÁRMA"};
-    printf("Test REPORTAR_SITIO: %s, largo: %d\n", my_new_site2, strlen(my_new_site2));
+    // char my_new_site [] = {"Las Margaritas Prov. de Maximiliano"};
+    // printf("Test REPORTAR_SITIO: %s\n", my_new_site);
     
-    strcpy(payload, "REPORTAR_SITIO:");
-    strcat(payload, my_new_site2);
-    strcat(payload, "OK");        //+trailing OK
-    CommsProcessSMSPayload (orig_num, payload);
+    // strcpy(payload, "REPORTAR_SITIO:");
+    // strcat(payload, my_new_site);
+    // strcat(payload, "OK");        //+trailing OK
+    // CommsProcessSMSPayload (orig_num, payload);
 
-    if ((sitio_prop_change) &&
-        (strcmp(mem_conf.sitio_propio, my_new_site2) == 0))
-    {
-        PrintOK();
-    }
-    else
-    {
-        PrintERR();
-        printf("el sitio errado es: %s\n", mem_conf.sitio_propio);
-    }
+    // // if ((sitio_prop_change) &&
+    // //     (strcmp(mem_conf.sitio_propio, my_new_site) == 0))
+    // if ( (strcmp(mem_conf.sitio_propio, my_new_site) == 0))
+    // {
+    //     PrintOK();
+    // }
+    // else
+    // {
+    //     PrintERR();
+    //     printf("el sitio errado es: %s\n", mem_conf.sitio_propio);
+    // }
+
+    // // char my_new_site2 [] = {"ALARMA VECINAL QUIRNO 457 CIUDAD AUTÓNOMA DE BUENOS AIRES ENTRE CALLE AV DIRECTORIO Y TANDIL CODIGO POSTAL 1406"};
+    // char my_new_site2 [] = {"ALARMA VECINAL QUIRNO 457 CIUDAD AUTONOMA DE BUENOS AIRES ENTRE CALLE AV DIRECTORIO Y TANDIL CODIGO POSTAL 1406"};
+    // // char my_new_site2 [] = {"ALARMA VECINAL QUIRNO 457 CIUDAD AUTÓNOMA DE BUENOS AIRES ENTRE CALLE AV DIRECTORIO"};
+    // // char my_new_site2 [] = {"ALÁRMA"};
+    // printf("Test REPORTAR_SITIO: %s, largo: %d\n", my_new_site2, strlen(my_new_site2));
+    
+    // strcpy(payload, "REPORTAR_SITIO:");
+    // strcat(payload, my_new_site2);
+    // strcat(payload, "OK");        //+trailing OK
+    // CommsProcessSMSPayload (orig_num, payload);
+
+    // // if ((sitio_prop_change) &&
+    // //     (strcmp(mem_conf.sitio_propio, my_new_site2) == 0))
+    // if ( (strcmp(mem_conf.sitio_propio, my_new_site2) == 0))
+    // {
+    //     PrintOK();
+    // }
+    // else
+    // {
+    //     PrintERR();
+    //     printf("el sitio errado es: %s\n", mem_conf.sitio_propio);
+    // }
 }
 
 

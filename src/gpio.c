@@ -195,7 +195,9 @@ void GPIO_Config (void)
 #endif    // GPIOB_ENABLE
 #endif    //#ifdef HARDWARE_VER_1_2
     
-#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)    
+#if (defined HARDWARE_VER_1_0) || (defined HARDWARE_VER_1_1)
+    unsigned long temp;
+    
     //--- GPIO A ---//
 #ifdef GPIOA_ENABLE
     if (!GPIOA_CLK)

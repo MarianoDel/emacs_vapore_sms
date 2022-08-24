@@ -15,7 +15,7 @@
 
 //----------- Defines For Configuration -------------
 // -- select the following only on HARDWARE_VER_1_1 or HARDWARE_VER_1_0
-// #define WITH_PA1_V4V_SENSE    //normal mode
+#define WITH_PA1_V4V_SENSE    //normal mode
 // #define WITH_PA1_TEST1_INPUT    //change in hardware test1 is re-routed to PA1 for 12V inputs signals
 // -- select type of gsm_gateway function, in loop or as state machine
 #define USE_GSM_GATEWAY_IN_LOOP
@@ -246,6 +246,8 @@
 
 #ifdef WITH_PA1_V4V_SENSE
 //GPIOA pin1	V_Sense_4V
+// TEST1 input as alarm input; use on 3.3V
+#define ALARM_INPUT    ((GPIOB->IDR & 0x0040) != 0)
 #endif
 #ifdef WITH_PA1_TEST1_INPUT
 //GPIOA pin1	re-routed from test1
