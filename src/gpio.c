@@ -77,7 +77,7 @@ void GPIO_Config (void)
     //10: Pull-down
     //11: Reserved
 
-#ifdef HARDWARE_VER_2_0
+#if (defined HARDWARE_VER_2_0) || (defined HARDWARE_VER_2_1)
     unsigned long temp;
 
 #ifdef GPIOA_ENABLE    

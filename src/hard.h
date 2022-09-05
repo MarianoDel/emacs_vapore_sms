@@ -22,8 +22,9 @@
 // #define USE_GSM_GATEWAY_SM
 
 //----------- Hardware Board Version -------------
+#define HARDWARE_VER_2_1    // sim800l daughter board design (china manufacture)
 // #define HARDWARE_VER_2_0    // sim800l daughter board design
-#define HARDWARE_VER_1_2    // all old hard changes included
+// #define HARDWARE_VER_1_2    // all old hard changes included
 // #define HARDWARE_VER_1_1    // test1 input modified to report alarms 4V analog to digital input
                                // pin5 on micro must be gnd (its disconnected)
 // #define HARDWARE_VER_1_0    // original version
@@ -51,6 +52,9 @@
 //-------- End Of Defines For Configuration ------
 
 
+#ifdef HARDWARE_VER_2_1
+#define HARD    "Hardware version 2.1\n"
+#endif
 #ifdef HARDWARE_VER_2_0
 #define HARD    "Hardware version 2.0\n"
 #endif
@@ -89,7 +93,8 @@
 #endif
 
 //--------- Sanity Checks ----------
-#if (!defined HARDWARE_VER_2_0) && \
+#if (!defined HARDWARE_VER_2_1) && \
+    (!defined HARDWARE_VER_2_0) && \
     (!defined HARDWARE_VER_1_2) && \
     (!defined HARDWARE_VER_1_1) && \
     (!defined HARDWARE_VER_1_0)
@@ -120,7 +125,7 @@
 
 
 // Gpios Configuration ------------------------------
-#ifdef HARDWARE_VER_2_0
+#if (defined HARDWARE_VER_2_0) || (defined HARDWARE_VER_2_1)
 //GPIOA pin0    nc
 
 //GPIOA pin1	V_Sense_4V
@@ -177,7 +182,7 @@
 //GPIOB pin7    test2
 //GPIOB pin8    test3
 //GPIOB pin9    nc
-#endif     //#ifdef HARDWARE_VER_2_0
+#endif     //#ifdef HARDWARE_VER_2_0 of HARDWARE_VER_2_1
 
 #ifdef HARDWARE_VER_1_2
 //GPIOA pin0    nc

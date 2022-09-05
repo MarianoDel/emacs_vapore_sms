@@ -326,7 +326,7 @@ unsigned char PwrKey_Status (void)
 
 unsigned char Status_Status (void)
 {
-#ifdef HARDWARE_VER_2_0
+#if (defined HARDWARE_VER_2_0) || (defined HARDWARE_VER_2_1)
     return 1;
 #else
     return STATUS;
@@ -336,7 +336,7 @@ unsigned char Status_Status (void)
 
 unsigned char NetLight_Status (void)
 {
-#ifdef HARDWARE_VER_2_0
+#if (defined HARDWARE_VER_2_0) || (defined HARDWARE_VER_2_1)
     return 1;
 #else
     return NETLIGHT;
