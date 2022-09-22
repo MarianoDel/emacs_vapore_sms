@@ -20,6 +20,7 @@
 // -- select type of gsm_gateway function, in loop or as state machine
 #define USE_GSM_GATEWAY_IN_LOOP
 // #define USE_GSM_GATEWAY_SM
+// #define TESTING_DEBUG_AT_115200    //debug al modulo SIM a 115200
 
 //----------- Hardware Board Version -------------
 #define HARDWARE_VER_2_1    // sim800l daughter board design (china manufacture)

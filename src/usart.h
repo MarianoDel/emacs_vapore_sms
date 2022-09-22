@@ -21,6 +21,7 @@
 
 // Module Exported Functions ---------------------------------------------------
 void Usart1Config(void);
+void Usart1Config_115200 (void);
 void Usart1SendSingle (unsigned char);
 void Usart1Send (char *);
 void Usart1SendUnsigned(unsigned char *, unsigned char);

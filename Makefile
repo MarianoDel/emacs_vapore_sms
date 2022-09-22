@@ -93,6 +93,7 @@ SRC += ./src/battery.c
 SRC += ./src/sms_gprs_data.c
 SRC += ./src/contact_id.c
 SRC += ./src/reports.c
+SRC += ./src/test_debug.c
 
 
 ## Core Support

@@ -38,6 +38,9 @@
 #include "contact_id.h"
 #include "reports.h"
 
+#ifdef TESTING_DEBUG_AT_115200
+#include "test_debug.h"
+#endif
 
 // Externals -------------------------------------------------------------------
 // - Externals from ADC Converter -------
@@ -104,6 +107,12 @@ int main(void)
     
     //--- Fin Funciones de Test Hardware ---    
 
+    //--- Funciones de Test Debug 115200 ---
+#ifdef TESTING_DEBUG_AT_115200
+    TD_Loop ();
+#endif
+    //--- Fin Funciones de Test Debug 115200 ---    
+    
     
     //--- Welcome code ---//
     LED_OFF;

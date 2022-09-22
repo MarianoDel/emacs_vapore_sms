@@ -25,6 +25,7 @@
 #define USART2_CLK_OFF    (RCC->APBENR1 &= ~0x00020000)
 
 #define USART_64MHz_9600    6666
+#define USART_64MHz_115200    555
 #define USART_16MHz_9600    1666
 #define USART_115200    416
 #define USART_250000    192
@@ -74,6 +75,34 @@ void Usart1Config(void)
 #ifdef CLOCK_FREQ_64_MHZ    // PCKL 64MHz
     USART1->BRR = USART_64MHz_9600;
 #endif
+    // USART1->CR2 |= USART_CR2_STOP_1;	//2 bits stop
+    // USART1->CR1 = USART_CR1_RE | USART_CR1_TE | USART_CR1_UE;
+    // USART1->CR1 = USART_CR1_RXNEIE | USART_CR1_RE | USART_CR1_UE;	//SIN TX
+    USART1->CR1 = USART_CR1_RXNEIE_RXFNEIE | USART_CR1_RE | USART_CR1_TE | USART_CR1_UE;    //Rx int + Tx
+
+    unsigned int temp;
+    temp = GPIOA->AFR[1];
+    temp &= 0xFFFFF00F;
+    temp |= 0x00000110;    //PA10 -> AF1 PA9 -> AF1
+    GPIOA->AFR[1] = temp;
+
+    ptx1 = tx1buff;
+    ptx1_pckt_index = tx1buff;
+    prx1 = rx1buff;
+    
+    NVIC_EnableIRQ(USART1_IRQn);
+    NVIC_SetPriority(USART1_IRQn, 5);
+}
+
+
+void Usart1Config_115200 (void)
+{
+    if (!USART1_CLK)
+        USART1_CLK_ON;
+
+    // Usart1 9600 8N1 fifo disabled oversampled 16
+    USART1->BRR = USART_64MHz_115200;
+
     // USART1->CR2 |= USART_CR2_STOP_1;	//2 bits stop
     // USART1->CR1 = USART_CR1_RE | USART_CR1_TE | USART_CR1_UE;
     // USART1->CR1 = USART_CR1_RXNEIE | USART_CR1_RE | USART_CR1_UE;	//SIN TX
