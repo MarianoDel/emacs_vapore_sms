@@ -23,9 +23,9 @@
 // #define TESTING_DEBUG_AT_115200    //debug al modulo SIM a 115200
 
 //----------- Hardware Board Version -------------
-#define HARDWARE_VER_2_1    // sim800l daughter board design (china manufacture)
+// #define HARDWARE_VER_2_1    // sim800l daughter board design (china manufacture)
 // #define HARDWARE_VER_2_0    // sim800l daughter board design
-// #define HARDWARE_VER_1_2    // all old hard changes included
+#define HARDWARE_VER_1_2    // all old hard changes included
 // #define HARDWARE_VER_1_1    // test1 input modified to report alarms 4V analog to digital input
                                // pin5 on micro must be gnd (its disconnected)
 // #define HARDWARE_VER_1_0    // original version

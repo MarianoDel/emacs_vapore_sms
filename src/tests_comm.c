@@ -29,6 +29,9 @@ char enviar_sms_msg [160] = { '\0' };
 
 parameters_typedef mem_conf;
 
+unsigned short comms_global_flag;
+volatile unsigned short keepalive_cnt;
+
 // Module Auxialiary Functions -------------------------------------------------
 
 
@@ -84,7 +87,6 @@ void Test_Comms (void)
     // // else
     // //     PrintERR();
 
-    // char my_new_number [] = {"1145376762"};
     // printf("Test REPORTAR_NUM: %s\n", my_new_number);
     
     // strcpy(payload, "REPORTAR_NUM:1145376762OK");    //+trailing OK
@@ -102,19 +104,38 @@ void Test_Comms (void)
     //     printf("el numero errado es: %s\n", mem_conf.num_reportar);
     // }
 
-    printf("Test REPORTAR_NUM: %s\n", "+++");
+    char rep_num [22] = { 0 };
+    strcpy (rep_num, "+++");
+    printf("Test REPORTAR_NUM: %s\n", rep_num);
     
-    strcpy(payload, "REPORTAR_NUM:+++OK");    //+trailing OK
+    sprintf(payload, "REPORTAR_NUM:%sOK", rep_num);    //+trailing OK
     CommsProcessSMSPayload (orig_num, payload);
 
-    // if ((num_tel_rep_change) &&
-    //     (strcmp(mem_conf.num_reportar, my_new_number) == 0))
-    if ( (strcmp(mem_conf.num_reportar, my_new_number) == 0))
+    if ((strcmp(mem_conf.num_reportar, rep_num) == 0))
     {
+        printf("Test REPORTAR_NUM %s: ", rep_num);
         PrintOK();
     }
     else
     {
+        printf("Test REPORTAR_NUM %s: ", rep_num);
+        PrintERR();
+        printf("el numero errado es: %s\n", mem_conf.num_reportar);
+    }
+
+    strcpy (rep_num, "+19548208490");
+    printf("Test REPORTAR_NUM: %s\n", rep_num);    
+    sprintf(payload, "REPORTAR_NUM:%sOK", rep_num);    //+trailing OK
+    CommsProcessSMSPayload (orig_num, payload);
+
+    if ((strcmp(mem_conf.num_reportar, rep_num) == 0))
+    {
+        printf("Test REPORTAR_NUM %s: ", rep_num);        
+        PrintOK();
+    }
+    else
+    {
+        printf("Test REPORTAR_NUM %s: ", rep_num);
         PrintERR();
         printf("el numero errado es: %s\n", mem_conf.num_reportar);
     }
@@ -161,6 +182,36 @@ void Test_Comms (void)
     //     PrintERR();
     //     printf("el sitio errado es: %s\n", mem_conf.sitio_propio);
     // }
+}
+
+
+// Module Mocked Functions -----------------------------------------------------
+void Usart2Debug(char * msg, unsigned char debug_level)
+{
+    printf ("debug level %d ", debug_level);
+    Usart2Send(msg);
+    
+}
+
+void Battery_Voltage (unsigned char * v_int, unsigned char * v_dec)
+{
+    *v_int = 13;
+    *v_dec = 30;
+}
+
+unsigned char FuncsGSMSendSMS (char *ptrMSG, char *ptrNUM)
+{
+    printf(" enviar sms numero %s\n msg: %s\n", ptrNUM, ptrMSG);
+
+    return 1;
+}
+
+
+unsigned char FuncsGSMSendGPRS (char * message, unsigned char which_ip)
+{
+    printf(" enviar gprs a ip %d\n msg: %s\n", which_ip, message);
+
+    return 1;
 }
 
 
