@@ -32,6 +32,8 @@ unsigned char VerifySMSData (void);
 unsigned char VerifyNumberString (char * number);
 unsigned char VerifySiteString (char * site);
 
+unsigned char VerifyAPNString (char * apn, unsigned char len);
+
 #endif    /* _SMS_GPRS_DATA_H_ */
 
 //--- end of file ---//

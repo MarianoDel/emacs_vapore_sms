@@ -255,6 +255,18 @@ tests_comm:
 	gcc src/tests_comm.c sms_gprs_data.o comm.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
 	./a.out
 
+
+tests_funcsgsm_loc:
+	# first module objects to test
+	gcc -c src/funcs_gsm.c -I. $(INCDIR) $(DDEFS)
+	# second auxiliary helper modules
+	gcc -c src/tests_ok.c
+	# gcc -c src/tests_utils.c
+	gcc -c src/tests_mock_usart.c -I $(INCDIR)
+	gcc src/tests_funcsgsm_loc.c funcs_gsm.o tests_ok.o tests_mock_usart.o -I $(INCDIR) $(DDEFS)
+	./a.out
+
+
 tests_battery:
 	# first module objects to test
 	gcc -c --coverage src/battery.c -I. $(INCDIR) $(DDEFS)
@@ -266,6 +278,7 @@ tests_battery:
 	./a.out
 	# process coverage
 	gcov battery.c -m
+
 
 tests_comms_from_panel:
 	# first module objects to test

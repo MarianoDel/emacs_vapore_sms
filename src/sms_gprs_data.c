@@ -34,7 +34,6 @@ extern parameters_typedef mem_conf;
 
 // Module Private Functions ----------------------------------------------------
 // gprs data functions
-unsigned char VerifyAPNString (char * apn, unsigned char len);
 unsigned char VerifyIPString (char * ip, unsigned char len);
 unsigned char VerifyIPProtocol (char * ip_proto, unsigned char len);
 unsigned char VerifyPort (char * ip, unsigned char len);

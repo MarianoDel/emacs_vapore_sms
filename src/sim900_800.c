@@ -1,5 +1,4 @@
 //----------------------------------------------------
-// #### PROYECTO KIRNO REDONDA GSM - Custom Board ####
 // ##
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags
@@ -38,11 +37,12 @@
 #error "hard 2.0 or 2.1 must be used with sim800l"
 #endif
 
-#if (defined HARDWARE_VER_1_2) || \
+#if (defined HARDWARE_VER_3_0) || \
+    (defined HARDWARE_VER_1_2) || \
     (defined HARDWARE_VER_1_1) || \
     (defined HARDWARE_VER_1_0)
 #ifdef USE_SIM800L
-#error "hard 1.2 1.1 or 1.0 not have sim800l"
+#error "hard 3.0 1.2 1.1 or 1.0 not have sim800l"
 #endif
 #endif
 

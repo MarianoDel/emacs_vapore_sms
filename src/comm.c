@@ -25,6 +25,7 @@
 
 // Externals -------------------------------------------------------------------
 extern unsigned char enviar_sms;
+extern unsigned char send_location;
 extern char enviar_sms_num [];
 extern char enviar_sms_msg [];
 extern parameters_typedef mem_conf;
@@ -261,6 +262,28 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         strcpy(enviar_sms_num, orig_num);
         strcpy(enviar_sms_msg, "OK");
     }
+    
+    else if (!strncmp(payload, "LOC_APN:", sizeof ("LOC_APN:") - 1))
+    {
+        // GPRS config, call the correspondig module function
+        // cut the trailing OK
+        unsigned char len = strlen(payload);
+        *(payload + len - 2) = '\0';
+        if (VerifyAPNString(payload + sizeof ("LOC_APN:") - 1, len - sizeof ("LOC_APN:") - 1))
+        {
+            Usart2Debug("apn config ok\n", 1);
+            strcpy(mem_conf.apn, (payload + sizeof ("LOC_APN:") - 1));
+            comms_memory_save_flag_set;
+
+            enviar_sms = 1;
+            strcpy(enviar_sms_num, orig_num);
+            strcpy(enviar_sms_msg, "OK");
+        }
+        else
+            Usart2Debug("bad location apn data!\n", 1);
+
+    }
+    
 
     // Diagnostics and Activations    
     else if (!strncmp(payload, (const char *)"PRENDER:", sizeof ("PRENDER:") - 1))
@@ -286,6 +309,12 @@ void CommsProcessSMSPayload (char * orig_num, char * payload)
         enviar_sms = 1;
         strcpy(enviar_sms_num, orig_num);
         sprintf(enviar_sms_msg, "%s\r\n%s", HARD, SOFT);
+    }
+
+    else if (!strncmp(payload, "LOC:", sizeof ("LOC:") - 1))
+    {
+        send_location = 1;
+        strcpy(enviar_sms_num, orig_num);
     }
 }
 

@@ -88,12 +88,12 @@ SECTIONS
     __exidx_end = .;
   } >FLASH
 
-  .memParams 0x08007800 :
-  {
-    . = ALIGN(4);
-    KEEP(*(memParams)) /* direccion de memoria en que quiero esta estructura */
-    . = ALIGN(4);
-  } >FLASH
+  /* .memParams 0x08007800 : */
+  /* { */
+  /*   . = ALIGN(4); */
+  /*   KEEP(*(memParams)) /\* direccion de memoria en que quiero esta estructura *\/ */
+  /*   . = ALIGN(4); */
+  /* } >FLASH */
 
   .preinit_array     :
   {

@@ -1,5 +1,4 @@
 //----------------------------------------------------
-// #### PROYECTO KIRNO REDONDA GSM - Custom Board ####
 // ##
 // ## @Author: Med
 // ## @Editor: Emacs - ggtags

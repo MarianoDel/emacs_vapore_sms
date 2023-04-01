@@ -77,6 +77,67 @@ void GPIO_Config (void)
     //10: Pull-down
     //11: Reserved
 
+#ifdef HARDWARE_VER_3_0
+    unsigned long temp;
+
+#ifdef GPIOA_ENABLE    
+    //--- GPIO A ---//
+    if (!GPIOA_CLK)
+        GPIOA_CLK_ON;
+
+    temp = GPIOA->MODER;    //2 bits por pin
+    temp &= 0xFC03FF03;    //PA1 analog; PA2 - PA3 alternate;
+    temp |= 0x016800AC;    //PA9 - PA10 alternative; PA11 - PA12 output
+    GPIOA->MODER = temp;
+
+    temp = GPIOA->OTYPER;	//1 bit por pin
+    temp &= 0xFFFFFFFF;
+    temp |= 0x00000000;
+    GPIOA->OTYPER = temp;
+
+    temp = GPIOA->OSPEEDR;	//2 bits por pin
+    temp &= 0xFC03FF0F;
+    temp |= 0x00000000;		//low speed
+    GPIOA->OSPEEDR = temp;
+
+    temp = GPIOA->PUPDR;	//2 bits por pin
+    temp &= 0xFFFFFFFF;
+    temp |= 0x00000000;
+    GPIOA->PUPDR = temp;
+
+#endif    // GPIOA_ENABLE
+    
+
+#ifdef GPIOB_ENABLE    
+    //--- GPIO B ---//
+    if (!GPIOB_CLK)
+        GPIOB_CLK_ON;
+
+    temp = GPIOB->MODER;        //2 bits por pin
+    temp &= 0xFFFFC0C3;        // PB1 output; PB2 analog; PB4 - PB6 input
+    temp |= 0x00000034;
+    GPIOB->MODER = temp;
+
+    // temp |= 0x00000080;        //PA7 open drain    
+    temp = GPIOB->OTYPER;	//1 bit por pin
+    temp &= 0xFFFFFFFD;    //PB1 open drain
+    temp |= 0x00000002;
+    GPIOB->OTYPER = temp;
+
+    temp = GPIOB->OSPEEDR;	//2 bits por pin
+    temp &= 0xFFFFFFF3;
+    temp |= 0x00000000;		//low speed
+    GPIOB->OSPEEDR = temp;
+
+    temp = GPIOB->PUPDR;	//2 bits por pin
+    temp &= 0xFFFFCFFF;        //PB6 pulldwn
+    temp |= 0x00002000;
+    GPIOB->PUPDR = temp;
+
+#endif    // GPIOB_ENABLE
+#endif    //#ifdef HARDWARE_VER_3_0
+
+    
 #if (defined HARDWARE_VER_2_0) || (defined HARDWARE_VER_2_1)
     unsigned long temp;
 

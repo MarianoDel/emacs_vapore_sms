@@ -68,11 +68,13 @@ unsigned short GSMFlags = 0;
 unsigned char enviar_sms = 0;
 char enviar_sms_num [20] = { '\0' };
 char enviar_sms_msg [160] = { '\0' };
+unsigned char send_location = 0;
 
 // Timeout Timer
 volatile unsigned short funcs_gsm_timeout_timer = 0;
 
-
+char s_latitude [20] = { 0 };
+char s_longitude [20] = { 0 };
 
 // Module Functions ------------------------------------------------------------
 //Procesa toda la pila del GSM (por lo menos para los SMS)
@@ -303,6 +305,10 @@ void FuncsGSM (void)
             enviar_sms = 0;
             FuncsGSMSendSMS (enviar_sms_msg, enviar_sms_num);
         }
+        else if (send_location)
+        {
+            gsm_state = gsm_state_getting_location;
+        }
         else if (SMSLeft())    //si tengo algun mensaje paso a leerlo
             gsm_state = gsm_state_reading_sms;
         
@@ -444,6 +450,35 @@ void FuncsGSM (void)
     case gsm_state_sending_gprs:
         break;
 
+    case gsm_state_getting_location:
+        resp = FuncsGSM_GetLocation ();
+
+        if (resp == resp_gsm_ok)
+        {
+            send_location = 0;
+            Usart2Debug("location getted, sending sms...\n", 1);
+            enviar_sms = 1;
+            // error de compatibilidad en android
+            // sprintf(enviar_sms_msg, "https://www.google.com/maps/@%s,%s",
+            //         s_latitude,
+            //         s_longitude);
+
+            sprintf(enviar_sms_msg, "https://www.google.com/maps/search/?api=1&query=%s,%s",
+                    s_latitude,
+                    s_longitude);
+            gsm_state = gsm_state_ready;
+        }
+
+        if (resp == resp_gsm_error)
+        {
+            send_location = 0;            
+            Usart2Debug("location error, check apn, sending sms error...\n", 1);
+            enviar_sms = 1;
+            strcpy(enviar_sms_msg, "error de localizacion, verificar apn");
+            gsm_state = gsm_state_ready;
+        }
+        break;
+        
     case gsm_state_command_answer:
         // almost all commands take less than 10 secs to complete tasks
         resp = GSMSendCommand (p_CMD, 10000, 1, p_RESP);
@@ -808,6 +843,209 @@ unsigned char FuncsGSMSendGPRS (char * message, unsigned char which_ip)
         send_gprs_state = gprs_init;
         // unblock FuncsGSM SM
         gsm_state = gsm_state_ready;
+    }
+    
+    return resp;
+}
+
+
+typedef enum {
+    bearer_init = 0,
+    bearer_param,
+    bearer_context,
+    bearer_context_activate,
+    bearer_read_param,
+    lbs_set_address,
+    lbs_get_location,
+    bearer_deactivate,
+    bearer_deactivate_with_errors
+    
+} get_loc_e;
+
+
+get_loc_e get_loc_state;
+unsigned char FuncsGSM_GetLocation (void)
+{
+    unsigned char resp = resp_gsm_continue;
+    resp_cmd_e resp_cmd = cmd_continue;
+    char sbuff [100];
+
+
+    switch (get_loc_state)
+    {
+    case bearer_init:
+        Usart2Debug("ask gsm for location\r\n", 1);
+        get_loc_state++;
+        break;
+
+    case bearer_param:
+        resp_cmd = GSMSendCommand ("AT+SAPBR=3,1,\"Contype\",\"GPRS\"\r\n", 1000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            get_loc_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case bearer_context:
+        sprintf(sbuff, "AT+SAPBR=3,1,\"APN\",\"%s\"\r\n", mem_conf.apn);
+        resp_cmd = GSMSendCommand (sbuff, 1000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            get_loc_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case bearer_context_activate:
+        resp_cmd = GSMSendCommand ("AT+SAPBR=1,1\r\n", 65000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            get_loc_state++;
+        
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case bearer_read_param:
+        resp_cmd = GSMSendCommand ("AT+SAPBR=2,1\r\n", 1000, 1, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+        {
+            if (!strncmp(s_msg, "+SAPBR: 1,1,", sizeof("+SAPBR: 1,1,") - 1))
+                get_loc_state++;
+        }
+
+        if (resp_cmd > cmd_ok)
+        {
+            get_loc_state = bearer_deactivate_with_errors;
+            resp = resp_gsm_continue;
+        }
+        break;
+
+    case lbs_set_address:
+        resp_cmd = GSMSendCommand ("AT+CLBSCFG=1,3,\"lbs-simcom.com:3002\"\r\n", 1000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+            get_loc_state++;
+        
+        if (resp_cmd > cmd_ok)
+        {
+            get_loc_state = bearer_deactivate_with_errors;
+            resp = resp_gsm_continue;
+        }
+        break;
+
+    case lbs_get_location:
+        resp_cmd = GSMSendCommand ("AT+CLBS=1,1\r\n", 10000, 1, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+        {
+            if (!strncmp(s_msg, "+CLBS: 0,", sizeof("+CLBS: 0,") - 1))
+            {
+                unsigned char offset = sizeof("+CLBS: 0,") - 1;
+                unsigned char offset_latitude = 0;
+                unsigned char offset_longitude = 0;
+                char c = 0;
+
+                // get longitude
+                for (int i = 0; i < 20; i++)
+                {
+                    c = *(s_msg + offset + i);
+                    
+                    if (c != ',')
+                    {
+                        s_longitude[i] = c;
+                    }
+                    else
+                    {
+                        s_longitude[i] = 0;
+                        offset_longitude = i;
+                        break;
+                    }
+                }
+                // printf(" end longitude: %s offset: %d\n", s_longitude, offset_longitude);
+
+                // get latitude
+                for (int i = 0; i < 20; i++)
+                {
+                    c = *(s_msg + offset + offset_longitude + 1 + i);    //+1 for ',' offset
+                    
+                    if (c != ',')
+                    {
+                        s_latitude[i] = c;
+                    }
+                    else
+                    {
+                        s_latitude[i] = 0;
+                        offset_latitude = i;
+                        break;
+                    }
+                }
+                // printf(" end latitude: %s offset: %d\n", s_latitude, offset_latitude);
+
+                if ((offset_latitude < 7) ||
+                    (offset_longitude < 7))
+                {
+                    Usart2Debug("latitude or longitude with errors\r\n", 1);
+                    get_loc_state = bearer_deactivate_with_errors;
+                }
+                else
+                {
+                    get_loc_state++;
+                }
+            }
+            else
+            {
+                Usart2Debug("not location getted\r\n", 1);
+                get_loc_state = bearer_deactivate_with_errors;
+            }
+        }
+
+        if (resp_cmd > cmd_ok)
+        {
+            get_loc_state = bearer_deactivate_with_errors;
+            resp = resp_gsm_continue;
+        }
+        break;
+
+    case bearer_deactivate:
+        resp_cmd = GSMSendCommand ("AT+SAPBR=0,1\r\n", 65000, 0, &s_msg[0]);
+
+        if (resp_cmd == cmd_ok)
+        {
+            get_loc_state = bearer_init;
+            resp = resp_gsm_ok;
+        }
+
+        if (resp_cmd > cmd_ok)
+            resp = resp_gsm_error;
+        
+        break;
+
+    case bearer_deactivate_with_errors:
+        resp_cmd = GSMSendCommand ("AT+SAPBR=0,1\r\n", 65000, 0, &s_msg[0]);
+
+        if (resp_cmd != cmd_continue)
+            resp = resp_gsm_error;
+        
+        break;
+        
+    default:
+        get_loc_state = bearer_init;
+        break;
+    }
+
+    // if any error, reset the SM and free the funcsGSM
+    if ((resp == resp_gsm_error) ||
+        (resp == resp_gsm_timeout))
+    {
+        get_loc_state = bearer_init;
     }
     
     return resp;

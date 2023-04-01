@@ -27,6 +27,8 @@ unsigned char enviar_sms = 0;
 char enviar_sms_num [20] = { '\0' };
 char enviar_sms_msg [160] = { '\0' };
 
+unsigned char send_location = 0;
+
 parameters_typedef mem_conf;
 
 unsigned short comms_global_flag;
@@ -75,17 +77,24 @@ void Test_Comms (void)
     else
         PrintERR();
 
-    // printf("Desactivar: ");    
-    // strcpy(payload, "REPORTAR_OK:0");
-    // CommsProcessSMSPayload (orig_num, payload);
 
-    // // if ((mem_conf.bkp_envios_ok == 0) &&
-    // //     (envios_ok_change))
-    // // {
-    // //     PrintOK();
-    // // }
-    // // else
-    // //     PrintERR();
+    printf("\nTest apn for location\n");    
+    char apn_name [68];
+    strcpy(apn_name, "apn.personal.com");    
+    sprintf(payload, "LOC_APN:%sOK", apn_name);    //+trailing OK
+    CommsProcessSMSPayload (orig_num, payload);
+
+    printf("Test LOC_APN: ");
+    if ((!strncmp(mem_conf.apn, apn_name, strlen(apn_name))) &&
+        (comms_memory_save_flag))
+    {
+        PrintOK();
+    }
+    else
+    {
+        PrintERR();
+        printf("apn set: %s\n", mem_conf.apn);        
+    }
 
     // printf("Test REPORTAR_NUM: %s\n", my_new_number);
     
@@ -106,7 +115,7 @@ void Test_Comms (void)
 
     char rep_num [22] = { 0 };
     strcpy (rep_num, "+++");
-    printf("Test REPORTAR_NUM: %s\n", rep_num);
+    printf("\nTest REPORTAR_NUM: %s\n", rep_num);
     
     sprintf(payload, "REPORTAR_NUM:%sOK", rep_num);    //+trailing OK
     CommsProcessSMSPayload (orig_num, payload);

@@ -17,8 +17,10 @@
 
 // Configurations Defines ------------------------------------------------------
 //- Where to Backup ------------------------------------------------------------
-#define FLASH_PAGE_FOR_BKP    PAGE15
-#define FLASH_ADDRESS_FOR_BKP    PAGE15_ADDR
+// #define FLASH_PAGE_FOR_BKP    PAGE15
+// #define FLASH_ADDRESS_FOR_BKP    PAGE15_ADDR
+#define FLASH_PAGE_FOR_BKP    PAGE31
+#define FLASH_ADDRESS_FOR_BKP    PAGE31_ADDR
 
 
 // Define the STM32F10x FLASH Page Size depending on the used STM32 device

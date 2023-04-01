@@ -34,7 +34,8 @@ typedef enum {
 	gsm_state_ready,
 	gsm_state_sending_conf,
 	gsm_state_sending_sms,
-	gsm_state_sending_gprs,        
+	gsm_state_sending_gprs,
+        gsm_state_getting_location,
 	gsm_state_command_answer,
 	gsm_state_idle,
 	gsm_state_connecting,
@@ -95,6 +96,8 @@ unsigned short FuncsGSMGPRSFlagsAsk (void);
 void FuncsGSM_ServerAnswer_Set (void);
 void FuncsGSM_ServerAnswer_Reset (void);
 unsigned char FuncsGSM_ServerAnswer_Get (void);
+
+unsigned char FuncsGSM_GetLocation (void);
 
 #endif    /* _FUNCS_GSM_H_ */
 

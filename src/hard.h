@@ -23,9 +23,10 @@
 // #define TESTING_DEBUG_AT_115200    //debug al modulo SIM a 115200
 
 //----------- Hardware Board Version -------------
+#define HARDWARE_VER_3_0    // sim800c board design (china manufacture)
 // #define HARDWARE_VER_2_1    // sim800l daughter board design (china manufacture)
 // #define HARDWARE_VER_2_0    // sim800l daughter board design
-#define HARDWARE_VER_1_2    // all old hard changes included
+// #define HARDWARE_VER_1_2    // all old hard changes included
 // #define HARDWARE_VER_1_1    // test1 input modified to report alarms 4V analog to digital input
                                // pin5 on micro must be gnd (its disconnected)
 // #define HARDWARE_VER_1_0    // original version
@@ -53,6 +54,9 @@
 //-------- End Of Defines For Configuration ------
 
 
+#ifdef HARDWARE_VER_3_0
+#define HARD    "Hardware version 3.0\n"
+#endif
 #ifdef HARDWARE_VER_2_1
 #define HARD    "Hardware version 2.1\n"
 #endif
@@ -94,7 +98,8 @@
 #endif
 
 //--------- Sanity Checks ----------
-#if (!defined HARDWARE_VER_2_1) && \
+#if (!defined HARDWARE_VER_3_0) && \
+    (!defined HARDWARE_VER_2_1) && \
     (!defined HARDWARE_VER_2_0) && \
     (!defined HARDWARE_VER_1_2) && \
     (!defined HARDWARE_VER_1_1) && \
@@ -126,6 +131,67 @@
 
 
 // Gpios Configuration ------------------------------
+#ifdef HARDWARE_VER_3_0
+//GPIOA pin0    nc
+
+//GPIOA pin1	V_Sense_4V
+
+//GPIOA pin2    usart2 tx
+//GPIOA pin3	usart2 rx (para debug)
+
+//GPIOA pin4
+//GPIOA pin5
+//GPIOA pin6
+//GPIOA pin7    nc
+
+//GPIOB pin0    nc
+
+//GPIOB pin1
+#define PWRKEY    ((GPIOB->ODR & 0x0002) != 0)
+#define PWRKEY_ON    (GPIOB->BSRR = 0x00000002)
+#define PWRKEY_OFF    (GPIOB->BSRR = 0x00020000)
+
+
+//GPIOB pin2    V_Sense_12V
+
+//GPIOA pin8    nc
+
+//GPIOA pin9    usart1 tx (para el SIM)
+
+//GPIOC pin6    nc
+
+//GPIOA pin10	usart1 rx (para el SIM)
+
+//GPIOA pin11
+#define ACT_12V    ((GPIOA->ODR & 0x0800) != 0)
+#define ACT_12V_ON    (GPIOA->BSRR = 0x00000800)
+#define ACT_12V_OFF    (GPIOA->BSRR = 0x08000000)
+
+//GPIOA pin12
+#define LED    ((GPIOA->ODR & 0x1000) != 0)
+#define LED_ON    (GPIOA->BSRR = 0x00001000)
+#define LED_OFF    (GPIOA->BSRR = 0x10000000)
+
+//GPIOA pin13    swdio
+//GPIOA pin14    swclk
+//GPIOA pin15    nc
+
+//GPIOB pin3    nc
+
+//GPIOB pin4
+#define STATUS    ((GPIOB->IDR & 0x0010) != 0)
+
+//GPIOB pin5
+#define NETLIGHT    ((GPIOB->IDR & 0x0020) != 0)
+
+//GPIOB pin6
+#define ALARM_INPUT    ((GPIOB->IDR & 0x0040) != 0)
+
+//GPIOB pin7    test2
+//GPIOB pin8    test3
+//GPIOB pin9    nc
+#endif     //#ifdef HARDWARE_VER_3_0
+
 #if (defined HARDWARE_VER_2_0) || (defined HARDWARE_VER_2_1)
 //GPIOA pin0    nc
 
